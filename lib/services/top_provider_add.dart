@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:file_picker/file_picker.dart';
 import 'dart:typed_data';
+import 'dart:io'; // เพิ่มการใช้งาน File
 
 class HeaderProviderAdd extends StatefulWidget {
   final Function(Uint8List?) onImagePicked; // Callback to pass the image
@@ -28,13 +29,15 @@ class _HeaderProviderAddState extends State<HeaderProviderAdd> {
       type: FileType.image,
     );
 
-    if (result != null) {
+    if (result != null && result.files.single.path != null) {
+      final file = File(result.files.single.path!);
+      final bytes = await file.readAsBytes(); // อ่านไฟล์เป็น Bytes
+
       setState(() {
-        _imageBytes =
-            result.files.single.bytes; // Use bytes for web compatibility
-        widget
-            .onImagePicked(_imageBytes); // Pass the image back to parent widget
+        _imageBytes = bytes; // อัปเดต State
       });
+
+      widget.onImagePicked(_imageBytes); // Pass the image back to parent widget
     }
   }
 
@@ -77,28 +80,29 @@ class _HeaderProviderAddState extends State<HeaderProviderAdd> {
               children: [
                 // Display selected image, initial image, or default asset image
                 ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: _imageBytes != null
-                      ? Image.memory(
-                          _imageBytes!,
-                          width: 239,
-                          height: picture,
-                          fit: BoxFit.cover,
-                        )
-                      : (widget.initialImage != null
-                          ? Image.network(
-                              widget.initialImage!,
-                              width: 239,
-                              height: picture,
-                              fit: BoxFit.cover,
-                            )
-                          : Image.asset(
-                              'assets/images/scholarship_program.png',
-                              width: 239,
-                              height: picture,
-                              fit: BoxFit.cover,
-                            )),
-                ),
+                    borderRadius: BorderRadius.circular(12),
+                    child: _imageBytes != null
+                        ? Image.memory(
+                            _imageBytes!,
+                            width: 239,
+                            height: picture,
+                            fit: BoxFit.cover,
+                          )
+                        : (widget.initialImage != null &&
+                                widget.initialImage !=
+                                    'assets/images/scholarship_program.png')
+                            ? Image.network(
+                                widget.initialImage!,
+                                width: 239,
+                                height: picture,
+                                fit: BoxFit.cover,
+                              )
+                            : Image.asset(
+                                'assets/images/scholarship_program.png',
+                                width: 239,
+                                height: picture,
+                                fit: BoxFit.cover,
+                              )),
                 // White faded overlay
                 ClipRRect(
                   borderRadius: BorderRadius.circular(12),

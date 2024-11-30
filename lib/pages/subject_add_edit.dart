@@ -1,5 +1,6 @@
 import 'package:edugo/pages/provider_detail.dart';
 import 'package:edugo/pages/provider_management.dart';
+import 'package:edugo/pages/subject_manage.dart';
 import 'package:edugo/services/datetime_provider_add.dart';
 import 'package:edugo/services/dropdown_provider_add.dart';
 import 'package:edugo/services/file_upload.dart';
@@ -12,21 +13,21 @@ import 'dart:convert';
 import 'dart:typed_data';
 import 'package:http_parser/http_parser.dart';
 
-class ProviderAddEdit extends StatefulWidget {
+class SubjectAddEdit extends StatefulWidget {
   final bool isEdit;
   final Map<String, dynamic>? initialData;
 
-  const ProviderAddEdit({
+  const SubjectAddEdit({
     Key? key,
     required this.isEdit,
     this.initialData,
   }) : super(key: key);
 
   @override
-  State<ProviderAddEdit> createState() => _ProviderAddEditState();
+  State<SubjectAddEdit> createState() => _SubjectAddEditState();
 }
 
-class _ProviderAddEditState extends State<ProviderAddEdit> {
+class _SubjectAddEditState extends State<SubjectAddEdit> {
   // ตัวแปรเก็บค่าจากฟอร์ม
   int? id;
   String? title; // สำหรับ Scholarship Name
@@ -1203,7 +1204,7 @@ class _ProviderAddEditState extends State<ProviderAddEdit> {
                               PageRouteBuilder(
                                 pageBuilder:
                                     (context, animation, secondaryAnimation) =>
-                                        const ProviderManagement(),
+                                        const SubjectManagement(),
                                 transitionsBuilder: (context, animation,
                                     secondaryAnimation, child) {
                                   const begin = 0.0;

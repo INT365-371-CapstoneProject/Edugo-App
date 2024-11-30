@@ -2,6 +2,7 @@ import 'package:edugo/pages/provider_add.dart';
 import 'package:edugo/pages/provider_detail.dart';
 import 'package:edugo/services/scholarship_card.dart';
 import 'package:edugo/services/status_box.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
@@ -16,13 +17,18 @@ class ProviderManagement extends StatefulWidget {
 }
 
 class _ProviderManagementState extends State<ProviderManagement> {
+  List<dynamic> filterPending = [];
+  List<dynamic> filterOpened = [];
+  List<dynamic> filterClosed = [];
   List<dynamic> scholarships = [];
+  List<dynamic> useItem = [];
   bool isLoading = true;
+  String selectedStatus = "All";
 
   @override
   void initState() {
     super.initState();
-    fetchScholarships();
+    _delayedLoad(); // เรียกใช้งานฟังก์ชัน _delayedLoad
   }
 
   Future<void> fetchScholarships() async {
@@ -42,12 +48,34 @@ class _ProviderManagementState extends State<ProviderManagement> {
             scholarship['description'] =
                 scholarship['description'] ?? 'No Description Available';
             scholarship['published_date'] =
-                scholarship['published_date'] ?? DateTime.now().toString();
+                scholarship['published_date'] ?? scholarship['publish_date'];
             scholarship['close_date'] =
-                scholarship['close_date'] ?? DateTime.now().toString();
+                scholarship['close_date'] ?? scholarship['close_date'];
             return scholarship;
           }).toList();
+
+          // Filter Pending (publish_date หลังจาก DateTime.now())
+          filterPending = scholarships.where((s) {
+            DateTime publishDate = DateTime.parse(s['published_date']);
+            return publishDate.isAfter(DateTime.now());
+          }).toList();
+
+          // Filter Opened (publish_date ก่อน DateTime.now() และ close_date หลัง DateTime.now())
+          filterOpened = scholarships.where((s) {
+            DateTime publishDate = DateTime.parse(s['published_date']);
+            DateTime closeDate = DateTime.parse(s['close_date']);
+            return publishDate.isBefore(DateTime.now()) &&
+                closeDate.isAfter(DateTime.now());
+          }).toList();
+
+          filterClosed = scholarships.where((s) {
+            DateTime closeDate = DateTime.parse(s['close_date']);
+            return closeDate.isBefore(DateTime.now());
+          }).toList();
+
           isLoading = false;
+
+          useItem = scholarships;
         });
       } else {
         throw Exception('Failed to load scholarships');
@@ -58,6 +86,11 @@ class _ProviderManagementState extends State<ProviderManagement> {
       });
       print("Error fetching scholarships: $e");
     }
+  }
+
+  Future<void> _delayedLoad() async {
+    await Future.delayed(const Duration(seconds: 3)); // Delay 3 seconds
+    fetchScholarships();
   }
 
   @override
@@ -93,10 +126,14 @@ class _ProviderManagementState extends State<ProviderManagement> {
                         colorBlendMode: BlendMode.srcIn,
                       ),
                     ),
-                    Image.asset(
-                      'assets/images/avatar.png',
-                      width: 40.0,
-                      height: 40.0,
+                    CircleAvatar(
+                      radius: 20,
+                      backgroundColor: const Color(0xFFC0CDFF),
+                      child: Image.asset(
+                        'assets/images/website_icon.png',
+                        width: 40.0,
+                        height: 40.0,
+                      ),
                     ),
                   ],
                 ),
@@ -158,133 +195,187 @@ class _ProviderManagementState extends State<ProviderManagement> {
           Expanded(
             child: isLoading
                 ? Center(child: CircularProgressIndicator())
-                : SingleChildScrollView(
-                    padding: const EdgeInsets.only(top: 16, bottom: 16),
-                    child: Column(
-                      children: [
-                        // StatusBox row
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              StatusBox(
-                                title: "All",
-                                color: const Color(0xFF355FFF),
-                                count: scholarships.length.toString(),
-                              ),
-                              StatusBox(
-                                title: "Pending",
-                                color: const Color(0xFFD9D9D9),
-                                count: scholarships
-                                    .where((s) =>
-                                        DateTime.parse(s['publish_date'])
-                                            .isAfter(DateTime.now()))
-                                    .length
-                                    .toString(),
-                              ),
-                              StatusBox(
-                                title: "Opened",
-                                color: const Color(0xFFC4E250),
-                                count: scholarships
-                                    .where((s) =>
-                                        DateTime.parse(s['publish_date'])
-                                            .isBefore(DateTime.now()) &&
-                                        DateTime.parse(s['close_date'])
-                                            .isAfter(DateTime.now()))
-                                    .length
-                                    .toString(),
-                              ),
-                              StatusBox(
-                                title: "Closed",
-                                color: const Color(0xFFD5448E),
-                                count: scholarships
-                                    .where((s) =>
-                                        DateTime.parse(s['close_date'])
-                                            .isBefore(DateTime.now()))
-                                    .length
-                                    .toString(),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 16.0),
-
-                        // List of Scholarships
-                        ListView.builder(
-                          shrinkWrap: true,
-                          physics: const ClampingScrollPhysics(),
-                          padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                          itemCount: scholarships.length,
-                          itemBuilder: (context, index) {
-                            final scholarship = scholarships[index];
-                            final imageUrl = scholarship['image'] ??
-                                'assets/images/scholarship_1.png';
-                            final title = scholarship['title'] ?? 'No Title';
-                            final description = scholarship['description'] ??
-                                'No Description Available';
-                            final publishedDate =
-                                DateTime.parse(scholarship['published_date']);
-                            final closeDate =
-                                DateTime.parse(scholarship['close_date']);
-                            final duration =
-                                "${DateFormat('MMM').format(publishedDate)} - ${DateFormat('MMM').format(closeDate)} ${closeDate.year}";
-
-                            // สร้างแท็กจากลำดับที่ของรายการ
-                            final formattedTag =
-                                "#${(index + 1).toString().padLeft(5, '0')}";
-
-                            // เช็คสถานะตามเงื่อนไข
-                            String status;
-                            if (DateTime.now().isBefore(publishedDate)) {
-                              status = "Pending";
-                            } else if (DateTime.now().isBefore(closeDate)) {
-                              status = "Open";
-                            } else {
-                              status = "Closed";
-                            }
-
-                            return Padding(
-                              padding: const EdgeInsets.only(bottom: 16.0),
-                              child: GestureDetector(
-                                onTap: () {
-                                  final existingData = {
-                                    'id': scholarship['id'],
-                                    'title': scholarship['title'],
-                                    'url': scholarship['url'],
-                                    'category': scholarship['category'],
-                                    'country': scholarship['country'],
-                                    'description': scholarship['description'],
-                                    'image': scholarship['image'],
-                                    'attach_file': scholarship['attach_file'],
-                                    'published_date':
-                                        scholarship['published_date'],
-                                    'close_date': scholarship['close_date'],
-                                  };
-
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) => ProviderDetail(
-                                        initialData:
-                                            existingData, // ส่ง existingData ไปยังหน้าแก้ไข
-                                      ),
-                                    ),
-                                  );
-                                },
-                                child: ScholarshipCard(
-                                  image: imageUrl,
-                                  tag: formattedTag,
-                                  title: title,
-                                  date: duration,
-                                  status: status,
-                                  description: description,
+                : RefreshIndicator(
+                    onRefresh:
+                        _delayedLoad, // Callback ฟังก์ชันเมื่อเลื่อนรีเฟรช
+                    child: SingleChildScrollView(
+                      physics:
+                          const AlwaysScrollableScrollPhysics(), // เปิดให้เลื่อนเสมอ
+                      padding: const EdgeInsets.only(top: 16, bottom: 16),
+                      child: Column(
+                        children: [
+                          // StatusBox row
+                          Padding(
+                            padding:
+                                const EdgeInsets.symmetric(horizontal: 16.0),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                GestureDetector(
+                                  onTap: () {
+                                    setState(() {
+                                      selectedStatus = "All";
+                                      // Update the filtered list based on the selected status
+                                      useItem = scholarships;
+                                    });
+                                  },
+                                  child: StatusBox(
+                                    title: "All",
+                                    color: const Color(0xFF355FFF),
+                                    count: scholarships.length.toString(),
+                                  ),
                                 ),
-                              ),
-                            );
-                          },
-                        )
-                      ],
+                                // Pending StatusBox
+                                // Update the onTap for StatusBox
+                                GestureDetector(
+                                  onTap: () {
+                                    setState(() {
+                                      selectedStatus = "Pending";
+                                      // Update the filtered list based on the selected status
+                                      useItem = filterPending;
+                                    });
+                                  },
+                                  child: StatusBox(
+                                    title: "Pending",
+                                    color: const Color(0xFFD9D9D9),
+                                    count: scholarships
+                                        .where((s) =>
+                                            DateTime.parse(s['publish_date'])
+                                                .isAfter(DateTime.now()))
+                                        .length
+                                        .toString(),
+                                  ),
+                                ),
+
+                                // Repeat for other status boxes (Opened, Closed, All) with proper filtered data
+                                GestureDetector(
+                                  onTap: () {
+                                    setState(() {
+                                      selectedStatus = "Opened";
+                                      useItem = filterOpened;
+                                    });
+                                  },
+                                  child: StatusBox(
+                                    title: "Opened",
+                                    color: const Color(0xFFC4E250),
+                                    count: scholarships
+                                        .where((s) =>
+                                            DateTime.parse(s['publish_date'])
+                                                .isBefore(DateTime.now()) &&
+                                            DateTime.parse(s['close_date'])
+                                                .isAfter(DateTime.now()))
+                                        .length
+                                        .toString(),
+                                  ),
+                                ),
+
+                                GestureDetector(
+                                  onTap: () {
+                                    setState(() {
+                                      selectedStatus = "Closed";
+                                      useItem = filterClosed;
+                                    });
+                                  },
+                                  child: StatusBox(
+                                    title: "Closed",
+                                    color: const Color(0xFFD5448E),
+                                    count: scholarships
+                                        .where((s) =>
+                                            DateTime.parse(s['close_date'])
+                                                .isBefore(DateTime.now()))
+                                        .length
+                                        .toString(),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 16.0),
+
+                          // List of Scholarships
+                          ListView.builder(
+                            shrinkWrap: true,
+                            physics: const ClampingScrollPhysics(),
+                            padding:
+                                const EdgeInsets.symmetric(horizontal: 16.0),
+                            itemCount: useItem.length,
+                            itemBuilder: (context, index) {
+                              final scholarship = useItem[index];
+                              final imageUrl = scholarship['image'] ??
+                                  'assets/images/scholarship_1.png';
+                              final title = scholarship['title'] ?? 'No Title';
+                              final description = scholarship['description'] ??
+                                  'No Description Available';
+                              final publishedDate =
+                                  DateTime.parse(scholarship['published_date']);
+                              final closeDate =
+                                  DateTime.parse(scholarship['close_date']);
+                              final duration =
+                                  "${DateFormat('d MMM').format(publishedDate)} - ${DateFormat('d MMM yyyy').format(closeDate)}";
+
+                              // สร้างแท็กจากลำดับที่ของรายการ
+                              final formattedTag =
+                                  "#${(index + 1).toString().padLeft(5, '0')}";
+
+                              // เช็คสถานะตามเงื่อนไข
+                              String status;
+                              if (DateTime.now().isBefore(publishedDate)) {
+                                status = "Pending";
+                              } else if (DateTime.now().isBefore(closeDate)) {
+                                status = "Open";
+                              } else {
+                                status = "Closed";
+                              }
+
+                              return Padding(
+                                padding: const EdgeInsets.only(bottom: 16.0),
+                                child: GestureDetector(
+                                  onTap: () {
+                                    final existingData = {
+                                      'id': scholarship['id'],
+                                      'title': scholarship['title'],
+                                      'url': scholarship['url'],
+                                      'category': scholarship['category'],
+                                      'country': scholarship['country'],
+                                      'description': scholarship['description'],
+                                      'image': scholarship['image'],
+                                      'attach_file': scholarship['attach_file'],
+                                      'published_date':
+                                          scholarship['published_date'],
+                                      'close_date': scholarship['close_date'],
+                                    };
+
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => ProviderDetail(
+                                          initialData:
+                                              existingData, // ส่ง existingData ไปยังหน้าแก้ไข
+                                        ),
+                                      ),
+                                      // MaterialPageRoute(
+                                      //   builder: (context) => ProviderAddEdit(
+                                      //     isEdit: true,
+                                      //     initialData:
+                                      //         existingData, // ส่ง existingData ไปยังหน้าแก้ไข
+                                      //   ),
+                                      // ),
+                                    );
+                                  },
+                                  child: ScholarshipCard(
+                                    image: imageUrl,
+                                    tag: formattedTag,
+                                    title: title,
+                                    date: duration,
+                                    status: status,
+                                    description: description,
+                                  ),
+                                ),
+                              );
+                            },
+                          )
+                        ],
+                      ),
                     ),
                   ),
           ),

@@ -1,5 +1,6 @@
 import 'package:edugo/pages/provider_add.dart';
 import 'package:edugo/pages/provider_management.dart';
+import 'package:edugo/pages/subject_manage.dart';
 import 'package:edugo/services/datetime_provider_add.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -7,29 +8,24 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
-class ProviderDetail extends StatefulWidget {
+class SubjectDetail extends StatefulWidget {
   final Map<String, dynamic>? initialData;
 
-  const ProviderDetail({
+  const SubjectDetail({
     Key? key,
     this.initialData,
   }) : super(key: key);
 
   @override
-  State<ProviderDetail> createState() => _ProviderDetailState();
+  State<SubjectDetail> createState() => _SubjectDetailState();
 }
 
-class _ProviderDetailState extends State<ProviderDetail> {
+class _SubjectDetailState extends State<SubjectDetail> {
   int? id;
-  String? title; // Scholarship Name
-  String? description; // Description
-  String? url; // Web URL
+  String? title;
+  String? description;
   String? image;
-  String? attachFile;
-  String? selectedScholarshipType; // Scholarship Type
-  String? selectedCountry;
   DateTime? selectedStartDate;
-  DateTime? selectedEndDate;
   final double coverHeight = 227;
   final double pictureHeight = 114;
 
@@ -42,17 +38,12 @@ class _ProviderDetailState extends State<ProviderDetail> {
       id = data['id'] ?? '';
       title = data['title'] ?? 'No Title';
       description = data['description'] ?? 'No Description';
-      url = data['url'] ?? 'No Website';
-      selectedCountry = data['country'] ?? 'No Country';
-      selectedScholarshipType = data['category'] ?? 'No Category';
+
       selectedStartDate = data['published_date'] != null
           ? DateTime.tryParse(data['published_date'])
           : null;
-      selectedEndDate = data['close_date'] != null
-          ? DateTime.tryParse(data['close_date'])
-          : null;
+
       image = data['image'] ?? '';
-      attachFile = data['attach_file'] ?? 'No Attach Files';
     }
   }
 
@@ -76,7 +67,7 @@ class _ProviderDetailState extends State<ProviderDetail> {
               ),
               const SizedBox(height: 16),
               Text(
-                'Are you sure you want to delete this scholarship?',
+                'Are you sure you want to delete this post?',
                 textAlign: TextAlign.center,
                 style: GoogleFonts.dmSans(
                   fontSize: 16,
@@ -86,7 +77,7 @@ class _ProviderDetailState extends State<ProviderDetail> {
               ),
               const SizedBox(height: 8),
               Text(
-                '"${title ?? "Scholarship"}"', // แสดงชื่อของทุน
+                '"${title ?? "porst"}"', // แสดงชื่อของทุน
                 textAlign: TextAlign.center,
                 style: GoogleFonts.dmSans(
                   fontSize: 14,
@@ -166,7 +157,7 @@ class _ProviderDetailState extends State<ProviderDetail> {
 
   Future<void> submitDeleteData() async {
     final String apiUrl =
-        "https://capstone24.sit.kmutt.ac.th/un2/api/announce/delete/${id}";
+        "https://capstone24.sit.kmutt.ac.th/un2/api/subject/delete/${id}";
 
     var request = http.MultipartRequest('DELETE', Uri.parse(apiUrl));
 
@@ -177,7 +168,7 @@ class _ProviderDetailState extends State<ProviderDetail> {
         Navigator.pushAndRemoveUntil(
           context,
           MaterialPageRoute(
-            builder: (context) => ProviderManagement(),
+            builder: (context) => SubjectManagement(),
           ),
           (route) => false, // ลบ stack ทั้งหมด
         );
@@ -242,7 +233,7 @@ class _ProviderDetailState extends State<ProviderDetail> {
                                     PageRouteBuilder(
                                       pageBuilder: (context, animation,
                                               secondaryAnimation) =>
-                                          const ProviderManagement(),
+                                          const SubjectManagement(),
                                       transitionsBuilder: (context, animation,
                                           secondaryAnimation, child) {
                                         const begin = 0.0;
@@ -381,209 +372,8 @@ class _ProviderDetailState extends State<ProviderDetail> {
                           ),
                         ),
                       ),
-                      const SizedBox(height: 16),
-
-                      // // Web URL
-                      Text(
-                        'Web (URL)',
-                        style: GoogleFonts.dmSans(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w500,
-                          color: Colors.black,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Padding(
-                        padding: const EdgeInsets.only(left: 11.0),
-                        child: Text(
-                          url ?? "No URL available.",
-                          maxLines: 1, // จำกัดให้แสดงเพียง 1 บรรทัด
-                          overflow: TextOverflow
-                              .ellipsis, // แสดง "..." หากข้อความยาวเกิน
-                          style: GoogleFonts.dmSans(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w400,
-                            color: Color(0xFF64738B),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-
-                      // Type of Scholarship and Country
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        children: [
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Type of Scholarship*',
-                                style: GoogleFonts.dmSans(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w500,
-                                  color: Colors.black,
-                                ),
-                              ),
-                              const SizedBox(height: 16),
-                              Padding(
-                                padding: const EdgeInsets.only(left: 11),
-                                child: Container(
-                                  width: 150, // กำหนดความกว้างเป็น 150px
-                                  child: Text(
-                                    selectedScholarshipType ??
-                                        'Full Scholarship',
-                                    maxLines: 1, // จำกัดแค่ 1 บรรทัด
-                                    overflow: TextOverflow
-                                        .ellipsis, // แสดง "..." หากข้อความยาวเกิน
-                                    style: GoogleFonts.dmSans(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w400,
-                                      color: Color(0xFF64738B),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(width: 49),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Country*',
-                                style: GoogleFonts.dmSans(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w500,
-                                  color: Colors.black,
-                                ),
-                              ),
-                              const SizedBox(height: 16),
-                              Padding(
-                                padding: const EdgeInsets.only(left: 11),
-                                child: Container(
-                                  width: 160, // กำหนดความกว้างเป็น 150px
-                                  child: Text(
-                                    selectedCountry ?? 'Not Specified',
-                                    maxLines: 1, // จำกัดแค่ 1 บรรทัด
-                                    overflow: TextOverflow
-                                        .ellipsis, // แสดง "..." หากข้อความยาวเกิน
-                                    style: GoogleFonts.dmSans(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w400,
-                                      color: Color(0xFF64738B),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
 
                       const SizedBox(height: 24),
-
-                      // Date Selector
-                      Container(
-                        height: 190,
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 11),
-                        decoration: BoxDecoration(
-                          border: Border.all(color: const Color(0xFFCBD5E0)),
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: DateSelector(
-                          isDetail: true,
-                          initialStartDate: selectedStartDate,
-                          initialEndDate: selectedEndDate,
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-
-                      // Attach_file
-                      Container(
-                        height: 96,
-                        width: double.infinity,
-                        padding: const EdgeInsets.all(14),
-                        decoration: BoxDecoration(
-                          border: Border.all(
-                            color: Color(0xFFCBD5E0),
-                          ),
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Container(
-                              decoration: BoxDecoration(
-                                color: Color(0xFFE5EDFB),
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                              child: Image.asset(
-                                'assets/images/attach_file.png',
-                                width: 66.0,
-                                height: 66.0,
-                              ),
-                            ),
-                            SizedBox(width: 14),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'Attach File',
-                                    style: TextStyle(
-                                      fontFamily: 'DM Sans',
-                                      fontSize: 14,
-                                      fontStyle: FontStyle.normal,
-                                      fontWeight: FontWeight.w600,
-                                      color: Color(0xFF94A2B8),
-                                      height: 1.0,
-                                    ),
-                                  ),
-                                  SizedBox(height: 2),
-                                  Text(
-                                    '*upload PDF file with maximum size 50 MB',
-                                    style: TextStyle(
-                                      fontFamily: 'DM Sans',
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.normal,
-                                      color: Color(0xFF94A2B8),
-                                    ),
-                                  ),
-                                  SizedBox(height: 4),
-                                  Container(
-                                    height: 28,
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 8),
-                                    decoration: BoxDecoration(
-                                      border: Border.all(
-                                        color: Color(0xFFC0CDFF),
-                                      ),
-                                      borderRadius: BorderRadius.circular(6),
-                                    ),
-                                    child: Align(
-                                      alignment: Alignment.centerLeft,
-                                      child: Text(
-                                        attachFile
-                                            .toString(), // แสดงชื่อไฟล์ที่ถูกเลือก
-                                        style: GoogleFonts.dmSans(
-                                          fontSize: 11,
-                                          fontWeight: FontWeight.w400,
-                                          fontStyle: FontStyle.italic,
-                                          color: Color(0xFF94A2B8),
-                                        ),
-                                        overflow: TextOverflow
-                                            .ellipsis, // หากชื่อไฟล์ยาวเกินไป
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 6),
 
                       // Description
                       Container(
@@ -634,7 +424,7 @@ class _ProviderDetailState extends State<ProviderDetail> {
                         ),
                       ),
 
-                      const SizedBox(height: 200),
+                      const SizedBox(height: 30),
                     ],
                   ),
                 ),
@@ -658,14 +448,9 @@ class _ProviderDetailState extends State<ProviderDetail> {
                       final existingData = {
                         'id': id,
                         'title': title,
-                        'url': url,
-                        'category': selectedScholarshipType,
-                        'country': selectedCountry,
                         'description': description,
                         'image': image,
-                        'attach_file': attachFile,
                         'published_date': selectedStartDate?.toIso8601String(),
-                        'close_date': selectedEndDate?.toIso8601String(),
                       };
 
                       Navigator.push(
@@ -702,7 +487,7 @@ class _ProviderDetailState extends State<ProviderDetail> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
-                          "Edit Scholarship",
+                          "Edit Post",
                           style: GoogleFonts.dmSans(
                             color: Colors.white,
                             fontWeight: FontWeight.w500,

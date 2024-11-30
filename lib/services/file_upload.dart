@@ -1,19 +1,20 @@
 import 'dart:typed_data';
+import 'dart:io'; // สำหรับ File I/O
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class AttachFile extends StatefulWidget {
-  final Function(Uint8List? fileBytes, String? fileName)
-      onFileSelected; // Callback to return selected file and file name
+  final Function(Uint8List? fileBytes, String? fileName) onFileSelected;
   final String? initialFileName;
   final bool isEdit;
 
-  const AttachFile(
-      {super.key,
-      required this.onFileSelected,
-      this.initialFileName,
-      this.isEdit = false});
+  const AttachFile({
+    super.key,
+    required this.onFileSelected,
+    this.initialFileName,
+    this.isEdit = false,
+  });
 
   @override
   _AttachFileState createState() => _AttachFileState();
@@ -25,10 +26,94 @@ class _AttachFileState extends State<AttachFile> {
   @override
   void initState() {
     super.initState();
-    // หากมี initialFileName (กรณีการแก้ไข) ให้ตั้งค่าให้กับ fileName
     fileName = widget.isEdit && widget.initialFileName != null
         ? widget.initialFileName!
         : 'Select file to Upload';
+  }
+
+  Future<void> _pickFile() async {
+    FilePickerResult? result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['pdf'], // กำหนดให้เลือกเฉพาะไฟล์ PDF
+    );
+
+    if (result != null) {
+      String? selectedFileName = result.files.single.name;
+      Uint8List? fileBytes = result.files.single.bytes;
+
+      // ตรวจสอบว่าไฟล์ที่เลือกเป็น PDF หรือไม่
+      if (selectedFileName != null && !selectedFileName.endsWith('.pdf')) {
+        // แสดง Dialog ถ้าไฟล์ไม่ใช่ PDF
+        _showOnlyPdfDialog();
+        return;
+      }
+
+      // ถ้า bytes เป็น null แต่มี path ให้โหลดไฟล์
+      if (fileBytes == null && result.files.single.path != null) {
+        File file = File(result.files.single.path!);
+        fileBytes = await file.readAsBytes(); // โหลดเนื้อหาไฟล์
+      }
+
+      // ตรวจสอบขนาดไฟล์ (5MB)
+      if (fileBytes != null && fileBytes.lengthInBytes > 5 * 1024 * 1024) {
+        _showFileSizeLimitDialog();
+        return;
+      }
+
+      // อัพเดตสถานะและส่งไฟล์กลับ
+      setState(() {
+        fileName = selectedFileName ?? 'Select file to Upload';
+      });
+      widget.onFileSelected(fileBytes, selectedFileName);
+    } else {
+      // กรณีผู้ใช้ไม่เลือกไฟล์
+      setState(() {
+        fileName = 'Select file to Upload';
+      });
+      widget.onFileSelected(null, null);
+    }
+  }
+
+  void _showFileSizeLimitDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('File Size Limit Exceeded'),
+          content: Text(
+              'File size exceeds the 5MB limit. Please select a smaller file.'),
+          actions: <Widget>[
+            TextButton(
+              child: Text('OK'),
+              onPressed: () {
+                Navigator.of(context).pop(); // ปิด dialog
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  // แสดง Dialog ถ้าไฟล์ไม่ใช่ PDF
+  void _showOnlyPdfDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Invalid File Type'),
+          content: Text('Only PDF files are allowed.'),
+          actions: <Widget>[
+            TextButton(
+              child: Text('OK'),
+              onPressed: () {
+                Navigator.of(context).pop(); // ปิด dialog
+              },
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -91,15 +176,14 @@ class _AttachFileState extends State<AttachFile> {
                       child: Align(
                         alignment: Alignment.centerLeft,
                         child: Text(
-                          fileName, // แสดงชื่อไฟล์ที่ถูกเลือก
+                          fileName,
                           style: GoogleFonts.dmSans(
                             fontSize: 11,
                             fontWeight: FontWeight.w400,
                             fontStyle: FontStyle.italic,
                             color: Color(0xFF94A2B8),
                           ),
-                          overflow:
-                              TextOverflow.ellipsis, // หากชื่อไฟล์ยาวเกินไป
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
                     ),
@@ -114,31 +198,7 @@ class _AttachFileState extends State<AttachFile> {
             height: 36,
             width: double.infinity,
             child: ElevatedButton(
-              onPressed: () async {
-                // เปิด File Picker เมื่อกดปุ่ม
-                FilePickerResult? result = await FilePicker.platform.pickFiles(
-                  type: FileType.custom,
-                  allowedExtensions: ['pdf'], // กำหนดเฉพาะไฟล์ PDF
-                );
-
-                if (result != null) {
-                  // ได้ไฟล์จากการเลือก
-                  Uint8List? fileBytes = result.files.single.bytes;
-                  String? selectedFileName = result.files.single.name;
-                  setState(() {
-                    fileName = selectedFileName ??
-                        'Select file to Upload'; // อัพเดตชื่อไฟล์
-                  });
-                  widget.onFileSelected(fileBytes,
-                      selectedFileName); // ส่งทั้ง fileBytes และ fileName
-                } else {
-                  // ไม่มีไฟล์ถูกเลือก
-                  setState(() {
-                    fileName = 'Select file to Upload'; // ตั้งค่าชื่อไฟล์กลับ
-                  });
-                  widget.onFileSelected(null, null); // ส่ง null เมื่อไม่มีไฟล์
-                }
-              },
+              onPressed: _pickFile, // เรียก method _pickFile
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF355FFF),
                 shape: RoundedRectangleBorder(

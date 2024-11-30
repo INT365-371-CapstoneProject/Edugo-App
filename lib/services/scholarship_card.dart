@@ -101,10 +101,12 @@ class ScholarshipCard extends StatelessWidget {
                             width: 61,
                             height: 20,
                             decoration: BoxDecoration(
-                              color: status == "Closed"
-                                  ? Color(0xFFF9C7E1)
-                                  : Colors.green[
-                                      100], // พื้นหลังสี #F9C7E1 หากสถานะเป็น "Closed"
+                              color: status == 'Pending'
+                                  ? Color(0xFFECF0F6)
+                                  : status == "Closed"
+                                      ? Color(0xFFF9C7E1)
+                                      : Colors.green[
+                                          100], // พื้นหลังสี #F9C7E1 หากสถานะเป็น "Closed"
                               borderRadius: BorderRadius.circular(4),
                             ),
                             alignment: Alignment.center,
@@ -114,10 +116,12 @@ class ScholarshipCard extends StatelessWidget {
                                 fontFamily: "DM Sans",
                                 fontSize: 11,
                                 fontWeight: FontWeight.w500,
-                                color: status == "Closed"
-                                    ? Color(0xFFED4B9E)
-                                    : Colors
-                                        .green, // ฟอนต์สี #ED4B9E หากสถานะเป็น "Closed"
+                                color: status == 'Pending'
+                                    ? Color(0xFF94A2B8)
+                                    : status == "Closed"
+                                        ? Color(0xFFED4B9E)
+                                        : Colors
+                                            .green, // ฟอนต์สี #ED4B9E หากสถานะเป็น "Closed"
                               ),
                               textAlign: TextAlign.center,
                             ),

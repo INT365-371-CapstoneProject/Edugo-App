@@ -15,7 +15,7 @@ class StatusBox extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 77,
+      width: 82,
       height: 64,
       decoration: BoxDecoration(
         color: Colors.white,
