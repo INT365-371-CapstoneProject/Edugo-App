@@ -1,5 +1,9 @@
 import 'dart:typed_data';
+import 'package:edugo/pages/provider_management.dart';
+import 'package:edugo/pages/provider_profile.dart';
+import 'package:edugo/pages/subject_add_edit.dart';
 import 'package:edugo/pages/subject_detail.dart';
+import 'package:edugo/services/footer.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -8,7 +12,7 @@ import 'dart:convert';
 import 'package:intl/intl.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter/foundation.dart';
-
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:http_parser/http_parser.dart';
 
 class SubjectManagement extends StatefulWidget {
@@ -73,55 +77,140 @@ class _SubjectManagementState extends State<SubjectManagement> {
     fetchsubject();
   }
 
-  Future<void> submitAddData() async {
+  void confirmDelete(BuildContext context, int id) {
+    showDialog(
+      context: context,
+      barrierDismissible: false, // ไม่ให้กดปิดนอกกรอบ Dialog
+      builder: (BuildContext dialogContext) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12), // ปรับมุมโค้ง
+          ),
+          contentPadding: const EdgeInsets.all(20),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Image.asset(
+                'assets/images/confirm_delete.png', // ไอคอนรูปคนทิ้งขยะ
+                width: 275,
+                height: 227,
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Are you sure you want to delete this post?',
+                textAlign: TextAlign.center,
+                style: GoogleFonts.dmSans(
+                  fontSize: 24,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF000000),
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            // ปุ่ม Cancel
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                  0, 0, 0, 0), // ระยะห่าง ซ้าย-บน-ขวา-ล่าง
+              child: Row(
+                mainAxisAlignment:
+                    MainAxisAlignment.spaceBetween, // ระยะห่างระหว่างปุ่ม
+                children: [
+                  // ปุ่ม Cancel
+                  SizedBox(
+                    width: 134, // กำหนดความกว้าง
+                    height: 41, // กำหนดความสูง
+                    child: TextButton(
+                      onPressed: () {
+                        Navigator.of(dialogContext).pop(); // ปิด Dialog
+                      },
+                      style: TextButton.styleFrom(
+                        foregroundColor: const Color(0xFFFFFFFF),
+                        backgroundColor: const Color(0xFF94A2B8),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      child: Text(
+                        'Cancel',
+                        style: GoogleFonts.dmSans(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ),
+                  // ปุ่ม Delete
+                  SizedBox(
+                    width: 134, // กำหนดความกว้าง
+                    height: 41, // กำหนดความสูง
+                    child: ElevatedButton(
+                      onPressed: () async {
+                        Navigator.of(dialogContext).pop(); // ปิด Dialog
+                        await submitDeleteData(id); // ดำเนินการลบข้อมูล
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFFD5448E),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      child: Text(
+                        'Delete',
+                        style: GoogleFonts.dmSans(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> submitDeleteData(int id) async {
     final String apiUrl =
-        "https://capstone24.sit.kmutt.ac.th/un2/api/subject/add";
+        "https://capstone24.sit.kmutt.ac.th/un2/api/subject/delete/${id}";
 
-    var request = http.MultipartRequest('POST', Uri.parse(apiUrl));
-
-    request.fields['title'] = titleController.text;
-    request.fields['description'] = descriptionController.text;
-    request.fields['posts_type'] = 'Announce';
-    request.fields['publish_date'] =
-        '${DateTime.now().toUtc().toIso8601String().split('.')[0]}Z';
-
-    request.fields['country_id'] = '1';
-
-    if (_imageBytes != null) {
-      request.files.add(
-        http.MultipartFile.fromBytes(
-          'image',
-          _imageBytes!,
-          filename: 'image.jpg',
-          contentType: MediaType('image', 'jpeg'),
-        ),
-      );
-    }
-
-    void showResponse(String message) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(message)),
-      );
-    }
+    var request = http.MultipartRequest('DELETE', Uri.parse(apiUrl));
 
     try {
-      // เพิ่มการหน่วงเวลา 3 วินาที
-      await Future.delayed(Duration(seconds: 3));
-
       var response = await request.send();
 
-      Navigator.of(context).pop(); // ปิด Loading Dialog
-
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        showResponse("Success: ${response.statusCode}");
+      if (response.statusCode == 200) {
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(
+            builder: (context) => SubjectManagement(),
+          ),
+          (route) => false, // ลบ stack ทั้งหมด
+        );
       } else {
-        showResponse(
-            "Failed to submit data. Status code: ${response.statusCode}");
+        showError("Failed to delete data. Status code: ${response.statusCode}");
       }
     } catch (e) {
-      Navigator.of(context).pop(); // ปิด Loading Dialog
-      showResponse("Error occurred: $e");
+      showError("Error occurred: $e");
     }
+  }
+
+  void showError(String message) {
+    // Replace with your preferred error handling method
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
+    );
+  }
+
+// Helper to show success messages
+  void showSuccess(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
+    );
   }
 
   void _showAddSubjectDialog() {
@@ -298,11 +387,10 @@ class _SubjectManagementState extends State<SubjectManagement> {
         children: [
           // Blue header block
           Container(
-            height: 190,
-            width: double.infinity,
+            height: 138,
             color: const Color(0xFF355FFF),
             padding: const EdgeInsets.only(
-              top: 58.0,
+              top: 72.0,
               right: 16,
               left: 16,
               bottom: 22,
@@ -310,58 +398,53 @@ class _SubjectManagementState extends State<SubjectManagement> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const SizedBox(height: 16),
-                Text(
-                  "Post Subject List",
-                  style: GoogleFonts.dmSans(
-                    fontSize: 22,
-                    fontStyle: FontStyle.normal,
-                    fontWeight: FontWeight.w600,
-                    height: 1.4,
-                    color: Color(0xFFFFFFFF),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Container(
-                  height: 47.0,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(12.0),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                    child: Row(
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: [
+                    CircleAvatar(
+                      radius: 20,
+                      child: Image.asset(
+                        'assets/images/avatar.png',
+                        width: 40.0,
+                        height: 40.0,
+                        colorBlendMode: BlendMode.srcIn,
+                      ),
+                    ),
+                    SizedBox(width: 16), // เพิ่มช่องว่างระหว่าง Avatar กับ Text
+                    Column(
+                      crossAxisAlignment:
+                          CrossAxisAlignment.start, // ทำให้ข้อความชิดซ้าย
                       children: [
-                        Image.asset(
-                          'assets/images/search.png',
-                          width: 27.0,
-                          height: 27.0,
-                          color: const Color(0xFF8CA4FF),
-                        ),
-                        const SizedBox(width: 19.0),
-                        Expanded(
-                          child: TextField(
-                            decoration: InputDecoration(
-                              hintText: "Search for ports",
-                              hintStyle: GoogleFonts.dmSans(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w400,
-                                color: Colors.grey[400],
-                              ),
-                              border: InputBorder.none,
-                            ),
+                        Text(
+                          "What’s on your mind ?",
+                          style: GoogleFonts.dmSans(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w300,
+                            color: Color(0xFFFFFFFF),
                           ),
                         ),
-                        Image.asset(
-                          'assets/images/three-line.png',
-                          width: 30.0,
-                          height: 18.0,
-                          color: const Color(0xFF8CA4FF),
+                        Text(
+                          "Share your thoughts here ...",
+                          style: GoogleFonts.dmSans(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w200,
+                            color: Color(0xFFFFFFFF),
+                          ),
                         ),
                       ],
                     ),
-                  ),
-                ),
+                    Spacer(), // ใช้ Spacer เพื่อให้ notification ชิดขวา
+                    CircleAvatar(
+                      radius: 20,
+                      backgroundColor: const Color(0xFFDAFB59),
+                      child: Image.asset(
+                        'assets/images/notification.png',
+                        width: 40.0,
+                        height: 40.0,
+                      ),
+                    ),
+                  ],
+                )
               ],
             ),
           ),
@@ -383,6 +466,7 @@ class _SubjectManagementState extends State<SubjectManagement> {
                             itemCount: useItem.length,
                             itemBuilder: (context, index) {
                               final subject = useItem[index];
+                              final id = subject['id'];
                               final imageUrl = subject['image'];
                               final title = subject['title'] ?? 'No Title';
                               final description = subject['description'] ??
@@ -390,7 +474,7 @@ class _SubjectManagementState extends State<SubjectManagement> {
                               final publishedDate = DateTime.tryParse(
                                   subject['published_date'] ?? '');
                               final formattedDate = publishedDate != null
-                                  ? DateFormat('hh:mm a · dd/MM/yyyy')
+                                  ? DateFormat('dd MMMM yyyy  hh:mm a')
                                       .format(publishedDate)
                                   : 'N/A';
 
@@ -430,20 +514,260 @@ class _SubjectManagementState extends State<SubjectManagement> {
                                       ],
                                     ),
                                     child: Padding(
-                                      padding: const EdgeInsets.all(16.0),
+                                      padding: const EdgeInsets.all(22.0),
                                       child: Column(
                                         crossAxisAlignment:
                                             CrossAxisAlignment.start,
                                         children: [
-                                          Text(
-                                            title,
-                                            style: GoogleFonts.dmSans(
-                                              fontSize: 18,
-                                              fontWeight: FontWeight.bold,
-                                              color: const Color(0xFF355FFF),
-                                            ),
+                                          Row(
+                                            crossAxisAlignment: CrossAxisAlignment
+                                                .start, // ทำให้ Column ชิดขอบบนสุด
+                                            mainAxisAlignment: MainAxisAlignment
+                                                .spaceBetween, // กระจายเนื้อหาทั้งสองด้าน
+                                            children: [
+                                              Row(
+                                                children: [
+                                                  CircleAvatar(
+                                                    radius: 20,
+                                                    child: Image.asset(
+                                                      'assets/images/avatar.png',
+                                                      width: 40.0,
+                                                      height: 40.0,
+                                                      colorBlendMode:
+                                                          BlendMode.srcIn,
+                                                    ),
+                                                  ),
+                                                  SizedBox(
+                                                      width:
+                                                          24), // เพิ่มช่องว่างระหว่าง Avatar กับ Column
+                                                  Column(
+                                                    crossAxisAlignment:
+                                                        CrossAxisAlignment
+                                                            .start, // ทำให้ Text ชิดซ้าย
+                                                    children: [
+                                                      Text(
+                                                        "User Name",
+                                                        style:
+                                                            GoogleFonts.dmSans(
+                                                          fontSize: 14,
+                                                          fontWeight:
+                                                              FontWeight.w400,
+                                                          color: const Color(
+                                                              0xFF111111),
+                                                        ),
+                                                      ),
+                                                      Text(
+                                                        formattedDate,
+                                                        style:
+                                                            GoogleFonts.dmSans(
+                                                          fontSize: 10,
+                                                          fontWeight:
+                                                              FontWeight.w400,
+                                                          color: const Color(
+                                                              0xFF94A2B8),
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ],
+                                              ),
+                                              GestureDetector(
+                                                onTap: () {
+                                                  showModalBottomSheet(
+                                                    context: context,
+                                                    shape:
+                                                        RoundedRectangleBorder(
+                                                      borderRadius:
+                                                          BorderRadius.vertical(
+                                                        top:
+                                                            Radius.circular(16),
+                                                      ),
+                                                    ),
+                                                    builder:
+                                                        (BuildContext context) {
+                                                      return Container(
+                                                        padding:
+                                                            const EdgeInsets
+                                                                .all(16.0),
+                                                        decoration:
+                                                            BoxDecoration(
+                                                          color: Color(
+                                                              0xFFEBEFFF), // สีพื้นหลังของ modal
+                                                          borderRadius:
+                                                              BorderRadius
+                                                                  .vertical(
+                                                            top:
+                                                                Radius.circular(
+                                                                    16),
+                                                          ),
+                                                        ),
+                                                        child: Column(
+                                                          mainAxisSize:
+                                                              MainAxisSize.min,
+                                                          children: [
+                                                            Container(
+                                                              width:
+                                                                  42, // Ensures the container takes up full width
+                                                              height:
+                                                                  5, // You can specify the height you want
+                                                              decoration:
+                                                                  BoxDecoration(
+                                                                color: Color(
+                                                                    0xFFCBD5E0), // Set the background color to red
+                                                                borderRadius:
+                                                                    BorderRadius
+                                                                        .circular(
+                                                                            25), // Set the border radius to 25 for rounded corners
+                                                              ),
+                                                            ),
+                                                            SizedBox(
+                                                                height: 10),
+                                                            // เพิ่ม Container รอบๆ Column เพื่อกำหนดพื้นหลัง
+                                                            Container(
+                                                              color: const Color
+                                                                  .fromARGB(
+                                                                  255,
+                                                                  240,
+                                                                  240,
+                                                                  240), // กำหนดสีพื้นหลังที่นี่
+                                                              child: Column(
+                                                                children: [
+                                                                  // ListTile สำหรับ Edit
+                                                                  Container(
+                                                                    decoration:
+                                                                        BoxDecoration(
+                                                                      color: Colors
+                                                                          .white, // พื้นหลังของแต่ละรายการ
+                                                                      borderRadius:
+                                                                          BorderRadius
+                                                                              .only(
+                                                                        topLeft:
+                                                                            Radius.circular(12), // มุมบนซ้าย
+                                                                        topRight:
+                                                                            Radius.circular(12), // มุมบนขวา
+                                                                      ),
+                                                                    ),
+                                                                    child:
+                                                                        ListTile(
+                                                                      leading:
+                                                                          SvgPicture
+                                                                              .asset(
+                                                                        'assets/images/edit_svg.svg', // ไฟล์ SVG
+                                                                        fit: BoxFit
+                                                                            .cover,
+                                                                        color: const Color(
+                                                                            0xff355FFF), // สีของไอคอน
+                                                                      ),
+                                                                      title:
+                                                                          Text(
+                                                                        'Edit post',
+                                                                        style: GoogleFonts
+                                                                            .dmSans(
+                                                                          fontSize:
+                                                                              14,
+                                                                          fontWeight:
+                                                                              FontWeight.w400,
+                                                                          color:
+                                                                              Color(0xFF000000),
+                                                                        ),
+                                                                      ),
+                                                                      onTap:
+                                                                          () {
+                                                                        final existingData =
+                                                                            {
+                                                                          'id':
+                                                                              subject['id'],
+                                                                          'description':
+                                                                              subject['description'],
+                                                                          'image':
+                                                                              subject['image'],
+                                                                          'dateTime':
+                                                                              subject['published_date']
+                                                                        };
+
+                                                                        Navigator
+                                                                            .push(
+                                                                          context,
+                                                                          MaterialPageRoute(
+                                                                            builder: (context) =>
+                                                                                SubjectAddEdit(
+                                                                              isEdit: true,
+                                                                              initialData: existingData,
+                                                                            ),
+                                                                          ),
+                                                                        );
+                                                                      },
+                                                                    ),
+                                                                  ),
+
+                                                                  // ListTile สำหรับ Delete
+                                                                  Container(
+                                                                    decoration:
+                                                                        BoxDecoration(
+                                                                      color: Colors
+                                                                          .white, // พื้นหลังของแต่ละรายการ
+                                                                      borderRadius:
+                                                                          BorderRadius
+                                                                              .only(
+                                                                        bottomLeft:
+                                                                            Radius.circular(12), // มุมบนซ้าย
+                                                                        bottomRight:
+                                                                            Radius.circular(12), // มุมบนขวา
+                                                                      ),
+                                                                    ),
+                                                                    child:
+                                                                        ListTile(
+                                                                      leading:
+                                                                          SvgPicture
+                                                                              .asset(
+                                                                        'assets/images/delete_svg.svg', // ไฟล์ SVG
+                                                                        fit: BoxFit
+                                                                            .cover,
+                                                                        color: const Color(
+                                                                            0xffED4B9E), // สีของไอคอน
+                                                                      ),
+                                                                      title:
+                                                                          Text(
+                                                                        'Delete post',
+                                                                        style: GoogleFonts
+                                                                            .dmSans(
+                                                                          fontSize:
+                                                                              14,
+                                                                          fontWeight:
+                                                                              FontWeight.w400,
+                                                                          color:
+                                                                              Color(0xFF000000),
+                                                                        ),
+                                                                      ),
+                                                                      onTap:
+                                                                          () {
+                                                                        confirmDelete(
+                                                                            context,
+                                                                            subject['id']);
+                                                                      },
+                                                                    ),
+                                                                  ),
+                                                                ],
+                                                              ),
+                                                            ),
+                                                          ],
+                                                        ),
+                                                      );
+                                                    },
+                                                  );
+                                                },
+                                                child: SvgPicture.asset(
+                                                  'assets/images/dot.svg', // ไฟล์ SVG
+                                                  fit: BoxFit.cover,
+                                                  color: const Color(
+                                                      0xff94A2B8), // สีของไอคอน
+                                                ),
+                                              ),
+                                            ],
                                           ),
-                                          const SizedBox(height: 8.0),
+                                          SizedBox(
+                                            height: 15,
+                                          ),
                                           Text(
                                             description,
                                             style: GoogleFonts.dmSans(
@@ -451,18 +775,20 @@ class _SubjectManagementState extends State<SubjectManagement> {
                                               fontWeight: FontWeight.normal,
                                               color: Colors.grey[700],
                                             ),
-                                            maxLines: 3,
+                                            maxLines: 4,
+                                            overflow: TextOverflow.ellipsis,
                                           ),
                                           if (imageUrl.isNotEmpty)
                                             Padding(
-                                              padding:
-                                                  const EdgeInsets.only(top: 8),
+                                              padding: const EdgeInsets.only(
+                                                  top: 15),
                                               child: ClipRRect(
                                                 borderRadius:
-                                                    BorderRadius.circular(8.0),
+                                                    BorderRadius.circular(12.0),
                                                 child: Image.network(
                                                   imageUrl,
                                                   fit: BoxFit.cover,
+                                                  height: 137,
                                                   width: double.infinity,
                                                   errorBuilder: (context, error,
                                                       stackTrace) {
@@ -487,13 +813,49 @@ class _SubjectManagementState extends State<SubjectManagement> {
                                           //       height: 200,
                                           //     ),
                                           //   ),
-                                          const SizedBox(height: 8.0),
-                                          Text(
-                                            formattedDate,
-                                            style: GoogleFonts.dmSans(
-                                              fontSize: 12,
-                                              fontWeight: FontWeight.normal,
-                                              color: Colors.grey[600],
+                                          SizedBox(height: 22),
+                                          Container(
+                                            width: double
+                                                .infinity, // Ensures the container takes up full width
+                                            height:
+                                                35, // You can specify the height you want
+                                            decoration: BoxDecoration(
+                                              color: Color(
+                                                  0xFFF0F0F0), // Set the background color to red
+                                              borderRadius: BorderRadius.circular(
+                                                  25), // Set the border radius to 25 for rounded corners
+                                            ),
+                                            child: Align(
+                                              alignment: Alignment
+                                                  .centerLeft, // Align the text to the left
+                                              child: Padding(
+                                                padding: const EdgeInsets
+                                                    .symmetric(
+                                                    horizontal: 4,
+                                                    vertical:
+                                                        6), // Optional padding for some space from the left
+                                                child: Row(
+                                                  children: [
+                                                    Image.asset(
+                                                      'assets/images/avatar.png',
+                                                      width: 27.0,
+                                                      height: 27.0,
+                                                      colorBlendMode:
+                                                          BlendMode.srcIn,
+                                                    ),
+                                                    SizedBox(width: 9),
+                                                    Text(
+                                                      'What about your opinion ?',
+                                                      style: TextStyle(
+                                                          fontSize: 11,
+                                                          color:
+                                                              Color(0xFF747474),
+                                                          fontWeight:
+                                                              FontWeight.w200),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
                                             ),
                                           ),
                                         ],
@@ -509,90 +871,8 @@ class _SubjectManagementState extends State<SubjectManagement> {
                     ),
                   ),
           ),
-          SizedBox(
-            height: 113,
-            child: Align(
-              alignment: Alignment.topCenter,
-              child: Padding(
-                padding:
-                    const EdgeInsets.only(top: 15.0, left: 16.0, right: 16.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    // ปุ่ม home อยู่ทางซ้าย
-                    SizedBox(
-                      height: 48,
-                      width: 48,
-                      child: ElevatedButton(
-                        onPressed: () {
-                          // Action สำหรับปุ่ม home
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.white, // สีพื้นหลังขาว
-                          shape: CircleBorder(),
-                          padding: EdgeInsets.zero,
-                          side: BorderSide.none, // ไม่มีขอบ
-                          elevation: 0, // ไม่ให้เงาปุ่ม
-                        ),
-                        child: Icon(
-                          Icons.home, // ไอคอน home
-                          color: const Color(0xFF355FFF),
-                          size: 48,
-                        ),
-                      ),
-                    ),
-                    // ระยะห่างระหว่างปุ่ม home กับปุ่ม +
-                    const SizedBox(width: 60), // ห่างกัน 24 หน่วย
-                    // ปุ่ม + อยู่ตรงกลาง
-                    SizedBox(
-                      height: 48,
-                      width: 84, // กำหนดความกว้างของปุ่ม
-                      child: ElevatedButton(
-                        onPressed: _showAddSubjectDialog, // แสดง Dialog
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor:
-                              const Color(0xFF355FFF), // สีพื้นหลังฟ้า
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(24), // มุมโค้ง
-                          ),
-                          padding: EdgeInsets.zero,
-                          elevation: 0, // ไม่ให้เงาปุ่ม
-                        ),
-                        child: Icon(
-                          Icons.add, // ไอคอน +
-                          color: Colors.white,
-                          size: 28, // ขนาดไอคอน
-                        ),
-                      ),
-                    ),
-                    // ระยะห่างระหว่างปุ่ม + กับปุ่ม profile
-                    const SizedBox(width: 60), // ห่างกัน 24 หน่วย
-                    // ปุ่ม profile อยู่ทางขวา
-                    SizedBox(
-                      height: 48,
-                      width: 48,
-                      child: ElevatedButton(
-                        onPressed: () {
-                          // Action สำหรับปุ่ม profile
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.white, // สีพื้นหลังขาว
-                          shape: CircleBorder(),
-                          padding: EdgeInsets.zero,
-                          side: BorderSide.none, // ไม่มีขอบ
-                          elevation: 0, // ไม่ให้เงาปุ่ม
-                        ),
-                        child: Icon(
-                          Icons.person, // ไอคอน profile
-                          color: const Color(0xFF355FFF),
-                          size: 48,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
+          FooterNav(
+            pageName: "subject",
           ),
         ],
       ),

@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:flutter_svg/flutter_svg.dart';
 
 class SubjectDetail extends StatefulWidget {
   final Map<String, dynamic>? initialData;
@@ -26,9 +27,7 @@ class _SubjectDetailState extends State<SubjectDetail> {
   String? description;
   String? image;
   DateTime? selectedStartDate;
-  final double coverHeight = 227;
-  final double pictureHeight = 114;
-
+  final double coverHeight = 138;
   @override
   void initState() {
     super.initState();
@@ -47,7 +46,7 @@ class _SubjectDetailState extends State<SubjectDetail> {
     }
   }
 
-  void confirmDelete(BuildContext context) {
+  void confirmDelete(BuildContext context, int? id) {
     showDialog(
       context: context,
       barrierDismissible: false, // ไม่ให้กดปิดนอกกรอบ Dialog
@@ -62,28 +61,17 @@ class _SubjectDetailState extends State<SubjectDetail> {
             children: [
               Image.asset(
                 'assets/images/confirm_delete.png', // ไอคอนรูปคนทิ้งขยะ
-                width: 169,
-                height: 151,
+                width: 275,
+                height: 227,
               ),
               const SizedBox(height: 16),
               Text(
                 'Are you sure you want to delete this post?',
                 textAlign: TextAlign.center,
                 style: GoogleFonts.dmSans(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500,
-                  color: Colors.black,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                '"${title ?? "porst"}"', // แสดงชื่อของทุน
-                textAlign: TextAlign.center,
-                style: GoogleFonts.dmSans(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w400,
-                  fontStyle: FontStyle.italic,
-                  color: const Color(0xFF64738B),
+                  fontSize: 24,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF000000),
                 ),
               ),
             ],
@@ -92,7 +80,7 @@ class _SubjectDetailState extends State<SubjectDetail> {
             // ปุ่ม Cancel
             Padding(
               padding: const EdgeInsets.fromLTRB(
-                  0, 34, 0, 0), // ระยะห่าง ซ้าย-บน-ขวา-ล่าง
+                  0, 0, 0, 0), // ระยะห่าง ซ้าย-บน-ขวา-ล่าง
               child: Row(
                 mainAxisAlignment:
                     MainAxisAlignment.spaceBetween, // ระยะห่างระหว่างปุ่ม
@@ -128,7 +116,7 @@ class _SubjectDetailState extends State<SubjectDetail> {
                     child: ElevatedButton(
                       onPressed: () async {
                         Navigator.of(dialogContext).pop(); // ปิด Dialog
-                        await submitDeleteData(); // ดำเนินการลบข้อมูล
+                        await submitDeleteData(id); // ดำเนินการลบข้อมูล
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFFD5448E),
@@ -155,7 +143,7 @@ class _SubjectDetailState extends State<SubjectDetail> {
     );
   }
 
-  Future<void> submitDeleteData() async {
+  Future<void> submitDeleteData(int? id) async {
     final String apiUrl =
         "https://capstone24.sit.kmutt.ac.th/un2/api/subject/delete/${id}";
 
@@ -197,8 +185,6 @@ class _SubjectDetailState extends State<SubjectDetail> {
 
   @override
   Widget build(BuildContext context) {
-    final top = coverHeight - pictureHeight / 2;
-
     return Scaffold(
       backgroundColor: const Color(0xffFFFFFF),
       body: Column(
@@ -211,11 +197,11 @@ class _SubjectDetailState extends State<SubjectDetail> {
                   alignment: Alignment.center,
                   children: [
                     Container(
-                      margin: EdgeInsets.only(bottom: pictureHeight * 2.5),
+                      margin: EdgeInsets.only(bottom: 0),
                       color: const Color(0xFF355FFF),
                       height: coverHeight,
                       padding: const EdgeInsets.only(
-                        top: 58.0,
+                        top: 72.0,
                         right: 16,
                         left: 16,
                         bottom: 22,
@@ -264,243 +250,328 @@ class _SubjectDetailState extends State<SubjectDetail> {
                                   ),
                                 ),
                               ),
-                              GestureDetector(
-                                onTap: () {
-                                  confirmDelete(context);
-                                  //submitDeleteData(); // ไม่ต้องมี Navigator.pop ตรงนี้
-                                },
-                                child: CircleAvatar(
-                                  radius: 20,
-                                  backgroundColor: const Color(0xFFED4B9E),
-                                  child: Image.asset(
-                                    'assets/images/icon_delete.png',
-                                    width: 20.0,
-                                    height: 20.0,
-                                    colorBlendMode: BlendMode.srcIn,
-                                  ),
+                              Text(
+                                "Post",
+                                style: GoogleFonts.dmSans(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.w500,
+                                  color: const Color(0xFFFFFFFF),
+                                ),
+                              ),
+                              CircleAvatar(
+                                radius: 20,
+                                backgroundColor: const Color(0xFFDAFB59),
+                                child: Image.asset(
+                                  'assets/images/notification.png',
+                                  width: 40.0,
+                                  height: 40.0,
                                 ),
                               ),
                             ],
                           ),
-                          const SizedBox(height: 16),
-                          Center(
-                            child: Text(
-                              title ?? "Scholarship",
-                              style: GoogleFonts.dmSans(
-                                fontSize: 20,
-                                fontStyle: FontStyle.normal,
-                                fontWeight: FontWeight.w500,
-                                height: 1.4,
-                                color: const Color.fromARGB(255, 255, 255, 255),
-                              ),
-                              maxLines:
-                                  1, // Add this line to limit the text to 1 line
-                              overflow: TextOverflow
-                                  .ellipsis, // Optional: Handles text overflow with ellipsis if the text is too long
-                            ),
-                          )
                         ],
-                      ),
-                    ),
-                    Positioned(
-                      top: top,
-                      child: Center(
-                        child: image != null ||
-                                image != "assets/images/scholarship_program.png"
-                            ? ClipRRect(
-                                borderRadius: BorderRadius.circular(12),
-                                child: Image.network(
-                                  image ?? '',
-                                  width: 245,
-                                  height: 338,
-                                  fit: BoxFit.cover,
-                                  errorBuilder: (context, error, stackTrace) =>
-                                      ClipRRect(
-                                    borderRadius: BorderRadius.circular(12),
-                                    child: Image.asset(
-                                      'assets/images/scholarship_program.png',
-                                      width: 245,
-                                      height: 338,
-                                      fit: BoxFit.cover,
-                                    ),
-                                  ),
-                                ),
-                              )
-                            : ClipRRect(
-                                borderRadius: BorderRadius.circular(12),
-                                child: Image.asset(
-                                  'assets/images/scholarship_program.png',
-                                  width: 245,
-                                  height: 338,
-                                  fit: BoxFit.cover,
-                                ),
-                              ),
                       ),
                     )
                   ],
                 ),
-
-                const SizedBox(height: 22),
-
-                // Details Section
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 14.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Scholarship Name
-                      Text(
-                        'Scholarship Name*',
-                        style: GoogleFonts.dmSans(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w500,
-                          color: Colors.black,
+                  padding: const EdgeInsets.all(16.0),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(10.0),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.grey.withOpacity(0.2),
+                          spreadRadius: 2,
+                          blurRadius: 5,
+                          offset: const Offset(0, 3),
                         ),
-                      ),
-                      const SizedBox(height: 16),
-                      Padding(
-                        padding: const EdgeInsets.only(left: 11),
-                        child: Text(
-                          title ?? "No title available.",
-                          maxLines: 1, // จำกัดให้แสดงเพียง 1 บรรทัด
-                          overflow: TextOverflow
-                              .ellipsis, // แสดง "..." หากข้อความยาวเกิน
-                          style: GoogleFonts.dmSans(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w400,
-                            color: Color(0xFF64738B),
-                          ),
-                        ),
-                      ),
-
-                      const SizedBox(height: 24),
-
-                      // Description
-                      Container(
-                        height: 414,
-                        width: double.infinity,
-                        padding: const EdgeInsets.all(14),
-                        decoration: BoxDecoration(
-                          border: Border.all(
-                            color: Color(0xFFCBD5E0),
-                          ),
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Description*',
-                              style: GoogleFonts.dmSans(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            // TextField
-                            Container(
-                              height:
-                                  353, // Adjust this height to fit your design
-                              width: double.infinity,
-                              decoration: BoxDecoration(
-                                border: Border.all(
-                                  color: Color(0xFFCBD5E0),
-                                ),
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                              child: Padding(
-                                padding: const EdgeInsets.all(14),
-                                child: Text(
-                                  description ?? 'Not Specified',
-                                  style: GoogleFonts.dmSans(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w400,
-                                    color: Color(0xFF64738B),
+                      ],
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(22.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment
+                                .start, // ทำให้ Column ชิดขอบบนสุด
+                            mainAxisAlignment: MainAxisAlignment
+                                .spaceBetween, // กระจายเนื้อหาทั้งสองด้าน
+                            children: [
+                              Row(
+                                children: [
+                                  CircleAvatar(
+                                    radius: 20,
+                                    child: Image.asset(
+                                      'assets/images/avatar.png',
+                                      width: 40.0,
+                                      height: 40.0,
+                                      colorBlendMode: BlendMode.srcIn,
+                                    ),
                                   ),
+                                  SizedBox(
+                                      width:
+                                          24), // เพิ่มช่องว่างระหว่าง Avatar กับ Column
+                                  Column(
+                                    crossAxisAlignment: CrossAxisAlignment
+                                        .start, // ทำให้ Text ชิดซ้าย
+                                    children: [
+                                      Text(
+                                        "User Name",
+                                        style: GoogleFonts.dmSans(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w400,
+                                          color: const Color(0xFF111111),
+                                        ),
+                                      ),
+                                      Text(
+                                        selectedStartDate.toString(),
+                                        style: GoogleFonts.dmSans(
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.w400,
+                                          color: const Color(0xFF94A2B8),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                              GestureDetector(
+                                onTap: () {
+                                  showModalBottomSheet(
+                                    context: context,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.vertical(
+                                        top: Radius.circular(16),
+                                      ),
+                                    ),
+                                    builder: (BuildContext context) {
+                                      return Container(
+                                        padding: const EdgeInsets.all(16.0),
+                                        decoration: BoxDecoration(
+                                          color: Color(
+                                              0xFFEBEFFF), // สีพื้นหลังของ modal
+                                          borderRadius: BorderRadius.vertical(
+                                            top: Radius.circular(16),
+                                          ),
+                                        ),
+                                        child: Column(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Container(
+                                              width:
+                                                  42, // Ensures the container takes up full width
+                                              height:
+                                                  5, // You can specify the height you want
+                                              decoration: BoxDecoration(
+                                                color: Color(
+                                                    0xFFCBD5E0), // Set the background color to red
+                                                borderRadius: BorderRadius.circular(
+                                                    25), // Set the border radius to 25 for rounded corners
+                                              ),
+                                            ),
+                                            SizedBox(height: 10),
+                                            // เพิ่ม Container รอบๆ Column เพื่อกำหนดพื้นหลัง
+                                            Container(
+                                              color: const Color.fromARGB(
+                                                  255,
+                                                  240,
+                                                  240,
+                                                  240), // กำหนดสีพื้นหลังที่นี่
+                                              child: Column(
+                                                children: [
+                                                  // ListTile สำหรับ Edit
+                                                  Container(
+                                                    decoration: BoxDecoration(
+                                                      color: Colors
+                                                          .white, // พื้นหลังของแต่ละรายการ
+                                                      borderRadius:
+                                                          BorderRadius.only(
+                                                        topLeft: Radius.circular(
+                                                            12), // มุมบนซ้าย
+                                                        topRight:
+                                                            Radius.circular(
+                                                                12), // มุมบนขวา
+                                                      ),
+                                                    ),
+                                                    child: ListTile(
+                                                      leading: SvgPicture.asset(
+                                                        'assets/images/edit_svg.svg', // ไฟล์ SVG
+                                                        fit: BoxFit.cover,
+                                                        color: const Color(
+                                                            0xff355FFF), // สีของไอคอน
+                                                      ),
+                                                      title: Text(
+                                                        'Edit post',
+                                                        style:
+                                                            GoogleFonts.dmSans(
+                                                          fontSize: 14,
+                                                          fontWeight:
+                                                              FontWeight.w400,
+                                                          color:
+                                                              Color(0xFF000000),
+                                                        ),
+                                                      ),
+                                                      onTap: () {
+                                                        Navigator.pop(context);
+                                                        print('Edit selected');
+                                                        // เพิ่มฟังก์ชัน Edit ที่นี่
+                                                      },
+                                                    ),
+                                                  ),
+
+                                                  // ListTile สำหรับ Delete
+                                                  Container(
+                                                    decoration: BoxDecoration(
+                                                      color: Colors
+                                                          .white, // พื้นหลังของแต่ละรายการ
+                                                      borderRadius:
+                                                          BorderRadius.only(
+                                                        bottomLeft:
+                                                            Radius.circular(
+                                                                12), // มุมบนซ้าย
+                                                        bottomRight:
+                                                            Radius.circular(
+                                                                12), // มุมบนขวา
+                                                      ),
+                                                    ),
+                                                    child: ListTile(
+                                                      leading: SvgPicture.asset(
+                                                        'assets/images/delete_svg.svg', // ไฟล์ SVG
+                                                        fit: BoxFit.cover,
+                                                        color: const Color(
+                                                            0xffED4B9E), // สีของไอคอน
+                                                      ),
+                                                      title: Text(
+                                                        'Delete post',
+                                                        style:
+                                                            GoogleFonts.dmSans(
+                                                          fontSize: 14,
+                                                          fontWeight:
+                                                              FontWeight.w400,
+                                                          color:
+                                                              Color(0xFF000000),
+                                                        ),
+                                                      ),
+                                                      onTap: () {
+                                                        confirmDelete(
+                                                            context, id);
+                                                      },
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      );
+                                    },
+                                  );
+                                },
+                                child: SvgPicture.asset(
+                                  'assets/images/dot.svg', // ไฟล์ SVG
+                                  fit: BoxFit.cover,
+                                  color: const Color(0xff94A2B8), // สีของไอคอน
+                                ),
+                              ),
+                            ],
+                          ),
+                          SizedBox(
+                            height: 15,
+                          ),
+                          Text(
+                            description.toString(),
+                            style: GoogleFonts.dmSans(
+                              fontSize: 14,
+                              fontWeight: FontWeight.normal,
+                              color: Colors.grey[700],
+                            ),
+                          ),
+                          if (image!.isNotEmpty)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 15),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(12.0),
+                                child: Image.network(
+                                  image.toString(),
+                                  fit: BoxFit.cover,
+                                  width: double.infinity,
+                                  errorBuilder: (context, error, stackTrace) {
+                                    return Image.asset(
+                                      'assets/images/scholarship_program.png', // รูปภาพ fallback
+                                      fit: BoxFit.cover,
+                                      width: double.infinity,
+                                      height: 200,
+                                    );
+                                  },
                                 ),
                               ),
                             ),
-                          ],
-                        ),
+                          // else
+                          //   ClipRRect(
+                          //     borderRadius:
+                          //         BorderRadius.circular(8.0),
+                          //     child: Image.asset(
+                          //       'assets/images/scholarship_program.png', // รูปภาพ fallback
+                          //       fit: BoxFit.cover,
+                          //       width: double.infinity,
+                          //       height: 200,
+                          //     ),
+                          //   ),
+                          SizedBox(height: 6),
+                        ],
                       ),
-
-                      const SizedBox(height: 30),
-                    ],
+                    ),
                   ),
                 ),
               ],
             ),
           ),
           SizedBox(
-            height: 113,
+            height: 88,
             // color: const Color.fromRGBO(104, 197, 123, 1),
             child: Align(
               alignment: Alignment.topCenter,
               child: Padding(
                 padding:
                     const EdgeInsets.only(top: 15.0, left: 16.0, right: 16.0),
-                child: SizedBox(
-                  height: 48,
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: () {
-                      // Prepare data to pass
-                      final existingData = {
-                        'id': id,
-                        'title': title,
-                        'description': description,
-                        'image': image,
-                        'published_date': selectedStartDate?.toIso8601String(),
-                      };
-
-                      Navigator.push(
-                        context,
-                        PageRouteBuilder(
-                          pageBuilder:
-                              (context, animation, secondaryAnimation) =>
-                                  ProviderAddEdit(
-                                      isEdit: true, initialData: existingData),
-                          transitionsBuilder:
-                              (context, animation, secondaryAnimation, child) {
-                            const begin = 0.0;
-                            const end = 1.0;
-                            const curve = Curves.easeOut;
-
-                            var tween = Tween(begin: begin, end: end)
-                                .chain(CurveTween(curve: curve));
-                            return FadeTransition(
-                              opacity: animation.drive(tween),
-                              child: child,
-                            );
-                          },
-                          transitionDuration: const Duration(milliseconds: 300),
-                        ),
-                      );
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF355FFF),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          "Edit Post",
-                          style: GoogleFonts.dmSans(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w500,
-                            fontSize: 16,
+                child: Container(
+                  width: double
+                      .infinity, // Ensures the container takes up full width
+                  height: 40, // You can specify the height you want
+                  decoration: BoxDecoration(
+                    color: Color(0xFFF0F0F0), // Set the background color to red
+                    borderRadius: BorderRadius.circular(
+                        25), // Set the border radius to 25 for rounded corners
+                  ),
+                  child: Align(
+                    alignment:
+                        Alignment.centerLeft, // Align the text to the left
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 4,
+                          vertical:
+                              6), // Optional padding for some space from the left
+                      child: Row(
+                        children: [
+                          Image.asset(
+                            'assets/images/avatar.png',
+                            width: 27.0,
+                            height: 27.0,
+                            colorBlendMode: BlendMode.srcIn,
                           ),
-                        ),
-                        const SizedBox(width: 8),
-                        Image.asset(
-                          'assets/images/add_new_scholarship.png',
-                          width: 21.0,
-                          height: 21.0,
-                        ),
-                      ],
+                          SizedBox(width: 9),
+                          Text(
+                            'What about your opinion ?',
+                            style: TextStyle(
+                                fontSize: 11,
+                                color: Color(0xFF747474),
+                                fontWeight: FontWeight.w200),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),

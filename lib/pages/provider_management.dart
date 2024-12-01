@@ -1,5 +1,6 @@
 import 'package:edugo/pages/provider_add.dart';
 import 'package:edugo/pages/provider_detail.dart';
+import 'package:edugo/pages/subject_manage.dart';
 import 'package:edugo/services/scholarship_card.dart';
 import 'package:edugo/services/status_box.dart';
 import 'package:flutter/cupertino.dart';
@@ -115,22 +116,49 @@ class _ProviderManagementState extends State<ProviderManagement> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    CircleAvatar(
-                      radius: 20,
-                      backgroundColor: const Color(0xFFDAFB59),
-                      child: Image.asset(
-                        'assets/images/back_button.png',
-                        width: 20.0,
-                        height: 20.0,
-                        color: const Color(0xFF355FFF),
-                        colorBlendMode: BlendMode.srcIn,
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.pushReplacement(
+                          context,
+                          PageRouteBuilder(
+                            pageBuilder:
+                                (context, animation, secondaryAnimation) =>
+                                    const SubjectManagement(),
+                            transitionsBuilder: (context, animation,
+                                secondaryAnimation, child) {
+                              const begin = 0.0;
+                              const end = 1.0;
+                              const curve = Curves.easeOut;
+
+                              var tween = Tween(begin: begin, end: end)
+                                  .chain(CurveTween(curve: curve));
+                              return FadeTransition(
+                                opacity: animation.drive(tween),
+                                child: child,
+                              );
+                            },
+                            transitionDuration:
+                                const Duration(milliseconds: 300),
+                          ),
+                        );
+                      },
+                      child: CircleAvatar(
+                        radius: 20,
+                        backgroundColor: const Color(0xFFDAFB59),
+                        child: Image.asset(
+                          'assets/images/back_button.png',
+                          width: 20.0,
+                          height: 20.0,
+                          color: const Color(0xFF355FFF),
+                          colorBlendMode: BlendMode.srcIn,
+                        ),
                       ),
                     ),
                     CircleAvatar(
                       radius: 20,
                       backgroundColor: const Color(0xFFC0CDFF),
                       child: Image.asset(
-                        'assets/images/website_icon.png',
+                        'assets/images/brower.png',
                         width: 40.0,
                         height: 40.0,
                       ),
