@@ -198,10 +198,45 @@ class _ProviderAddEditState extends State<ProviderAddEdit> {
     });
   }
 
+  // void _onImagePicked(Uint8List? image) {
+  //   setState(() {
+  //     _imageBytes = image;
+  //   });
+  // }
+
   void _onImagePicked(Uint8List? image) {
+    if (image != null) {
+      // ตรวจสอบประเภทของรูป เช่น JPEG หรือ PNG
+      if (!_isValidImage(image)) {
+        showError("Invalid image type. Please upload a JPEG or PNG file.");
+        return;
+      }
+      // ตรวจสอบขนาดไฟล์ เช่น ต้องไม่เกิน 5MB
+      if (image.length > 5 * 1024 * 1024) {
+        showError(
+            "Image is too large. Please upload an image smaller than 5MB.");
+        return;
+      }
+    }
     setState(() {
       _imageBytes = image;
     });
+  }
+
+// ฟังก์ชันสำหรับตรวจสอบประเภทของรูป
+  bool _isValidImage(Uint8List imageBytes) {
+    // ตรวจสอบ MIME type ของรูป
+    final header =
+        imageBytes.sublist(0, 4); // ใช้ bytes แรกเพื่อตรวจสอบประเภทไฟล์
+    if (header[0] == 0xFF && header[1] == 0xD8 && header[2] == 0xFF) {
+      return true; // JPEG
+    } else if (header[0] == 0x89 &&
+        header[1] == 0x50 &&
+        header[2] == 0x4E &&
+        header[3] == 0x47) {
+      return true; // PNG
+    }
+    return false;
   }
 
   _attachPdfFile(Uint8List? fileBytes, String? filename) {

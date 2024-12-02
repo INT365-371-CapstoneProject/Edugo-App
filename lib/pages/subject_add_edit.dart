@@ -42,16 +42,58 @@ class _SubjectAddEditState extends State<SubjectAddEdit> {
       TextEditingController(); // Controller for description text field
 
   // Function to pick an image using ImagePicker
+  // Future<void> _pickImage() async {
+  //   final ImagePicker _picker = ImagePicker();
+  //   // Show a dialog or options for taking a photo or picking from the gallery
+  //   final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
+
+  //   if (image != null) {
+  //     setState(() {
+  //       _selectedImage = File(image.path); // Set the selected image file
+  //     });
+  //   }
+  // }
+
   Future<void> _pickImage() async {
     final ImagePicker _picker = ImagePicker();
-    // Show a dialog or options for taking a photo or picking from the gallery
     final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
 
     if (image != null) {
+      // ตรวจสอบชนิดไฟล์ (extension)
+      final String extension = image.path.split('.').last.toLowerCase();
+      if (extension != 'jpg' && extension != 'jpeg' && extension != 'png') {
+        _showErrorDialog('Image Type is JPG or PNG only');
+        return;
+      }
+
+      // ตรวจสอบขนาดไฟล์ (เช่น ไม่เกิน 5MB)
+      final int fileSize = await File(image.path).length();
+      if (fileSize > 5 * 1024 * 1024) {
+        // 5MB
+        _showErrorDialog('File more than 5MB');
+        return;
+      }
+
       setState(() {
-        _selectedImage = File(image.path); // Set the selected image file
+        _selectedImage = File(image.path); // เก็บไฟล์รูปที่ผ่านการตรวจสอบแล้ว
       });
     }
+  }
+
+  void _showErrorDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text('Image Type invalid'),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: Text('Ok'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override

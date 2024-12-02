@@ -26,19 +26,56 @@ class _HeaderProviderAddState extends State<HeaderProviderAdd> {
   // Function to pick an image
   Future<void> _pickImage() async {
     FilePickerResult? result = await FilePicker.platform.pickFiles(
-      type: FileType.image,
+      type: FileType.image, // เลือกเฉพาะไฟล์รูปภาพ
     );
 
     if (result != null && result.files.single.path != null) {
       final file = File(result.files.single.path!);
-      final bytes = await file.readAsBytes(); // อ่านไฟล์เป็น Bytes
+      final String extension =
+          result.files.single.extension?.toLowerCase() ?? '';
+      final int fileSize = await file.length(); // ขนาดไฟล์ในหน่วยไบต์
+
+      // ตรวจสอบชนิดไฟล์
+      if (extension != 'jpg' &&
+          extension != 'jpeg' &&
+          extension != 'png' &&
+          extension != 'svg') {
+        _showErrorDialog('กรุณาอัปโหลดไฟล์รูปแบบ JPG, PNG หรือ SVG เท่านั้น');
+        return;
+      }
+
+      // ตรวจสอบขนาดไฟล์ (จำกัดไม่เกิน 4MB)
+      if (fileSize > 4 * 1024 * 1024) {
+        _showErrorDialog('ไฟล์มีขนาดใหญ่เกิน 4MB');
+        return;
+      }
+
+      // อ่านไฟล์เป็น Bytes
+      final bytes = await file.readAsBytes();
 
       setState(() {
-        _imageBytes = bytes; // อัปเดต State
+        _imageBytes = bytes; // อัปเดต State ด้วยไฟล์ที่ผ่านการตรวจสอบแล้ว
       });
 
-      widget.onImagePicked(_imageBytes); // Pass the image back to parent widget
+      widget.onImagePicked(_imageBytes); // ส่งข้อมูลกลับไปยัง widget หลัก
     }
+  }
+
+// ฟังก์ชันแสดงข้อความแจ้งเตือนเมื่อมีข้อผิดพลาด
+  void _showErrorDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('ข้อผิดพลาด'),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('ตกลง'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
