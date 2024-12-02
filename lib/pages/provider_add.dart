@@ -233,9 +233,9 @@ class _ProviderAddEditState extends State<ProviderAddEdit> {
     request.fields['description'] = description ?? '';
     request.fields['posts_type'] = 'Announce';
     request.fields['publish_date'] =
-        '${selectedStartDate?.toUtc().toIso8601String().split('.')[0]}Z';
+        '${selectedStartDate?.toIso8601String().split('.')[0]}Z';
     request.fields['close_date'] =
-        '${selectedEndDate?.toUtc().toIso8601String().split('.')[0]}Z';
+        '${selectedEndDate?.toIso8601String().split('.')[0]}Z';
     request.fields['category_id'] = selectedCategory ?? '1';
     request.fields['country_id'] = selectedCountry ?? '1';
 
@@ -352,11 +352,11 @@ class _ProviderAddEditState extends State<ProviderAddEdit> {
     if (selectedStartDate?.toIso8601String() !=
         originalValues['publish_date']) {
       updatedFields['publish_date'] =
-          '${selectedStartDate?.toUtc().toIso8601String().split('.')[0]}Z';
+          '${selectedStartDate?.toIso8601String().split('.')[0]}Z';
     }
     if (selectedEndDate?.toIso8601String() != originalValues['close_date']) {
       updatedFields['close_date'] =
-          '${selectedEndDate?.toUtc().toIso8601String().split('.')[0]}Z';
+          '${selectedEndDate?.toIso8601String().split('.')[0]}Z';
     }
 
     // เพิ่มไฟล์ถ้ามีการเปลี่ยนแปลง

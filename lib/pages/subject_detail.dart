@@ -1,5 +1,6 @@
 import 'package:edugo/pages/provider_add.dart';
 import 'package:edugo/pages/provider_management.dart';
+import 'package:edugo/pages/subject_add_edit.dart';
 import 'package:edugo/pages/subject_manage.dart';
 import 'package:edugo/services/datetime_provider_add.dart';
 import 'package:flutter/foundation.dart';
@@ -348,123 +349,137 @@ class _SubjectDetailState extends State<SubjectDetail> {
                                       ),
                                     ),
                                     builder: (BuildContext context) {
-                                      return Container(
-                                        padding: const EdgeInsets.all(16.0),
-                                        decoration: BoxDecoration(
-                                          color: Color(
-                                              0xFFEBEFFF), // สีพื้นหลังของ modal
-                                          borderRadius: BorderRadius.vertical(
-                                            top: Radius.circular(16),
+                                      return FractionallySizedBox(
+                                        heightFactor:
+                                            0.45, // กำหนดความสูงเป็น 60% ของหน้าจอ
+                                        child: Container(
+                                          padding: const EdgeInsets.all(16.0),
+                                          decoration: BoxDecoration(
+                                            color: Color(0xFFEBEFFF),
+                                            borderRadius: BorderRadius.vertical(
+                                              top: Radius.circular(16),
+                                            ),
                                           ),
-                                        ),
-                                        child: Column(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            Container(
-                                              width:
-                                                  42, // Ensures the container takes up full width
-                                              height:
-                                                  5, // You can specify the height you want
-                                              decoration: BoxDecoration(
-                                                color: Color(
-                                                    0xFFCBD5E0), // Set the background color to red
-                                                borderRadius: BorderRadius.circular(
-                                                    25), // Set the border radius to 25 for rounded corners
+                                          child: Column(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Container(
+                                                width: 42,
+                                                height: 5,
+                                                decoration: BoxDecoration(
+                                                  color: Color(0xFFCBD5E0),
+                                                  borderRadius:
+                                                      BorderRadius.circular(25),
+                                                ),
                                               ),
-                                            ),
-                                            SizedBox(height: 10),
-                                            // เพิ่ม Container รอบๆ Column เพื่อกำหนดพื้นหลัง
-                                            Container(
-                                              color: const Color.fromARGB(
-                                                  255,
-                                                  240,
-                                                  240,
-                                                  240), // กำหนดสีพื้นหลังที่นี่
-                                              child: Column(
-                                                children: [
-                                                  // ListTile สำหรับ Edit
-                                                  Container(
-                                                    decoration: BoxDecoration(
-                                                      color: Colors
-                                                          .white, // พื้นหลังของแต่ละรายการ
-                                                      borderRadius:
-                                                          BorderRadius.only(
-                                                        topLeft: Radius.circular(
-                                                            12), // มุมบนซ้าย
-                                                        topRight:
-                                                            Radius.circular(
-                                                                12), // มุมบนขวา
-                                                      ),
-                                                    ),
-                                                    child: ListTile(
-                                                      leading: SvgPicture.asset(
-                                                        'assets/images/edit_svg.svg', // ไฟล์ SVG
-                                                        fit: BoxFit.cover,
-                                                        color: const Color(
-                                                            0xff355FFF), // สีของไอคอน
-                                                      ),
-                                                      title: Text(
-                                                        'Edit post',
-                                                        style:
-                                                            GoogleFonts.dmSans(
-                                                          fontSize: 14,
-                                                          fontWeight:
-                                                              FontWeight.w400,
-                                                          color:
-                                                              Color(0xFF000000),
+                                              SizedBox(height: 10),
+                                              Container(
+                                                color: const Color.fromARGB(
+                                                    255, 240, 240, 240),
+                                                child: Column(
+                                                  children: [
+                                                    // ListTile สำหรับ Edit
+                                                    Container(
+                                                      decoration: BoxDecoration(
+                                                        color: Colors.white,
+                                                        borderRadius:
+                                                            BorderRadius.only(
+                                                          topLeft:
+                                                              Radius.circular(
+                                                                  12),
+                                                          topRight:
+                                                              Radius.circular(
+                                                                  12),
                                                         ),
                                                       ),
-                                                      onTap: () {
-                                                        Navigator.pop(context);
-                                                        print('Edit selected');
-                                                        // เพิ่มฟังก์ชัน Edit ที่นี่
-                                                      },
-                                                    ),
-                                                  ),
+                                                      child: ListTile(
+                                                        leading:
+                                                            SvgPicture.asset(
+                                                          'assets/images/edit_svg.svg',
+                                                          fit: BoxFit.cover,
+                                                          color: const Color(
+                                                              0xff355FFF),
+                                                        ),
+                                                        title: Text(
+                                                          'Edit post',
+                                                          style: GoogleFonts
+                                                              .dmSans(
+                                                            fontSize: 14,
+                                                            fontWeight:
+                                                                FontWeight.w400,
+                                                            color: Color(
+                                                                0xFF000000),
+                                                          ),
+                                                        ),
+                                                        onTap: () {
+                                                          final existingData = {
+                                                            'id': id,
+                                                            'description':
+                                                                description,
+                                                            'image': image,
+                                                            'dateTime':
+                                                                selectedStartDate
+                                                          };
 
-                                                  // ListTile สำหรับ Delete
-                                                  Container(
-                                                    decoration: BoxDecoration(
-                                                      color: Colors
-                                                          .white, // พื้นหลังของแต่ละรายการ
-                                                      borderRadius:
-                                                          BorderRadius.only(
-                                                        bottomLeft:
-                                                            Radius.circular(
-                                                                12), // มุมบนซ้าย
-                                                        bottomRight:
-                                                            Radius.circular(
-                                                                12), // มุมบนขวา
+                                                          Navigator.push(
+                                                            context,
+                                                            MaterialPageRoute(
+                                                              builder: (context) =>
+                                                                  SubjectAddEdit(
+                                                                isEdit: true,
+                                                                initialData:
+                                                                    existingData,
+                                                              ),
+                                                            ),
+                                                          );
+                                                        },
                                                       ),
                                                     ),
-                                                    child: ListTile(
-                                                      leading: SvgPicture.asset(
-                                                        'assets/images/delete_svg.svg', // ไฟล์ SVG
-                                                        fit: BoxFit.cover,
-                                                        color: const Color(
-                                                            0xffED4B9E), // สีของไอคอน
-                                                      ),
-                                                      title: Text(
-                                                        'Delete post',
-                                                        style:
-                                                            GoogleFonts.dmSans(
-                                                          fontSize: 14,
-                                                          fontWeight:
-                                                              FontWeight.w400,
-                                                          color:
-                                                              Color(0xFF000000),
+
+                                                    // ListTile สำหรับ Delete
+                                                    Container(
+                                                      decoration: BoxDecoration(
+                                                        color: Colors.white,
+                                                        borderRadius:
+                                                            BorderRadius.only(
+                                                          bottomLeft:
+                                                              Radius.circular(
+                                                                  12),
+                                                          bottomRight:
+                                                              Radius.circular(
+                                                                  12),
                                                         ),
                                                       ),
-                                                      onTap: () {
-                                                        confirmDelete(
-                                                            context, id);
-                                                      },
+                                                      child: ListTile(
+                                                        leading:
+                                                            SvgPicture.asset(
+                                                          'assets/images/delete_svg.svg',
+                                                          fit: BoxFit.cover,
+                                                          color: const Color(
+                                                              0xffED4B9E),
+                                                        ),
+                                                        title: Text(
+                                                          'Delete post',
+                                                          style: GoogleFonts
+                                                              .dmSans(
+                                                            fontSize: 14,
+                                                            fontWeight:
+                                                                FontWeight.w400,
+                                                            color: Color(
+                                                                0xFF000000),
+                                                          ),
+                                                        ),
+                                                        onTap: () {
+                                                          confirmDelete(
+                                                              context, id);
+                                                        },
+                                                      ),
                                                     ),
-                                                  ),
-                                                ],
+                                                  ],
+                                                ),
                                               ),
-                                            ),
-                                          ],
+                                            ],
+                                          ),
                                         ),
                                       );
                                     },

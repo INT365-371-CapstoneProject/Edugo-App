@@ -658,7 +658,12 @@ class _ProviderDetailState extends State<ProviderDetail> {
                       final existingData = {
                         'id': id,
                         'title': title,
-                        'url': url,
+                        if (url == null || url == 'No Website')
+                          'url':
+                              null, // This will only add the key 'url' with null value if the condition is met
+                        if (url != null && url != 'No Website')
+                          'url':
+                              url, // This will add 'url' with the given value if the condition is met
                         'category': selectedScholarshipType,
                         'country': selectedCountry,
                         'description': description,

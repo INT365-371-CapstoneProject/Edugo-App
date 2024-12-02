@@ -58,6 +58,8 @@ class _SubjectManagementState extends State<SubjectManagement> {
                 subject['published_date'] ?? subject['publish_date'];
             return subject;
           }).toList();
+          subject.sort(
+              (a, b) => b['published_date'].compareTo(a['published_date']));
           isLoading = false;
           useItem = subject;
         });

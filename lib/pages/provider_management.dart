@@ -1,5 +1,6 @@
 import 'package:edugo/pages/provider_add.dart';
 import 'package:edugo/pages/provider_detail.dart';
+import 'package:edugo/pages/provider_profile.dart';
 import 'package:edugo/pages/subject_manage.dart';
 import 'package:edugo/services/scholarship_card.dart';
 import 'package:edugo/services/status_box.dart';
@@ -54,6 +55,9 @@ class _ProviderManagementState extends State<ProviderManagement> {
                 scholarship['close_date'] ?? scholarship['close_date'];
             return scholarship;
           }).toList();
+
+          scholarships.sort(
+              (a, b) => b['published_date'].compareTo(a['published_date']));
 
           // Filter Pending (publish_date หลังจาก DateTime.now())
           filterPending = scholarships.where((s) {
@@ -123,7 +127,7 @@ class _ProviderManagementState extends State<ProviderManagement> {
                           PageRouteBuilder(
                             pageBuilder:
                                 (context, animation, secondaryAnimation) =>
-                                    const SubjectManagement(),
+                                    const ProviderProfile(),
                             transitionsBuilder: (context, animation,
                                 secondaryAnimation, child) {
                               const begin = 0.0;

@@ -91,15 +91,28 @@ class _SubjectAddEditState extends State<SubjectAddEdit> {
     request.fields['country_id'] = '1';
 
     if (_selectedImage != null) {
-      // Convert image to bytes
-      List<int> imageBytes = await _selectedImage!.readAsBytes();
+      // ตรวจสอบนามสกุลไฟล์
+      String fileExtension = _selectedImage!.path.split('.').last.toLowerCase();
+      MediaType? contentType;
 
+      if (fileExtension == 'jpg' || fileExtension == 'jpeg') {
+        contentType = MediaType('image', 'jpeg');
+      } else if (fileExtension == 'png') {
+        contentType = MediaType('image', 'png');
+      } else {
+        // หากรูปภาพไม่ใช่ jpg หรือ png
+        showError("Unsupported file format. Please upload a JPG or PNG image.");
+        return;
+      }
+
+      // อ่านไฟล์เป็นไบต์และเพิ่มเข้าไปในคำขอ
+      List<int> imageBytes = await _selectedImage!.readAsBytes();
       request.files.add(
         http.MultipartFile.fromBytes(
           'image',
           imageBytes,
-          filename: 'image.jpg',
-          contentType: MediaType('image', 'jpeg'),
+          filename: 'image.$fileExtension', // ใช้นามสกุลไฟล์จริง
+          contentType: contentType, // กำหนด MediaType ตามประเภทของไฟล์
         ),
       );
     }
@@ -239,7 +252,7 @@ class _SubjectAddEditState extends State<SubjectAddEdit> {
                   ),
                   SizedBox(height: 40),
                   Text(
-                    "Waiting for Posting",
+                    "Waiting for Updating",
                     style: GoogleFonts.dmSans(
                       fontSize: 24,
                       fontWeight: FontWeight.w600,

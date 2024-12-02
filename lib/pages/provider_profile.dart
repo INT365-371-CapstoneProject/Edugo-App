@@ -110,35 +110,30 @@ class _ProviderProfileState extends State<ProviderProfile> {
               children: [
                 Center(
                   child: Text(
-                    "ToonCanada",
+                    "Alex Froster",
                     style: GoogleFonts.dmSans(
                         fontSize: 20, fontWeight: FontWeight.w500),
                   ),
                 ),
                 SizedBox(height: 16),
                 Container(
-                  padding: const EdgeInsets.all(16.0),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF355FFF),
-                    borderRadius: BorderRadius.circular(8.0),
+                    borderRadius: BorderRadius.circular(12.0),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        "Manage your Scholarship",
-                        style: GoogleFonts.inter(
-                          fontSize: 16.0,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                      const SizedBox(height: 4.0),
-                      Text(
-                        "You can manage your scholarship here. Available on Mobile and Desktop now!",
-                        style: GoogleFonts.inter(
-                          fontSize: 14.0,
-                          color: Colors.white,
+                      GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => ProviderManagement(),
+                            ),
+                          );
+                        },
+                        child: Image.asset(
+                          "assets/images/scholarship_management.png",
                         ),
                       ),
                     ],
@@ -181,12 +176,25 @@ class _ProviderProfileState extends State<ProviderProfile> {
                     onTap: () {
                       // Perform action
                     }),
-                _buildProfileOption(
-                    icon: Icons.logout_outlined,
-                    label: "Logout",
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                      vertical: 8.0), // เพิ่มระยะห่างแนวตั้ง
+                  child: ListTile(
+                    contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16.0), // เพิ่ม padding ด้านซ้าย-ขวา
+                    leading: CircleAvatar(
+                      backgroundColor: const Color(0xFFEBEFFF),
+                      child: Icon(
+                        Icons.logout, // ใช้ไอคอน Logout
+                        color: const Color(0xFF355FFF), // กำหนดสีของไอคอน
+                      ),
+                    ),
+                    title: Text("Logout"),
                     onTap: () {
-                      // Perform action
-                    }),
+                      // เพิ่มการทำงานเมื่อกด
+                    },
+                  ),
+                ),
               ],
             ),
           ),

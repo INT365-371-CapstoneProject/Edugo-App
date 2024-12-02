@@ -13,7 +13,8 @@ dependencies:
   flutter_svg: ^1.1.0  # Moved to main dependencies
   cupertino_icons: ^1.0.8
   http: ^1.2.2
-
+  shared_preferences: ^2.0.17  
+  
 dev_dependencies:
   flutter_test:
     sdk: flutter

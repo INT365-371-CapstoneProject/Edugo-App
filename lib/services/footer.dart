@@ -30,11 +30,14 @@ class _FooterNavState extends State<FooterNav> {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 72,
+      height: 100,
       child: Align(
         alignment: Alignment.center,
         child: Padding(
-          padding: const EdgeInsets.only(left: 33.0, right: 33.0),
+          padding: const EdgeInsets.only(
+            left: 33.0,
+            right: 33.0,
+          ),
           child: Row(
               mainAxisAlignment: MainAxisAlignment
                   .spaceBetween, // Position elements with space between
@@ -114,32 +117,29 @@ class _FooterNavState extends State<FooterNav> {
                   width: 64, // กำหนดความกว้างของปุ่ม
                   child: ElevatedButton(
                     onPressed: () {
-                      if (widget.pageName == "subject") {
-                        Navigator.pushReplacement(
-                          context,
-                          PageRouteBuilder(
-                            pageBuilder:
-                                (context, animation, secondaryAnimation) =>
-                                    const SubjectAddEdit(isEdit: false),
-                            transitionsBuilder: (context, animation,
-                                secondaryAnimation, child) {
-                              const begin = 0.0;
-                              const end = 1.0;
-                              const curve = Curves.easeOut;
+                      Navigator.pushReplacement(
+                        context,
+                        PageRouteBuilder(
+                          pageBuilder:
+                              (context, animation, secondaryAnimation) =>
+                                  const SubjectAddEdit(isEdit: false),
+                          transitionsBuilder:
+                              (context, animation, secondaryAnimation, child) {
+                            const begin = 0.0;
+                            const end = 1.0;
+                            const curve = Curves.easeOut;
 
-                              var tween = Tween(begin: begin, end: end)
-                                  .chain(CurveTween(curve: curve));
-                              return FadeTransition(
-                                opacity: animation.drive(tween),
-                                child: child,
-                              );
-                            },
-                            transitionDuration:
-                                const Duration(milliseconds: 300),
-                          ),
-                        );
-                      }
-                    }, // แสดง Dialog
+                            var tween = Tween(begin: begin, end: end)
+                                .chain(CurveTween(curve: curve));
+                            return FadeTransition(
+                              opacity: animation.drive(tween),
+                              child: child,
+                            );
+                          },
+                          transitionDuration: const Duration(milliseconds: 300),
+                        ),
+                      );
+                    },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF355FFF), // สีพื้นหลังฟ้า
                       shape: RoundedRectangleBorder(
