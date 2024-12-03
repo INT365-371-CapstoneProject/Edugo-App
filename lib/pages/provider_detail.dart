@@ -585,7 +585,6 @@ class _ProviderDetailState extends State<ProviderDetail> {
                       ),
                       const SizedBox(height: 6),
 
-                      // Description
                       Container(
                         height: 414,
                         width: double.infinity,
@@ -607,10 +606,9 @@ class _ProviderDetailState extends State<ProviderDetail> {
                               ),
                             ),
                             const SizedBox(height: 4),
-                            // TextField
+                            // Scrollable TextField
                             Container(
-                              height:
-                                  353, // Adjust this height to fit your design
+                              height: 353,
                               width: double.infinity,
                               decoration: BoxDecoration(
                                 border: Border.all(
@@ -620,12 +618,14 @@ class _ProviderDetailState extends State<ProviderDetail> {
                               ),
                               child: Padding(
                                 padding: const EdgeInsets.all(14),
-                                child: Text(
-                                  description ?? 'Not Specified',
-                                  style: GoogleFonts.dmSans(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w400,
-                                    color: Color(0xFF64738B),
+                                child: SingleChildScrollView(
+                                  child: Text(
+                                    description ?? 'Not Specified',
+                                    style: GoogleFonts.dmSans(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w400,
+                                      color: Color(0xFF64738B),
+                                    ),
                                   ),
                                 ),
                               ),
