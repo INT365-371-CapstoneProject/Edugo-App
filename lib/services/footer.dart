@@ -1,5 +1,7 @@
-import 'package:edugo/pages/provider_management.dart';
-import 'package:edugo/pages/provider_profile.dart';
+import 'package:edugo/features/home/screens/home_screen.dart';
+import 'package:edugo/features/scholarship/screens/provider_management.dart';
+import 'package:edugo/features/profile/screens/profile.dart';
+import 'package:edugo/features/search/screens/search_screen.dart';
 import 'package:edugo/pages/subject_add_edit.dart';
 import 'package:edugo/pages/subject_manage.dart';
 import 'package:flutter/cupertino.dart';
@@ -53,7 +55,7 @@ class _FooterNavState extends State<FooterNav> {
                         PageRouteBuilder(
                           pageBuilder:
                               (context, animation, secondaryAnimation) =>
-                                  const ProviderManagement(),
+                                  const HomeScreenApp(),
                           transitionsBuilder:
                               (context, animation, secondaryAnimation, child) {
                             const begin = 0.0;
@@ -81,9 +83,13 @@ class _FooterNavState extends State<FooterNav> {
                     child: Image.asset(
                       'assets/images/home_icon.png', // รูปภาพ fallback
                       fit: BoxFit.cover,
-                      color: Color(0xFF000000),
+
                       width: double.infinity,
                       height: 200,
+
+                      color: widget.pageName == 'home'
+                          ? Color(0xffD992FA)
+                          : Color(0xff000000),
                     ),
                   ),
                 ),
@@ -93,7 +99,28 @@ class _FooterNavState extends State<FooterNav> {
                   width: 26.2,
                   child: ElevatedButton(
                     onPressed: () {
-                      // Action สำหรับปุ่ม search
+                      Navigator.pushReplacement(
+                        context,
+                        PageRouteBuilder(
+                          pageBuilder:
+                              (context, animation, secondaryAnimation) =>
+                                  const SearchScreen(),
+                          transitionsBuilder:
+                              (context, animation, secondaryAnimation, child) {
+                            const begin = 0.0;
+                            const end = 1.0;
+                            const curve = Curves.easeOut;
+
+                            var tween = Tween(begin: begin, end: end)
+                                .chain(CurveTween(curve: curve));
+                            return FadeTransition(
+                              opacity: animation.drive(tween),
+                              child: child,
+                            );
+                          },
+                          transitionDuration: const Duration(milliseconds: 300),
+                        ),
+                      ); // Action สำหรับปุ่ม search
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.white, // สีพื้นหลังขาว
@@ -105,7 +132,9 @@ class _FooterNavState extends State<FooterNav> {
                     child: SvgPicture.asset(
                       'assets/images/search.svg', // ไฟล์ SVG
                       fit: BoxFit.cover,
-                      color: Color(0xff000000), // ถ้าต้องการเปลี่ยนสี SVG
+                      color: widget.pageName == 'search'
+                          ? Color(0xffD992FA)
+                          : Color(0xff000000),
                       width: double.infinity,
                       height: 200,
                     ),

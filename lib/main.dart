@@ -1,6 +1,6 @@
-import 'package:edugo/pages/provider_add.dart';
-import 'package:edugo/pages/provider_management.dart';
-import 'package:edugo/pages/provider_profile.dart';
+import 'package:edugo/features/scholarship/screens/provider_management.dart';
+import 'package:edugo/features/profile/screens/profile.dart';
+import 'package:edugo/pages/intro.dart';
 import 'package:edugo/pages/splash_screen.dart';
 import 'package:edugo/pages/subject_manage.dart';
 import 'package:flutter/material.dart';
@@ -15,7 +15,7 @@ class SplashScreenApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const MaterialApp(
-      home: ProviderProfile(),
+      home: SplashScreen(),
     );
   }
 }

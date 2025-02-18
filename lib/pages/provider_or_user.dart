@@ -1,3 +1,5 @@
+import 'package:edugo/features/login&register/login.dart';
+import 'package:edugo/pages/welcome_user_page.dart';
 import 'package:flutter/material.dart';
 
 class ProviderOrUser extends StatelessWidget {
@@ -18,7 +20,7 @@ class ProviderOrUser extends StatelessWidget {
                 width: 175,
                 height: 37.656,
                 child: Image.asset(
-                  "images/logoColor.png",
+                  "assets/images/logoColor.png",
                   fit: BoxFit.contain, // Adjust the image to fit within the box
                 ),
               ),
@@ -64,107 +66,160 @@ class ProviderOrUser extends StatelessWidget {
             // Button for "I'm providing scholarships"
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 40.0),
-              child: Container(
-                height: 128, // Set specific height
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.blueAccent),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Row(
-                  crossAxisAlignment:
-                      CrossAxisAlignment.center, // Align vertically
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.all(
-                          16.0), // Add padding around image
-                      child: Image.asset("images/provider.png"),
+              child: GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    PageRouteBuilder(
+                      pageBuilder: (context, animation, secondaryAnimation) =>
+                          const WelcomeUserPage(isProvider: true),
+                      transitionsBuilder:
+                          (context, animation, secondaryAnimation, child) {
+                        const begin = 0.0;
+                        const end = 1.0;
+                        const curve = Curves.easeOut;
+
+                        var tween = Tween(begin: begin, end: end)
+                            .chain(CurveTween(curve: curve));
+                        return FadeTransition(
+                          opacity: animation.drive(tween),
+                          child: child,
+                        );
+                      },
+                      transitionDuration: const Duration(milliseconds: 300),
                     ),
-                    const Expanded(
-                      child: Column(
-                        mainAxisAlignment:
-                            MainAxisAlignment.center, // Center text vertically
-                        crossAxisAlignment:
-                            CrossAxisAlignment.start, // Align text to the left
-                        children: [
-                          Text(
-                            "I'm providing scholarships",
-                            style: TextStyle(
-                              fontFamily: "DM Sans",
-                              fontSize: 16.0,
-                              fontWeight: FontWeight.w500,
-                              color: Color(0xFF000000),
-                            ),
-                          ),
-                          SizedBox(
-                              height: 8), // Spacing between title and subtitle
-                          Text(
-                            "For scholarship providers, you can share exciting and valuable scholarship opportunities with users in our app!",
-                            style: TextStyle(
-                              fontFamily: "DM Sans",
-                              fontSize: 14.0,
-                              fontWeight: FontWeight.w300,
-                              color: Color(0xFF7A7A7A),
-                            ),
-                          ),
-                        ],
+                  );
+                },
+                child: Container(
+                  height: 128, // Set specific height
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.blueAccent),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    crossAxisAlignment:
+                        CrossAxisAlignment.center, // Align vertically
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.all(
+                            16.0), // Add padding around image
+                        child: Image.asset("assets/images/provider.png"),
                       ),
-                    ),
-                  ],
+                      const Expanded(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment
+                              .center, // Center text vertically
+                          crossAxisAlignment: CrossAxisAlignment
+                              .start, // Align text to the left
+                          children: [
+                            Text(
+                              "I'm providing scholarships",
+                              style: TextStyle(
+                                fontFamily: "DM Sans",
+                                fontSize: 14.0,
+                                fontWeight: FontWeight.w500,
+                                color: Color(0xFF000000),
+                              ),
+                            ),
+                            SizedBox(
+                                height:
+                                    8), // Spacing between title and subtitle
+                            Text(
+                              "For scholarship providers, you can share exciting and valuable scholarship opportunities with users in our app!",
+                              style: TextStyle(
+                                fontFamily: "DM Sans",
+                                fontSize: 11.0,
+                                fontWeight: FontWeight.w300,
+                                color: Color(0xFF7A7A7A),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
+
             // Add spacing between buttons
             const SizedBox(height: 20),
             // Button for "I'm seeking scholarships"
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 40.0),
-              child: Container(
-                height: 128, // Set specific height
-                decoration: BoxDecoration(
-                  border: Border.all(
-                      color: const Color.fromARGB(255, 95, 113, 145)),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Row(
-                  crossAxisAlignment:
-                      CrossAxisAlignment.center, // Align vertically
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.all(
-                          16.0), // Add padding around image
-                      child: Image.asset("images/user.png"),
+              child: GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    PageRouteBuilder(
+                      pageBuilder: (context, animation, secondaryAnimation) =>
+                          const WelcomeUserPage(isUser: true),
+                      transitionsBuilder:
+                          (context, animation, secondaryAnimation, child) {
+                        const begin = 0.0;
+                        const end = 1.0;
+                        const curve = Curves.easeOut;
+
+                        var tween = Tween(begin: begin, end: end)
+                            .chain(CurveTween(curve: curve));
+                        return FadeTransition(
+                          opacity: animation.drive(tween),
+                          child: child,
+                        );
+                      },
+                      transitionDuration: const Duration(milliseconds: 300),
                     ),
-                    const Expanded(
-                      child: Column(
-                        mainAxisAlignment:
-                            MainAxisAlignment.center, // Center text vertically
-                        crossAxisAlignment:
-                            CrossAxisAlignment.start, // Align text to the left
-                        children: [
-                          Text(
-                            "I'm seeking scholarships",
-                            style: TextStyle(
-                              fontFamily: "DM Sans",
-                              fontSize: 16.0,
-                              fontWeight: FontWeight.w500,
-                              color: Color(0xFF000000),
-                            ),
-                          ),
-                          SizedBox(
-                              height: 8), // Spacing between title and subtitle
-                          Text(
-                            "If you're looking for reliable sources of knowledge and scholarship information, sign up now! Start exploring unlimited learning opportunities today!",
-                            style: TextStyle(
-                              fontFamily: "DM Sans",
-                              fontSize: 14.0,
-                              fontWeight: FontWeight.w300,
-                              color: Color(0xFF7A7A7A),
-                            ),
-                          ),
-                        ],
+                  );
+                },
+                child: Container(
+                  height: 128, // Set specific height
+                  decoration: BoxDecoration(
+                    border: Border.all(
+                        color: const Color.fromARGB(255, 95, 113, 145)),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    crossAxisAlignment:
+                        CrossAxisAlignment.center, // Align vertically
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.all(
+                            16.0), // Add padding around image
+                        child: Image.asset("assets/images/user.png"),
                       ),
-                    ),
-                  ],
+                      const Expanded(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment
+                              .center, // Center text vertically
+                          crossAxisAlignment: CrossAxisAlignment
+                              .start, // Align text to the left
+                          children: [
+                            Text(
+                              "I'm seeking scholarships",
+                              style: TextStyle(
+                                fontFamily: "DM Sans",
+                                fontSize: 14.0,
+                                fontWeight: FontWeight.w500,
+                                color: Color(0xFF000000),
+                              ),
+                            ),
+                            SizedBox(
+                                height:
+                                    8), // Spacing between title and subtitle
+                            Text(
+                              "If you're looking for reliable sources of knowledge and scholarship information, sign up now! Start exploring unlimited learning opportunities today!",
+                              style: TextStyle(
+                                fontFamily: "DM Sans",
+                                fontSize: 11.0,
+                                fontWeight: FontWeight.w300,
+                                color: Color(0xFF7A7A7A),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),

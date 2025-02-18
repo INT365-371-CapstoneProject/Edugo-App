@@ -1,6 +1,6 @@
 import 'dart:typed_data';
-import 'package:edugo/pages/provider_management.dart';
-import 'package:edugo/pages/provider_profile.dart';
+import 'package:edugo/features/scholarship/screens/provider_management.dart';
+import 'package:edugo/features/profile/screens/profile.dart';
 import 'package:edugo/pages/subject_add_edit.dart';
 import 'package:edugo/pages/subject_detail.dart';
 import 'package:edugo/services/footer.dart';

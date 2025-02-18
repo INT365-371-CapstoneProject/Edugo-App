@@ -24,7 +24,7 @@ class _IntroScreenState extends State<IntroScreen> {
             width: 175,
             height: 37.656,
             child: Image.asset(
-              "images/logoColor.png",
+              "assets/images/logoColor.png",
               fit: BoxFit.contain,
             ),
           ),
@@ -36,8 +36,9 @@ class _IntroScreenState extends State<IntroScreen> {
             width: 200,
             child: Transform.scale(
               scale: 1.5,
-              child: Image.asset(
-                  isIntro1 ? "images/intro1.png" : "images/intro2.png"),
+              child: Image.asset(isIntro1
+                  ? "assets/images/intro1.png"
+                  : "assets/images/intro2.png"),
             ),
           ),
           const SizedBox(height: 30.0),

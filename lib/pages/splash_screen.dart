@@ -1,5 +1,6 @@
 import 'dart:async';
-import 'package:edugo/pages/provider_management.dart';
+import 'package:edugo/features/scholarship/screens/provider_management.dart';
+import 'package:edugo/pages/intro.dart';
 import 'package:flutter/material.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -31,7 +32,7 @@ class _SplashScreenState extends State<SplashScreen> {
   Route _createDissolveRoute() {
     return PageRouteBuilder(
       pageBuilder: (context, animation, secondaryAnimation) =>
-          const ProviderManagement(),
+          const IntroScreen(),
       transitionsBuilder: (context, animation, secondaryAnimation, child) {
         const begin = 0.0;
         const end = 1.0;
