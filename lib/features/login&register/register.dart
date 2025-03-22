@@ -43,12 +43,6 @@ class _RegisterState extends State<Register> {
   }
 
   Future<void> registerUser() async {
-    if (_controllers['email']!.text.isEmpty ||
-        _controllers['password']!.text.isEmpty) {
-      _showSnackBar("Email and Password are required");
-      return;
-    }
-
     String path = widget.isProvider
         ? "provider"
         : widget.isUser
@@ -159,24 +153,30 @@ class _RegisterState extends State<Register> {
 
     // ตรวจสอบอีเมล
     final emailRegex = RegExp(r'^[^@]+@[^@]+\.[^@]+');
-    if (!emailRegex.hasMatch(email)) {
-      _errors['email'] = "Invalid email format";
+
+    if (email.length == 0) {
+      _errors['email'] = "Please enter your email address";
+      isValid = false;
+    } else if (!emailRegex.hasMatch(email)) {
+      _errors['email'] = "Invalid email format. Please enter a valid email";
       isValid = false;
     }
 
     // ตรวจสอบ Username, First Name และ Last Name
     if (username.length < 5) {
-      _errors['username'] = "Must be at least 5 characters";
+      _errors['username'] = "Username must be at least 5 characters long";
       isValid = false;
     }
 
     if (firstName.length < 2 || firstName.length > 25) {
-      _errors['firstName'] = "Must be between 2 and 25 characters";
+      _errors['firstName'] =
+          "First name must be between 2 and 25 characters long";
       isValid = false;
     }
 
     if (lastName.length < 2 || lastName.length > 25) {
-      _errors['lastName'] = "Must be between 2 and 25 characters";
+      _errors['lastName'] =
+          "Last name must be between 2 and 25 characters long";
       isValid = false;
     }
 
@@ -200,9 +200,11 @@ class _RegisterState extends State<Register> {
       isValid = false;
     }
 
-    if (password != confirmPassword) {
-      _errors['confirmPassword'] =
-          "Password and Confirm Password have to match";
+    if (confirmPassword == '') {
+      _errors['confirmPassword'] = "Confirm Password must match";
+      isValid = false;
+    } else if (password != confirmPassword) {
+      _errors['confirmPassword'] = "Password and Confirm Password must match";
       isValid = false;
     }
 

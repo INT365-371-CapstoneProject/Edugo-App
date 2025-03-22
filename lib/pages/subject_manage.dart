@@ -3,6 +3,7 @@ import 'package:edugo/features/scholarship/screens/provider_management.dart';
 import 'package:edugo/features/profile/screens/profile.dart';
 import 'package:edugo/pages/subject_add_edit.dart';
 import 'package:edugo/pages/subject_detail.dart';
+import 'package:edugo/services/auth_service.dart';
 import 'package:edugo/services/footer.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -28,7 +29,7 @@ class _SubjectManagementState extends State<SubjectManagement> {
   bool isLoading = true;
   String selectedStatus = "All";
   Uint8List? _imageBytes;
-
+  final AuthService authService = AuthService(); // Instance of AuthService
   final TextEditingController titleController = TextEditingController();
   final TextEditingController descriptionController = TextEditingController();
 
@@ -39,13 +40,23 @@ class _SubjectManagementState extends State<SubjectManagement> {
   }
 
   Future<void> fetchsubject() async {
+    String? token = await authService.getToken();
+    Map<String, String> headers = {}; // Explicitly type the map
+    if (token != null) {
+      headers['Authorization'] = 'Bearer $token';
+    }
+
     const baseImageUrl =
         "https://capstone24.sit.kmutt.ac.th/un2/api/public/images/";
     const url = "https://capstone24.sit.kmutt.ac.th/un2/api/subject";
     try {
-      final response = await http.get(Uri.parse(url));
+      final response = await http.get(Uri.parse(url), headers: headers);
       if (response.statusCode == 200) {
-        final List<dynamic> data = json.decode(response.body);
+        final Map<String, dynamic> responseData = json.decode(response.body);
+
+        // ดึงข้อมูลเฉพาะ "data" มาใช้งาน
+        final List<dynamic> data = responseData['data'];
+
         setState(() {
           subject = data.map((subject) {
             subject['image'] = subject['image'] != null
