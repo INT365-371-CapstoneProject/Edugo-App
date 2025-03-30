@@ -30,7 +30,6 @@ class ProviderAddEdit extends StatefulWidget {
 }
 
 class _ProviderAddEditState extends State<ProviderAddEdit> {
-
   final AuthService authService = AuthService();
   // ตัวแปรเก็บค่าจากฟอร์ม
   int? id;
@@ -1207,9 +1206,11 @@ class _ProviderAddEditState extends State<ProviderAddEdit> {
                                                                       animation,
                                                                       secondaryAnimation) =>
                                                                   ProviderDetail(
-                                                                      initialData:
-                                                                          widget
-                                                                              .initialData),
+                                                                initialData: widget
+                                                                    .initialData,
+                                                                isProvider:
+                                                                    true,
+                                                              ),
                                                               transitionsBuilder:
                                                                   (context,
                                                                       animation,

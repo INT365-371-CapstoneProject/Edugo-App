@@ -1,3 +1,4 @@
+import 'package:edugo/features/home/screens/home_screen.dart';
 import 'package:edugo/features/scholarship/screens/provider_add.dart';
 import 'package:edugo/features/scholarship/screens/provider_management.dart';
 import 'package:edugo/services/auth_service.dart';
@@ -9,10 +10,12 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 
 class ProviderDetail extends StatefulWidget {
+  final bool isProvider;
   final Map<String, dynamic>? initialData;
 
   const ProviderDetail({
     Key? key,
+    required this.isProvider,
     this.initialData,
   }) : super(key: key);
 
@@ -191,6 +194,37 @@ class _ProviderDetailState extends State<ProviderDetail> {
     }
   }
 
+  Future<void> addBookmark() async {
+    final url =
+        Uri.parse('https://capstone24.sit.kmutt.ac.th/un2/api/bookmark');
+
+    String? token = await authService.getToken();
+
+    // Create headers map
+    Map<String, String> headers = {'Content-Type': 'application/json'};
+
+    // Add Authorization header if token is available
+    if (token != null) {
+      headers['Authorization'] = 'Bearer $token';
+    }
+
+    try {
+      final response = await http.post(
+        url,
+        headers: headers, // Use the headers with the token
+        body: json.encode({"announce_id": id}),
+      );
+
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        print("Success");
+      } else {
+        print(response);
+      }
+    } catch (e) {
+      print(e);
+    }
+  }
+
   // Helper to show error messages
   void showError(String message) {
     // Replace with your preferred error handling method
@@ -244,7 +278,9 @@ class _ProviderDetailState extends State<ProviderDetail> {
                                     PageRouteBuilder(
                                       pageBuilder: (context, animation,
                                               secondaryAnimation) =>
-                                          const ProviderManagement(),
+                                          widget.isProvider
+                                              ? const ProviderManagement()
+                                              : const HomeScreenApp(),
                                       transitionsBuilder: (context, animation,
                                           secondaryAnimation, child) {
                                         const begin = 0.0;
@@ -277,18 +313,31 @@ class _ProviderDetailState extends State<ProviderDetail> {
                               ),
                               GestureDetector(
                                 onTap: () {
-                                  confirmDelete(context);
-                                  //submitDeleteData(); // ไม่ต้องมี Navigator.pop ตรงนี้
+                                  if (widget.isProvider) {
+                                    confirmDelete(context);
+                                  } else {
+                                    // ใส่ action สำหรับผู้ใช้ทั่วไป เช่น กดถูกใจ
+                                    addBookmark();
+                                  }
                                 },
                                 child: CircleAvatar(
                                   radius: 20,
-                                  backgroundColor: const Color(0xFFED4B9E),
-                                  child: Image.asset(
-                                    'assets/images/icon_delete.png',
-                                    width: 20.0,
-                                    height: 20.0,
-                                    colorBlendMode: BlendMode.srcIn,
-                                  ),
+                                  backgroundColor: widget.isProvider
+                                      ? const Color(0xFFED4B9E)
+                                      : Colors.grey[300],
+                                  child: widget.isProvider
+                                      ? Image.asset(
+                                          'assets/images/icon_delete.png',
+                                          width: 20.0,
+                                          height: 20.0,
+                                          colorBlendMode: BlendMode.srcIn,
+                                        )
+                                      : Icon(
+                                          Icons.favorite,
+                                          color: Colors
+                                              .red, // กำหนดสีให้ไอคอนหัวใจ
+                                          size: 24, // ขนาดของไอคอน
+                                        ),
                                 ),
                               ),
                             ],
@@ -636,99 +685,104 @@ class _ProviderDetailState extends State<ProviderDetail> {
                         ),
                       ),
 
-                      const SizedBox(height: 200),
+                      widget.isProvider
+                          ? const SizedBox(height: 200)
+                          : const SizedBox(height: 20),
                     ],
                   ),
                 ),
               ],
             ),
           ),
-          SizedBox(
-            height: 113,
-            // color: const Color.fromRGBO(104, 197, 123, 1),
-            child: Align(
-              alignment: Alignment.topCenter,
-              child: Padding(
-                padding:
-                    const EdgeInsets.only(top: 15.0, left: 16.0, right: 16.0),
-                child: SizedBox(
-                  height: 48,
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: () {
-                      // Prepare data to pass
-                      final existingData = {
-                        'id': id,
-                        'title': title,
-                        if (url == null || url == 'No Website')
-                          'url':
-                              null, // This will only add the key 'url' with null value if the condition is met
-                        if (url != null && url != 'No Website')
-                          'url':
-                              url, // This will add 'url' with the given value if the condition is met
-                        'category': selectedScholarshipType,
-                        'country': selectedCountry,
-                        'description': description,
-                        'image': image,
-                        'attach_file': attachFile,
-                        'published_date': selectedStartDate?.toIso8601String(),
-                        'close_date': selectedEndDate?.toIso8601String(),
-                      };
+          if (widget.isProvider)
+            SizedBox(
+              height: 113,
+              // color: const Color.fromRGBO(104, 197, 123, 1),
+              child: Align(
+                alignment: Alignment.topCenter,
+                child: Padding(
+                  padding:
+                      const EdgeInsets.only(top: 15.0, left: 16.0, right: 16.0),
+                  child: SizedBox(
+                    height: 48,
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: () {
+                        // Prepare data to pass
+                        final existingData = {
+                          'id': id,
+                          'title': title,
+                          if (url == null || url == 'No Website')
+                            'url':
+                                null, // This will only add the key 'url' with null value if the condition is met
+                          if (url != null && url != 'No Website')
+                            'url':
+                                url, // This will add 'url' with the given value if the condition is met
+                          'category': selectedScholarshipType,
+                          'country': selectedCountry,
+                          'description': description,
+                          'image': image,
+                          'attach_file': attachFile,
+                          'published_date':
+                              selectedStartDate?.toIso8601String(),
+                          'close_date': selectedEndDate?.toIso8601String(),
+                        };
 
-                      Navigator.push(
-                        context,
-                        PageRouteBuilder(
-                          pageBuilder:
-                              (context, animation, secondaryAnimation) =>
-                                  ProviderAddEdit(
-                                      isEdit: true, initialData: existingData),
-                          transitionsBuilder:
-                              (context, animation, secondaryAnimation, child) {
-                            const begin = 0.0;
-                            const end = 1.0;
-                            const curve = Curves.easeOut;
+                        Navigator.push(
+                          context,
+                          PageRouteBuilder(
+                            pageBuilder: (context, animation,
+                                    secondaryAnimation) =>
+                                ProviderAddEdit(
+                                    isEdit: true, initialData: existingData),
+                            transitionsBuilder: (context, animation,
+                                secondaryAnimation, child) {
+                              const begin = 0.0;
+                              const end = 1.0;
+                              const curve = Curves.easeOut;
 
-                            var tween = Tween(begin: begin, end: end)
-                                .chain(CurveTween(curve: curve));
-                            return FadeTransition(
-                              opacity: animation.drive(tween),
-                              child: child,
-                            );
-                          },
-                          transitionDuration: const Duration(milliseconds: 300),
-                        ),
-                      );
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF355FFF),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          "Edit Scholarship",
-                          style: GoogleFonts.dmSans(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w500,
-                            fontSize: 16,
+                              var tween = Tween(begin: begin, end: end)
+                                  .chain(CurveTween(curve: curve));
+                              return FadeTransition(
+                                opacity: animation.drive(tween),
+                                child: child,
+                              );
+                            },
+                            transitionDuration:
+                                const Duration(milliseconds: 300),
                           ),
+                        );
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF355FFF),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
                         ),
-                        const SizedBox(width: 8),
-                        Image.asset(
-                          'assets/images/add_new_scholarship.png',
-                          width: 21.0,
-                          height: 21.0,
-                        ),
-                      ],
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            "Edit Scholarship",
+                            style: GoogleFonts.dmSans(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w500,
+                              fontSize: 16,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Image.asset(
+                            'assets/images/add_new_scholarship.png',
+                            width: 21.0,
+                            height: 21.0,
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
               ),
             ),
-          ),
         ],
       ),
     );

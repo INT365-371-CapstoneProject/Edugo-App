@@ -392,8 +392,9 @@ class _ProviderManagementState extends State<ProviderManagement> {
                                       context,
                                       MaterialPageRoute(
                                         builder: (context) => ProviderDetail(
-                                          initialData:
-                                              existingData, // ส่ง existingData ไปยังหน้าแก้ไข
+                                          initialData: existingData,
+                                          isProvider:
+                                              true, // ส่ง existingData ไปยังหน้าแก้ไข
                                         ),
                                       ),
                                       // MaterialPageRoute(

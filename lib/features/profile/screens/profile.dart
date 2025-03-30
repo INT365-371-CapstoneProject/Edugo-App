@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'dart:typed_data';
+import 'package:edugo/features/bookmark/screens/bookmark_management.dart';
 import 'package:edugo/features/login&register/login.dart';
+import 'package:edugo/features/notification/screens/notification_management.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:edugo/features/profile/screens/edit_profile.dart';
@@ -280,13 +282,55 @@ class _ProviderProfileState extends State<ProviderProfile> {
                     icon: Icons.bookmark,
                     label: "Bookmark",
                     onTap: () {
-                      // Perform action
+                      Navigator.pushReplacement(
+                        context,
+                        PageRouteBuilder(
+                          pageBuilder:
+                              (context, animation, secondaryAnimation) =>
+                                  BookmarkList(id: profile!['id']),
+                          transitionsBuilder:
+                              (context, animation, secondaryAnimation, child) {
+                            const begin = 0.0;
+                            const end = 1.0;
+                            const curve = Curves.easeOut;
+
+                            var tween = Tween(begin: begin, end: end)
+                                .chain(CurveTween(curve: curve));
+                            return FadeTransition(
+                              opacity: animation.drive(tween),
+                              child: child,
+                            );
+                          },
+                          transitionDuration: const Duration(milliseconds: 300),
+                        ),
+                      );
                     }),
                 _buildProfileOption(
                     icon: Icons.notifications,
                     label: "Notification",
                     onTap: () {
-                      // Perform action
+                      Navigator.pushReplacement(
+                        context,
+                        PageRouteBuilder(
+                          pageBuilder:
+                              (context, animation, secondaryAnimation) =>
+                                  NotificationList(id: profile!['id']),
+                          transitionsBuilder:
+                              (context, animation, secondaryAnimation, child) {
+                            const begin = 0.0;
+                            const end = 1.0;
+                            const curve = Curves.easeOut;
+
+                            var tween = Tween(begin: begin, end: end)
+                                .chain(CurveTween(curve: curve));
+                            return FadeTransition(
+                              opacity: animation.drive(tween),
+                              child: child,
+                            );
+                          },
+                          transitionDuration: const Duration(milliseconds: 300),
+                        ),
+                      );
                     }),
                 _buildProfileOption(
                     icon: Icons.settings,
