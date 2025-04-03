@@ -105,6 +105,26 @@ class _BookmarkListState extends State<BookmarkList> {
     }
   }
 
+  Future<void> deleteBookmark(int id) async {
+    String? token = await authService.getToken();
+    final url = "https://capstone24.sit.kmutt.ac.th/un2/api/bookmark/ann/${id}";
+
+    try {
+      final response = await http.delete(Uri.parse(url), headers: {
+        'Authorization': token != null ? 'Bearer $token' : '',
+        'Content-Type': 'application/json',
+      });
+
+      if (response.statusCode == 200) {
+        fetchBookmark();
+      } else {
+        throw Exception('Failed to load announcement details');
+      }
+    } catch (e) {
+      print("Error fetching announce details: $e");
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -210,9 +230,14 @@ class _BookmarkListState extends State<BookmarkList> {
                               color: Colors.grey[600],
                             ),
                           ),
+                          trailing: IconButton(
+                            icon: Icon(Icons.delete, color: Colors.red),
+                            onPressed: () {
+                              deleteBookmark(item['id']);
+                            },
+                          ),
                           onTap: () {
-                            // สามารถเพิ่มการนำทางไปหน้า Detail ได้
-                            print("Tapped on: ${item['title']}");
+                            // print("Tapped on: ${item['title']}");
                           },
                         ),
                       );

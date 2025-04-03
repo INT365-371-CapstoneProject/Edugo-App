@@ -173,7 +173,9 @@ class _QuestionState extends State<Question> {
           },
           child: Container(
             decoration: BoxDecoration(
-              color: isSelected ? Colors.yellow : Colors.black,
+              color: isSelected
+                  ? const Color.fromARGB(255, 112, 223, 176)
+                  : const Color(0xFF355FFF),
               borderRadius: BorderRadius.circular(6),
             ),
             child: Center(
@@ -213,7 +215,9 @@ class _QuestionState extends State<Question> {
                 index == educationOptions.length - 1 ? 0 : 16, // เช็คอันสุดท้าย
           ),
           decoration: BoxDecoration(
-            color: isSelected ? Colors.yellow : const Color(0xFF355FFF),
+            color: isSelected
+                ? const Color.fromARGB(255, 112, 223, 176)
+                : const Color(0xFF355FFF),
             borderRadius: BorderRadius.circular(8),
           ),
           child: ListTile(

@@ -553,7 +553,7 @@ class _RegisterState extends State<Register> {
                 borderRadius: BorderRadius.circular(9.51),
                 borderSide: hasError
                     ? const BorderSide(color: Colors.red, width: 2.0)
-                    : BorderSide.none, // ใช้สี
+                    : BorderSide(color: Color(0xFFC0CDFF)), // ใช้สี
               ),
               filled: true,
               fillColor: const Color(0xFFECF0F6),
