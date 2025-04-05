@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 
 import 'package:edugo/features/search/screens/search_list.dart';
+import 'package:edugo/shared/utils/endpoint.dart';
 import 'package:flutter/material.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:edugo/services/footer.dart';
@@ -32,9 +33,8 @@ class _SearchScreenState extends State<SearchScreen> {
   }
 
   Future<void> fetchScholarships() async {
-    const baseImageUrl =
-        "https://capstone24.sit.kmutt.ac.th/un2/api/public/images/";
-    const url = "https://capstone24.sit.kmutt.ac.th/un2/api/announce-user";
+    const baseImageUrl = Endpoints.getScholarshipImage;
+    const url = Endpoints.getScholarship;
 
     try {
       String? token = await authService.getToken();
@@ -341,7 +341,7 @@ class _SearchScreenState extends State<SearchScreen> {
                                 DateTime.now();
 
                         final String imageUrl =
-                            "https://capstone24.sit.kmutt.ac.th/un2/api/announce/${scholarship['id']}/image";
+                            "${Endpoints.announce}/${scholarship['id']}/image";
 
                         // แปลงวันที่เป็นรูปแบบที่ต้องการ
                         final duration =

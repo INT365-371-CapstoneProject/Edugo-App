@@ -1,5 +1,6 @@
 import 'package:edugo/features/subject/screens/subject_manage.dart';
 import 'package:edugo/services/auth_service.dart';
+import 'package:edugo/shared/utils/endpoint.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -121,8 +122,7 @@ class _SubjectAddEditState extends State<SubjectAddEdit> {
   Future<void> submitAddData() async {
     String? token = await authService.getToken();
 
-    final String apiUrl =
-        "https://capstone24.sit.kmutt.ac.th/un2/api/subject/add";
+    final String apiUrl = "${Endpoints.subject}/add";
 
     var request = http.MultipartRequest('POST', Uri.parse(apiUrl));
 
@@ -237,8 +237,7 @@ class _SubjectAddEditState extends State<SubjectAddEdit> {
   }
 
   Future<void> submitEditData() async {
-    final String apiUrl =
-        "https://capstone24.sit.kmutt.ac.th/un2/api/subject/update/${id}";
+    final String apiUrl = "${Endpoints.subject}/update/${id}";
 
     var request = http.MultipartRequest('PUT', Uri.parse(apiUrl));
 

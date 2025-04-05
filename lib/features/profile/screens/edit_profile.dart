@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:typed_data';
+import 'package:edugo/shared/utils/endpoint.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -150,7 +151,7 @@ class _ProviderProfileEditState extends State<ProviderProfileEdit> {
     String? token = await authService.getToken();
 
     final response = await http.get(
-      Uri.parse('https://capstone24.sit.kmutt.ac.th/un2/api/country'),
+      Uri.parse(Endpoints.country),
       headers: {
         'Authorization': 'Bearer $token',
         'Content-Type': 'application/json',
@@ -176,7 +177,7 @@ class _ProviderProfileEditState extends State<ProviderProfileEdit> {
     String? token = await authService.getToken();
 
     final response = await http.get(
-      Uri.parse('https://capstone24.sit.kmutt.ac.th/un2/api/profile/avatar'),
+      Uri.parse(Endpoints.getProfileAvatar),
       headers: {
         'Authorization': 'Bearer $token',
       },
@@ -212,7 +213,7 @@ class _ProviderProfileEditState extends State<ProviderProfileEdit> {
 
     var request = http.MultipartRequest(
       'PUT',
-      Uri.parse('https://capstone24.sit.kmutt.ac.th/un2/api/profile'),
+      Uri.parse(Endpoints.profile),
     );
 
     request.headers['Authorization'] = 'Bearer $token';
@@ -250,7 +251,7 @@ class _ProviderProfileEditState extends State<ProviderProfileEdit> {
 
     try {
       final response = await http.put(
-        Uri.parse('https://capstone24.sit.kmutt.ac.th/un2/api/profile'),
+        Uri.parse(Endpoints.profile),
         headers: {
           'Authorization': 'Bearer $token',
           'Content-Type': 'application/json',

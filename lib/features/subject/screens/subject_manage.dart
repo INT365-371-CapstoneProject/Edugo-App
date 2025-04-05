@@ -5,6 +5,7 @@ import 'package:edugo/features/subject/screens/subject_add_edit.dart';
 import 'package:edugo/features/subject/screens/subject_detail.dart';
 import 'package:edugo/services/auth_service.dart';
 import 'package:edugo/services/footer.dart';
+import 'package:edugo/shared/utils/endpoint.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -44,11 +45,13 @@ class _SubjectManagementState extends State<SubjectManagement> {
 
   Uint8List? imagePostAvatar;
 
+  String subjectEndpoint = Endpoints.subject;
+
   Future<void> fetchAvatarImage() async {
     String? token = await authService.getToken();
 
     final response = await http.get(
-      Uri.parse('https://capstone24.sit.kmutt.ac.th/un2/api/profile/avatar'),
+      Uri.parse(Endpoints.getProfileAvatar),
       headers: {
         'Authorization': 'Bearer $token',
       },
@@ -67,8 +70,7 @@ class _SubjectManagementState extends State<SubjectManagement> {
     String? token = await authService.getToken();
 
     final response = await http.get(
-      Uri.parse(
-          'https://capstone24.sit.kmutt.ac.th/un2/api/subject/$id/avatar'),
+      Uri.parse('$subjectEndpoint/$id/avatar'),
       headers: {
         'Authorization': 'Bearer $token',
       },
@@ -90,11 +92,11 @@ class _SubjectManagementState extends State<SubjectManagement> {
       headers['Authorization'] = 'Bearer $token';
     }
 
-    const baseImageUrl =
-        "https://capstone24.sit.kmutt.ac.th/un2/api/public/images/";
-    const url = "https://capstone24.sit.kmutt.ac.th/un2/api/subject";
+    const baseImageUrl = Endpoints.getScholarshipImage;
+
     try {
-      final response = await http.get(Uri.parse(url), headers: headers);
+      final response =
+          await http.get(Uri.parse(subjectEndpoint), headers: headers);
       if (response.statusCode == 200) {
         final Map<String, dynamic> responseData = json.decode(response.body);
 
@@ -233,8 +235,7 @@ class _SubjectManagementState extends State<SubjectManagement> {
   }
 
   Future<void> submitDeleteData(int id) async {
-    final String apiUrl =
-        "https://capstone24.sit.kmutt.ac.th/un2/api/subject/delete/${id}";
+    final String apiUrl = "$subjectEndpoint/${id}";
 
     var request = http.MultipartRequest('DELETE', Uri.parse(apiUrl));
 

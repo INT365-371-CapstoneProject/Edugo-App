@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../features/login&register/login.dart';
+import '../../features/login&register/screens/login.dart';
 import '../../features/profile/screens/profile.dart';
 
 class AppRoutes {

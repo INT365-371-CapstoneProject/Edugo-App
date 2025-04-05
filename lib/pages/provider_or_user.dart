@@ -1,4 +1,4 @@
-import 'package:edugo/features/login&register/login.dart';
+import 'package:edugo/features/login&register/screens/login.dart';
 import 'package:edugo/pages/welcome_user_page.dart';
 import 'package:flutter/material.dart';
 

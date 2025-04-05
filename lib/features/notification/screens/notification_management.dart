@@ -1,4 +1,5 @@
 import 'package:edugo/features/profile/screens/profile.dart';
+import 'package:edugo/shared/utils/endpoint.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
@@ -36,8 +37,7 @@ class _NotificationListState extends State<NotificationList> {
       headers['Authorization'] = 'Bearer $token';
     }
 
-    final url =
-        "https://capstone24.sit.kmutt.ac.th/un2/api/notification/acc/${widget.id}";
+    final url = "${Endpoints.getNotificationWithAccountID}/${widget.id}";
 
     try {
       final response = await http.get(Uri.parse(url), headers: headers);

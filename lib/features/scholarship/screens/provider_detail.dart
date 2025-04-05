@@ -3,6 +3,7 @@ import 'package:edugo/features/scholarship/screens/provider_add.dart';
 import 'package:edugo/features/scholarship/screens/provider_management.dart';
 import 'package:edugo/services/auth_service.dart';
 import 'package:edugo/services/datetime_provider_add.dart';
+import 'package:edugo/shared/utils/endpoint.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -170,8 +171,7 @@ class _ProviderDetailState extends State<ProviderDetail> {
   }
 
   Future<void> submitDeleteData() async {
-    final String apiUrl =
-        "https://capstone24.sit.kmutt.ac.th/un2/api/announce/delete/${id}";
+    final String apiUrl = "${Endpoints.announce}/delete/${id}";
 
     var request = http.MultipartRequest('DELETE', Uri.parse(apiUrl));
 
@@ -195,8 +195,7 @@ class _ProviderDetailState extends State<ProviderDetail> {
   }
 
   Future<void> addBookmark() async {
-    final url =
-        Uri.parse('https://capstone24.sit.kmutt.ac.th/un2/api/bookmark');
+    final url = Uri.parse(Endpoints.bookmark);
 
     String? token = await authService.getToken();
 

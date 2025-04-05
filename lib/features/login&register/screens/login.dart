@@ -1,9 +1,11 @@
 import 'dart:convert';
 import 'package:edugo/features/home/screens/home_screen.dart';
 import 'package:edugo/features/login&register/screens/forgetPassword.dart';
+import 'package:edugo/features/login&register/services/login_service.dart';
 import 'package:edugo/features/question/screens/question.dart';
 import 'package:edugo/features/scholarship/screens/provider_management.dart';
 import 'package:edugo/features/profile/screens/profile.dart';
+import 'package:edugo/shared/utils/endpoint.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 
 import '../../../services/auth_service.dart';
@@ -21,7 +23,6 @@ class _LoginState extends State<Login> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   bool _isPasswordVisible = false;
-
   bool _emailError = false;
   bool _passwordError = false;
 
@@ -36,107 +37,44 @@ class _LoginState extends State<Login> {
     }
   }
 
-  final AuthService _authService = AuthService();
+  final LoginService loginService = LoginService();
 
   Future<void> loginUser(String emailOrUsername, String password) async {
-    final url = Uri.parse('https://capstone24.sit.kmutt.ac.th/un2/api/login');
+    final token = await loginService.loginUser(emailOrUsername, password);
 
-    _showLoadingDialog(); // แสดง Popup Loading ก่อนเริ่ม request
-
-    // ตรวจสอบว่าเป็น Email หรือ Username
-    bool isEmail = RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(emailOrUsername);
-    String key = isEmail ? 'email' : 'username';
-
-    print(key);
-
-    try {
-      final response = await http.post(
-        url,
-        headers: {'Content-Type': 'application/json'},
-        body: json.encode({
-          key: emailOrUsername, // ใช้ 'email' หรือ 'username' ตามที่ตรวจสอบได้
-          'password': password,
-          "remember_me": true
-        }),
-      );
-
-      Navigator.of(context).pop(); // ปิด Popup Loading
-
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        final token = data['token'];
-
-        await _authService.saveToken(token);
-        addFCMToken();
-        _showSuccessDialog(); // แสดง Popup สำเร็จ
-      } else {
-        _showErrorDialog("Login Failed", "Invalid email or password.");
-      }
-    } catch (e) {
-      Navigator.of(context).pop(); // ปิด Popup Loading
-      _showErrorDialog("Error", "Something went wrong. Please try again.");
-    }
-  }
-
-  Future<void> addFCMToken() async {
-    final url = Uri.parse('https://capstone24.sit.kmutt.ac.th/un2/api/fcm');
-
-    String? token = await _authService.getToken();
-
-    // Create headers map
-    Map<String, String> headers = {'Content-Type': 'application/json'};
-
-    // Add Authorization header if token is available
     if (token != null) {
-      headers['Authorization'] = 'Bearer $token';
-    }
-    final firebaseMessaging = FirebaseMessaging.instance;
-
-    final fCMToken = await firebaseMessaging.getToken();
-
-    try {
-      final response = await http.post(
-        url,
-        headers: headers, // Use the headers with the token
-        body: json.encode({"fcm_token": fCMToken}),
-      );
-
-      if (response.statusCode == 201 || response.statusCode == 200) {
-        print("Success");
-      } else {
-        print(response);
-      }
-    } catch (e) {
-      print(e);
+      await loginService.addFCMToken(token);
+      _showSuccessDialog();
+    } else {
+      _showErrorDialog("Login Failed", "Invalid email or password.");
     }
   }
 
-  void _showLoadingDialog() {
+  void _navigateToHome() {
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => const HomeScreenApp()),
+    );
+  }
+
+  void _showErrorDialog(String title, String message) {
     showDialog(
       context: context,
-      barrierDismissible: false, // ป้องกันผู้ใช้ปิด Popup เอง
-      builder: (BuildContext context) {
-        return Dialog(
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          child: Padding(
-            padding: const EdgeInsets.all(20.0),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: const [
-                CircularProgressIndicator(), // วงกลมโหลด
-                SizedBox(height: 16),
-                Text("Logging in...", style: TextStyle(fontSize: 16)),
-              ],
-            ),
+      builder: (context) => AlertDialog(
+        title: Text(title),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('OK'),
           ),
-        );
-      },
+        ],
+      ),
     );
   }
 
   Future<http.Response?> getAnswer() async {
-    final url = Uri.parse('https://capstone24.sit.kmutt.ac.th/un2/api/answer');
+    final url = Uri.parse(Endpoints.answer);
     final AuthService authService = AuthService();
     String? token = await authService.getToken();
 
@@ -217,38 +155,6 @@ class _LoginState extends State<Login> {
         },
         transitionDuration: const Duration(milliseconds: 300),
       ),
-    );
-  }
-
-  void _showErrorDialog(String title, String message) {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          title: Text(title,
-              textAlign: TextAlign.center,
-              style: const TextStyle(color: Colors.red)),
-          content: Text(message, textAlign: TextAlign.center),
-          actions: [
-            Center(
-              child: ElevatedButton(
-                onPressed: () {
-                  Navigator.of(context).pop();
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.red,
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8)),
-                ),
-                child: const Text("OK", style: TextStyle(color: Colors.white)),
-              ),
-            ),
-          ],
-        );
-      },
     );
   }
 

@@ -1,8 +1,9 @@
 import 'dart:convert';
-import 'package:edugo/features/login&register/login.dart';
+import 'package:edugo/features/login&register/screens/login.dart';
+import 'package:edugo/shared/utils/endpoint.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import '../../services/auth_service.dart';
+import '../../../services/auth_service.dart';
 import 'package:edugo/features/home/screens/home_screen.dart';
 
 class Register extends StatefulWidget {
@@ -50,7 +51,7 @@ class _RegisterState extends State<Register> {
             : "";
     if (!_validateUserStepTwo()) return;
 
-    final url = Uri.parse('https://capstone24.sit.kmutt.ac.th/un2/api/$path');
+    final url = Uri.parse('${Endpoints.baseUrl}/$path');
     final requestBody = _buildRequestBody();
 
     if (requestBody == null) return;

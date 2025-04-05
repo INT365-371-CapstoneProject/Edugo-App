@@ -1,5 +1,6 @@
 import 'dart:convert';
-import 'package:edugo/features/login&register/login.dart';
+import 'package:edugo/features/login&register/screens/login.dart';
+import 'package:edugo/shared/utils/endpoint.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
@@ -142,8 +143,7 @@ class _ForgetPasswordState extends State<ForgetPassword> {
 
     try {
       final response = await http.post(
-        Uri.parse(
-            "https://capstone24.sit.kmutt.ac.th/un2/api/auth/forgot-password"),
+        Uri.parse(Endpoints.forgotPassword),
         headers: {"Content-Type": "application/json"},
         body: json.encode({"email": email}),
       );
@@ -183,7 +183,7 @@ class _ForgetPasswordState extends State<ForgetPassword> {
 
     try {
       final response = await http.post(
-        Uri.parse("https://capstone24.sit.kmutt.ac.th/un2/api/auth/verify-otp"),
+        Uri.parse(Endpoints.otpVerification),
         headers: {"Content-Type": "application/json"},
         body: json.encode({
           "email": email, // ส่ง email ไปด้วย

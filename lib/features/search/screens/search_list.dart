@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:edugo/features/search/screens/filter.dart';
 import 'package:edugo/services/auth_service.dart';
 import 'package:edugo/services/scholarship_card.dart';
+import 'package:edugo/shared/utils/endpoint.dart';
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
@@ -70,8 +71,7 @@ class _SearchListState extends State<SearchList> {
           activeFilters['scholarshipTypes']!.map((type) => "category=$type"));
     }
 
-    String url =
-        "https://capstone24.sit.kmutt.ac.th/un2/api/search/announce-user";
+    String url = Endpoints.searchAnnounceUser;
     if (queryParams.isNotEmpty) {
       url += "?${queryParams.join('&')}";
     }
@@ -223,7 +223,7 @@ class _SearchListState extends State<SearchList> {
                         child: ScholarshipCard(
                           tag: formattedTag,
                           image:
-                              "https://capstone24.sit.kmutt.ac.th/un2/api/announce/${scholarship['id']}/image",
+                              "${Endpoints.announce}/${scholarship['id']}/image",
                           title: scholarship['title'] ?? 'No title',
                           date: scholarship['date'] ?? 'No date available',
                           status: "",
