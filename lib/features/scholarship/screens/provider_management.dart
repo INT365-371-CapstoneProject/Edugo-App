@@ -4,6 +4,7 @@ import 'package:edugo/features/profile/screens/profile.dart';
 import 'package:edugo/features/subject/screens/subject_manage.dart';
 import 'package:edugo/services/scholarship_card.dart';
 import 'package:edugo/services/status_box.dart';
+import 'package:edugo/shared/utils/endpoint.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -36,8 +37,8 @@ class _ProviderManagementState extends State<ProviderManagement> {
   }
 
   Future<void> fetchScholarships() async {
-    const baseImageUrl = "https://capstone24.sit.kmutt.ac.th/un2/api/announce/";
-    const url = "https://capstone24.sit.kmutt.ac.th/un2/api/announce";
+    const baseImageUrl = Endpoints.announce;
+    const url = Endpoints.announce;
 
     try {
       String? token = await authService.getToken();

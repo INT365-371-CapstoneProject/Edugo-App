@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 
 import 'package:edugo/features/scholarship/screens/provider_detail.dart';
+import 'package:edugo/shared/utils/endpoint.dart';
 import 'package:flutter/material.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:edugo/services/footer.dart';
@@ -31,9 +32,7 @@ class _HomeScreenAppState extends State<HomeScreenApp> {
   }
 
   Future<void> fetchScholarships() async {
-    const baseImageUrl =
-        "https://capstone24.sit.kmutt.ac.th/un2/api/public/images/";
-    const url = "https://capstone24.sit.kmutt.ac.th/un2/api/announce-user";
+    const baseImageUrl = Endpoints.getScholarshipImage;
 
     try {
       String? token = await authService.getToken();
@@ -42,7 +41,8 @@ class _HomeScreenAppState extends State<HomeScreenApp> {
         headers['Authorization'] = 'Bearer $token';
       }
 
-      final response = await http.get(Uri.parse(url), headers: headers);
+      final response =
+          await http.get(Uri.parse(Endpoints.getScholarship), headers: headers);
 
       if (response.statusCode == 200) {
         final Map<String, dynamic> data =
@@ -351,7 +351,7 @@ class _HomeScreenAppState extends State<HomeScreenApp> {
                                 DateTime.now();
 
                         final String imageUrl =
-                            "https://capstone24.sit.kmutt.ac.th/un2/api/announce/${scholarship['id']}/image";
+                            "${Endpoints.announce}/${scholarship['id']}/image";
 
                         // แปลงวันที่เป็นรูปแบบที่ต้องการ
                         final duration =

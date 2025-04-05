@@ -1,4 +1,5 @@
 import 'package:edugo/services/auth_service.dart';
+import 'package:edugo/shared/utils/endpoint.dart';
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
@@ -42,7 +43,7 @@ class _FilterDrawerState extends State<FilterDrawer> {
   }
 
   Future<void> fetchScholarshipCategories() async {
-    String url = "https://capstone24.sit.kmutt.ac.th/un2/api/category";
+    String url = Endpoints.category;
 
     String? token = await authService.getToken();
     Map<String, String> headers = {};

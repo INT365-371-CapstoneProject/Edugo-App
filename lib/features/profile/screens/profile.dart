@@ -1,8 +1,9 @@
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:edugo/features/bookmark/screens/bookmark_list.dart';
-import 'package:edugo/features/login&register/login.dart';
+import 'package:edugo/features/login&register/screens/login.dart';
 import 'package:edugo/features/notification/screens/notification_management.dart';
+import 'package:edugo/shared/utils/endpoint.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:edugo/features/profile/screens/edit_profile.dart';
@@ -47,7 +48,7 @@ class _ProviderProfileState extends State<ProviderProfile> {
     String? token = await authService.getToken();
 
     final response = await http.get(
-      Uri.parse('https://capstone24.sit.kmutt.ac.th/un2/api/profile/avatar'),
+      Uri.parse(Endpoints.getProfileAvatar),
       headers: {
         'Authorization': 'Bearer $token',
       },
@@ -63,7 +64,7 @@ class _ProviderProfileState extends State<ProviderProfile> {
   }
 
   Future<void> fetchProfile() async {
-    const url = "https://capstone24.sit.kmutt.ac.th/un2/api/profile";
+    const url = Endpoints.profile;
 
     try {
       String? token = await authService.getToken();

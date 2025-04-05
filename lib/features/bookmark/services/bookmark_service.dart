@@ -1,3 +1,4 @@
+import 'package:edugo/shared/utils/endpoint.dart';
 import 'package:http/http.dart' as http;
 import 'package:edugo/services/auth_service.dart';
 import 'dart:convert';
@@ -6,11 +7,11 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 class BookmarkService {
   final AuthService _authService = AuthService();
 
-  String? get apiBaseUrl => dotenv.env['API_BASE_URL'];
+  String apiBaseUrl = Endpoints.baseUrl;
 
   Future<List<dynamic>> fetchBookmarks(int userId) async {
     final String? token = await _authService.getToken();
-    final String url = "$apiBaseUrl/bookmark/acc/$userId";
+    final String url = "${Endpoints.getBookmarkByAccountID}/$userId";
 
     final headers = {
       if (token != null) 'Authorization': 'Bearer $token',
@@ -57,6 +58,7 @@ class BookmarkService {
     });
 
     if (response.statusCode != 200) {
+      fetchBookmarks(id);
       throw Exception("Failed to delete bookmark");
     }
   }

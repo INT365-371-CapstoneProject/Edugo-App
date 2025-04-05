@@ -1,5 +1,5 @@
-import 'package:edugo/features/login&register/login.dart';
-import 'package:edugo/features/login&register/register.dart';
+import 'package:edugo/features/login&register/screens/login.dart';
+import 'package:edugo/features/login&register/screens/register.dart';
 import 'package:flutter/material.dart';
 
 // cf = change of Figma : {Scale on figma}

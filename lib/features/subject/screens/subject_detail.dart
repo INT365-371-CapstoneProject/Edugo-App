@@ -3,6 +3,7 @@ import 'package:edugo/features/subject/screens/subject_add_edit.dart';
 import 'package:edugo/features/subject/screens/subject_manage.dart';
 import 'package:edugo/services/auth_service.dart';
 import 'package:edugo/services/datetime_provider_add.dart';
+import 'package:edugo/shared/utils/endpoint.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -33,6 +34,9 @@ class _SubjectDetailState extends State<SubjectDetail> {
   final double coverHeight = 138;
   final AuthService authService = AuthService(); // Instance of AuthService
   TextEditingController _commentController = TextEditingController();
+
+  String subjectEndpoint = Endpoints.subject;
+  String commentEndpoint = Endpoints.comment;
 
   @override
   void initState() {
@@ -66,8 +70,7 @@ class _SubjectDetailState extends State<SubjectDetail> {
       headers['Authorization'] = 'Bearer $token';
     }
 
-    final String url =
-        "https://capstone24.sit.kmutt.ac.th/un2/api/comment/post/$id";
+    final String url = "$commentEndpoint/post/$id";
 
     try {
       final response = await http.get(Uri.parse(url), headers: headers);
@@ -105,7 +108,6 @@ class _SubjectDetailState extends State<SubjectDetail> {
       headers['Authorization'] = 'Bearer $token';
     }
 
-    final String url = "https://capstone24.sit.kmutt.ac.th/un2/api/comment";
     final Map<String, dynamic> body = {
       "Comments_Text": _commentController.text,
       "publish_date": DateTime.now().toIso8601String(),
@@ -114,7 +116,7 @@ class _SubjectDetailState extends State<SubjectDetail> {
 
     try {
       final response = await http.post(
-        Uri.parse(url),
+        Uri.parse(commentEndpoint),
         headers: headers,
         body: jsonEncode(body), // แปลง Map เป็น JSON String
       );
@@ -230,8 +232,7 @@ class _SubjectDetailState extends State<SubjectDetail> {
   }
 
   Future<void> submitDeleteData(int? id) async {
-    final String apiUrl =
-        "https://capstone24.sit.kmutt.ac.th/un2/api/subject/delete/$id";
+    final String apiUrl = "$subjectEndpoint/delete/$id";
 
     var request = http.MultipartRequest('DELETE', Uri.parse(apiUrl));
 

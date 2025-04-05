@@ -1,4 +1,4 @@
-import 'package:edugo/features/bookmark/services/%E0%B8%B4bookmark_service.dart';
+import 'package:edugo/features/bookmark/services/bookmark_service.dart';
 import 'package:edugo/features/bookmark/widgets/bookmark_item.dart';
 import 'package:edugo/features/profile/screens/profile.dart';
 import 'package:flutter/material.dart';
@@ -44,7 +44,7 @@ class _BookmarkListState extends State<BookmarkList> {
 
   void handleDelete(int id) async {
     await _bookmarkService.deleteBookmark(id);
-    loadData(); // รีโหลดใหม่หลังลบ
+    loadData();
   }
 
   @override

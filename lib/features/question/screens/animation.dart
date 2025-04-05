@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:edugo/services/auth_service.dart';
+import 'package:edugo/shared/utils/endpoint.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:http/http.dart' as http;
@@ -24,7 +25,7 @@ class _AnimationQuestionState extends State<AnimationQuestion> {
   final AuthService authService = AuthService();
 
   Future<void> SentAnswer() async {
-    final url = Uri.parse('https://capstone24.sit.kmutt.ac.th/un2/api/answer');
+    final url = Uri.parse(Endpoints.answer);
 
     String? token = await authService.getToken();
 

@@ -7,6 +7,7 @@ import 'package:edugo/services/datetime_provider_add.dart';
 import 'package:edugo/services/dropdown_provider_add.dart';
 import 'package:edugo/services/file_upload.dart';
 import 'package:edugo/services/top_provider_add.dart';
+import 'package:edugo/shared/utils/endpoint.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -164,7 +165,7 @@ class _ProviderAddEditState extends State<ProviderAddEdit> {
   }
 
   Future<void> fetchCountryData() async {
-    const apiUrl = "https://capstone24.sit.kmutt.ac.th/un2/api/country";
+    const apiUrl = Endpoints.country;
     try {
       var response = await http.get(Uri.parse(apiUrl));
       if (response.statusCode == 200) {
@@ -179,9 +180,8 @@ class _ProviderAddEditState extends State<ProviderAddEdit> {
   }
 
   Future<void> fetchCategoryData() async {
-    const apiUrl = "https://capstone24.sit.kmutt.ac.th/un2/api/category";
     try {
-      var response = await http.get(Uri.parse(apiUrl));
+      var response = await http.get(Uri.parse(Endpoints.category));
       if (response.statusCode == 200) {
         final List<dynamic> data = json.decode(response.body);
         setState(() {
@@ -266,8 +266,7 @@ class _ProviderAddEditState extends State<ProviderAddEdit> {
   }
 
   Future<void> submitAddData() async {
-    final String apiUrl =
-        "https://capstone24.sit.kmutt.ac.th/un2/api/announce/add";
+    final String apiUrl = "${Endpoints.announce}/add";
 
     var request = http.MultipartRequest('POST', Uri.parse(apiUrl));
 
@@ -449,8 +448,7 @@ class _ProviderAddEditState extends State<ProviderAddEdit> {
   // }
 
   Future<void> submitEditData() async {
-    final String apiUrl =
-        "https://capstone24.sit.kmutt.ac.th/un2/api/announce/update/${id}";
+    final String apiUrl = "${Endpoints.announce}/update/${id}";
 
     var request = http.MultipartRequest('PUT', Uri.parse(apiUrl));
 

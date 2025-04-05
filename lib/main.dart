@@ -1,19 +1,20 @@
-import 'package:edugo/api/firebase_api.dart';
-import 'package:edugo/features/scholarship/screens/provider_management.dart';
-import 'package:edugo/features/profile/screens/profile.dart';
-import 'package:edugo/firebase_options.dart';
-import 'package:edugo/pages/intro.dart';
-import 'package:edugo/pages/splash_screen.dart';
-import 'package:edugo/features/subject/screens/subject_manage.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:edugo/firebase_options.dart';
+import 'package:edugo/api/firebase_api.dart';
+import 'package:edugo/pages/splash_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize Firebase
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
+  // Initialize notifications (or other services)
   await FirebaseApi().initNotification();
-  await dotenv.load();
+
+  // Run the app
   runApp(SplashScreenApp());
 }
 
