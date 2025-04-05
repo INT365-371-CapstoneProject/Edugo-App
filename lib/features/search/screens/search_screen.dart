@@ -452,10 +452,6 @@ class _SearchScreenState extends State<SearchScreen> {
               ),
             ),
           ),
-          // Navbar ติดล่างสุด
-          FooterNav(
-            pageName: "search",
-          ),
         ],
       ),
     );

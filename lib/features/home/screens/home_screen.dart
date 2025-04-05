@@ -1,15 +1,97 @@
 import 'dart:typed_data';
 
 import 'package:edugo/features/scholarship/screens/provider_detail.dart';
+import 'package:edugo/features/search/screens/search_list.dart';
 import 'package:flutter/material.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:edugo/services/footer.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:edugo/services/auth_service.dart';
-import 'package:intl/intl.dart'; // นำเข้า DateFormat
+import 'package:intl/intl.dart';
 
 import '../../../services/scholarship_card.dart';
+
+class CountryFilter extends StatelessWidget {
+  final String name;
+  final int countryId;
+  final String flagImage;
+
+  const CountryFilter({
+    Key? key,
+    required this.name,
+    required this.countryId,
+    required this.flagImage,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          PageRouteBuilder(
+            pageBuilder: (context, animation, secondaryAnimation) => SearchList(
+              searchQuery: "",
+              selectedFilters: {
+                'countries': {countryId.toString()}
+              },
+            ),
+            transitionsBuilder:
+                (context, animation, secondaryAnimation, child) {
+              const begin = 0.0;
+              const end = 1.0;
+              const curve = Curves.easeOut;
+
+              var tween =
+                  Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+              return FadeTransition(
+                opacity: animation.drive(tween),
+                child: child,
+              );
+            },
+            transitionDuration: const Duration(milliseconds: 300),
+          ),
+        );
+      },
+      child: Column(
+        children: [
+          CircleAvatar(
+            radius: 25,
+            backgroundColor: const Color(0xFFEBEFFF),
+            child: ClipOval(
+              child: Image.asset(
+                flagImage,
+                width: 32,
+                height: 32,
+                fit: BoxFit.contain,
+                errorBuilder: (context, error, stackTrace) {
+                  // Fallback to showing first letter if image fails to load
+                  return Center(
+                    child: Text(
+                      name.substring(0, 1),
+                      style: const TextStyle(
+                        color: Color(0xFF355FFF),
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18,
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ),
+          const SizedBox(height: 6.0),
+          Text(
+            name,
+            style: const TextStyle(fontSize: 12),
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
+      ),
+    );
+  }
+}
 
 class HomeScreenApp extends StatefulWidget {
   const HomeScreenApp({super.key});
@@ -20,14 +102,64 @@ class HomeScreenApp extends StatefulWidget {
 
 class _HomeScreenAppState extends State<HomeScreenApp> {
   int _currentIndex = 0;
+  bool _showAllCountries = false;
   List<dynamic> scholarships = [];
   final Map<String, Uint8List?> _imageCache = {};
-  final AuthService authService = AuthService(); // Instance of AuthService
+  final AuthService authService = AuthService();
+
+  final List<Map<String, dynamic>> countryList = [
+    {
+      'name': 'Australia',
+      'countryId': 9,
+      'flagImage': 'assets/images/flags/australia.png'
+    },
+    {
+      'name': 'Italy',
+      'countryId': 82,
+      'flagImage': 'assets/images/flags/italy.png'
+    },
+    {
+      'name': 'America',
+      'countryId': 186,
+      'flagImage': 'assets/images/flags/usa.png'
+    },
+    {
+      'name': 'Canada',
+      'countryId': 31,
+      'flagImage': 'assets/images/flags/canada.png'
+    },
+    {
+      'name': 'Japan',
+      'countryId': 84,
+      'flagImage': 'assets/images/flags/japan.png'
+    },
+    {
+      'name': 'New Zealand',
+      'countryId': 125,
+      'flagImage': 'assets/images/flags/new_zealand.png'
+    },
+    {
+      'name': 'China',
+      'countryId': 36,
+      'flagImage': 'assets/images/flags/china.png'
+    },
+    {'name': 'UK', 'countryId': 185, 'flagImage': 'assets/images/flags/uk.png'},
+    {
+      'name': 'Singapore',
+      'countryId': 157,
+      'flagImage': 'assets/images/flags/singapore.png'
+    },
+    {
+      'name': 'Germany',
+      'countryId': 64,
+      'flagImage': 'assets/images/flags/germany.png'
+    },
+  ];
 
   @override
   void initState() {
     super.initState();
-    fetchScholarships(); // โหลดข้อมูลทุนการศึกษาเมื่อเริ่มต้น
+    fetchScholarships();
   }
 
   Future<void> fetchScholarships() async {
@@ -37,7 +169,7 @@ class _HomeScreenAppState extends State<HomeScreenApp> {
 
     try {
       String? token = await authService.getToken();
-      Map<String, String> headers = {}; // Explicitly type the map
+      Map<String, String> headers = {};
       if (token != null) {
         headers['Authorization'] = 'Bearer $token';
       }
@@ -45,10 +177,8 @@ class _HomeScreenAppState extends State<HomeScreenApp> {
       final response = await http.get(Uri.parse(url), headers: headers);
 
       if (response.statusCode == 200) {
-        final Map<String, dynamic> data =
-            json.decode(response.body); // Handle the response as a map
-        List<dynamic> scholarshipData =
-            data['data']; // Get the 'data' part, which is a list
+        final Map<String, dynamic> data = json.decode(response.body);
+        List<dynamic> scholarshipData = data['data'];
 
         setState(() {
           scholarships = scholarshipData.map((scholarship) {
@@ -79,13 +209,11 @@ class _HomeScreenAppState extends State<HomeScreenApp> {
 
   Future<Uint8List?> fetchImage(String url) async {
     if (_imageCache.containsKey(url)) {
-      return _imageCache[url]; // ดึงจากแคชถ้ามีอยู่แล้ว
+      return _imageCache[url];
     }
 
     try {
-      final AuthService authService = AuthService();
       String? token = await authService.getToken();
-
       Map<String, String> headers = {};
       if (token != null) {
         headers['Authorization'] = 'Bearer $token';
@@ -94,30 +222,22 @@ class _HomeScreenAppState extends State<HomeScreenApp> {
       final response = await http.get(Uri.parse(url), headers: headers);
 
       if (response.statusCode == 200) {
-        _imageCache[url] = response.bodyBytes; // บันทึกลงแคช
-        return response.bodyBytes; // โหลดรูปสำเร็จ
+        _imageCache[url] = response.bodyBytes;
+        return response.bodyBytes;
       } else {
         debugPrint("Failed to load image: ${response.statusCode}");
       }
     } catch (e) {
       debugPrint("Error fetching image: $e");
     }
-    _imageCache[url] = null; // ถ้าโหลดไม่สำเร็จ ให้แคชเป็น null
-    return null; // โหลดรูปไม่ได้ ให้ใช้ภาพเริ่มต้นแทน
+    _imageCache[url] = null;
+    return null;
   }
 
   final List<String> carouselItems = [
     'assets/images/carousel_1.png',
     'assets/images/carousel_2.png',
     'assets/images/carousel_3.png',
-  ];
-
-  final List<Map<String, String>> countries = [
-    {'name': 'Australia', 'flag': 'assets/images/brower.png'},
-    {'name': 'Italy', 'flag': 'assets/images/brower.png'},
-    {'name': 'America', 'flag': 'assets/images/brower.png'},
-    {'name': 'Canada', 'flag': 'assets/images/brower.png'},
-    {'name': 'Japan', 'flag': 'assets/images/brower.png'},
   ];
 
   @override
@@ -130,7 +250,7 @@ class _HomeScreenAppState extends State<HomeScreenApp> {
             child: SingleChildScrollView(
               child: Column(
                 children: [
-                  // ส่วน Header
+                  // Header
                   Container(
                     height: 263,
                     color: const Color(0xFF355FFF),
@@ -139,7 +259,7 @@ class _HomeScreenAppState extends State<HomeScreenApp> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Avatar และ Notification Icon
+                        // Avatar and Notification Icon
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
@@ -151,12 +271,23 @@ class _HomeScreenAppState extends State<HomeScreenApp> {
                             CircleAvatar(
                               radius: 20,
                               backgroundColor: const Color(0xFFDAFB59),
-                              child: Image.asset(
-                                'assets/images/notification.png',
-                                width: 40.0,
-                                height: 40.0,
-                                color: const Color(0xFF355FFF),
-                                colorBlendMode: BlendMode.srcIn,
+                              child: GestureDetector(
+                                onTap: () {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text(
+                                          'Notifications will be available soon!'),
+                                      duration: Duration(seconds: 2),
+                                    ),
+                                  );
+                                },
+                                child: Image.asset(
+                                  'assets/images/notification.png',
+                                  width: 40.0,
+                                  height: 40.0,
+                                  color: const Color(0xFF355FFF),
+                                  colorBlendMode: BlendMode.srcIn,
+                                ),
                               ),
                             ),
                           ],
@@ -215,14 +346,37 @@ class _HomeScreenAppState extends State<HomeScreenApp> {
                                       ),
                                       border: InputBorder.none,
                                     ),
+                                    onSubmitted: (value) {
+                                      Navigator.push(
+                                        context,
+                                        PageRouteBuilder(
+                                          pageBuilder: (context, animation,
+                                                  secondaryAnimation) =>
+                                              SearchList(searchQuery: value),
+                                          transitionsBuilder: (context,
+                                              animation,
+                                              secondaryAnimation,
+                                              child) {
+                                            const begin = 0.0;
+                                            const end = 1.0;
+                                            const curve = Curves.easeOut;
+
+                                            var tween = Tween(
+                                                    begin: begin, end: end)
+                                                .chain(
+                                                    CurveTween(curve: curve));
+                                            return FadeTransition(
+                                              opacity: animation.drive(tween),
+                                              child: child,
+                                            );
+                                          },
+                                          transitionDuration:
+                                              const Duration(milliseconds: 300),
+                                        ),
+                                      );
+                                    },
                                   ),
                                 ),
-                                // Image.asset(
-                                //   'assets/images/three-line.png',
-                                //   width: 30.0,
-                                //   height: 18.0,
-                                //   color: const Color(0xFF8CA4FF),
-                                // ),
                               ],
                             ),
                           ),
@@ -293,26 +447,55 @@ class _HomeScreenAppState extends State<HomeScreenApp> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text("Discover Many Countries",
-                            style: TextStyle(
-                                fontSize: 18, fontWeight: FontWeight.bold)),
-                        const SizedBox(height: 12.0),
                         Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceAround,
-                          children: countries.map((country) {
-                            return Column(
-                              children: [
-                                CircleAvatar(
-                                  radius: 25,
-                                  backgroundColor: const Color.fromARGB(255, 6,
-                                      72, 225), // ใช้ backgroundColor แทน
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            const Text(
+                              "Discover Many Countries",
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            TextButton(
+                              onPressed: () {
+                                setState(() {
+                                  _showAllCountries = !_showAllCountries;
+                                });
+                              },
+                              child: Text(
+                                _showAllCountries ? "See Less" : "See More",
+                                style: const TextStyle(
+                                  color: Color(0xFF355FFF),
+                                  fontWeight: FontWeight.w500,
+                                  decoration: TextDecoration.underline,
                                 ),
-                                const SizedBox(height: 6.0),
-                                Text(country['name']!,
-                                    style: const TextStyle(fontSize: 12)),
-                              ],
-                            );
-                          }).toList(),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(
+                            height: 4.0), // ลดระยะห่างจาก 8.0 เป็น 4.0
+                        GridView.count(
+                          padding: EdgeInsets.zero, // ลบ padding ของ GridView
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          crossAxisCount: 5,
+                          mainAxisSpacing: 8.0,
+                          crossAxisSpacing: 8.0,
+                          childAspectRatio: 0.8,
+                          children: List.generate(
+                            _showAllCountries ? countryList.length : 5,
+                            (index) {
+                              final country = countryList[index];
+                              return CountryFilter(
+                                name: country['name'],
+                                countryId: country['countryId'],
+                                flagImage: country['flagImage'],
+                              );
+                            },
+                          ),
                         ),
                       ],
                     ),
@@ -329,31 +512,24 @@ class _HomeScreenAppState extends State<HomeScreenApp> {
                       ),
                     ),
                   ),
-
                   const SizedBox(height: 10),
-
                   // Scholarships Section (Horizontal Scroll)
                   SizedBox(
-                    height: 240, // เพิ่มความสูงให้รองรับ Text
+                    height: 240,
                     child: ListView.builder(
-                      scrollDirection: Axis.horizontal, // ให้เลื่อนไปทางแนวนอน
+                      scrollDirection: Axis.horizontal,
                       padding: const EdgeInsets.symmetric(horizontal: 16.0),
                       itemCount: scholarships.length,
                       itemBuilder: (context, index) {
                         final scholarship = scholarships[index];
-
-                        // แปลงวันที่เป็น DateTime และตรวจสอบ null
                         final DateTime publishedDate =
                             DateTime.tryParse(scholarship['published_date']) ??
                                 DateTime.now();
                         final DateTime closeDate =
                             DateTime.tryParse(scholarship['close_date']) ??
                                 DateTime.now();
-
                         final String imageUrl =
                             "https://capstone24.sit.kmutt.ac.th/un2/api/announce/${scholarship['id']}/image";
-
-                        // แปลงวันที่เป็นรูปแบบที่ต้องการ
                         final duration =
                             "${DateFormat('d MMM').format(publishedDate)} - ${DateFormat('d MMM yyyy').format(closeDate)}";
 
@@ -386,7 +562,6 @@ class _HomeScreenAppState extends State<HomeScreenApp> {
                                   const begin = 0.0;
                                   const end = 1.0;
                                   const curve = Curves.easeOut;
-
                                   var tween = Tween(begin: begin, end: end)
                                       .chain(CurveTween(curve: curve));
                                   return FadeTransition(
@@ -433,7 +608,6 @@ class _HomeScreenAppState extends State<HomeScreenApp> {
                                                         CircularProgressIndicator()),
                                               );
                                             }
-
                                             if (snapshot.data == null) {
                                               return Image.asset(
                                                 "assets/images/scholarship_program.png",
@@ -442,7 +616,6 @@ class _HomeScreenAppState extends State<HomeScreenApp> {
                                                 fit: BoxFit.cover,
                                               );
                                             }
-
                                             return Image.memory(
                                               snapshot.data!,
                                               width: 144,
@@ -487,13 +660,11 @@ class _HomeScreenAppState extends State<HomeScreenApp> {
                       },
                     ),
                   ),
-                  const SizedBox(
-                      height: 20), // Add some spacing before the footer
+                  const SizedBox(height: 20),
                 ],
               ),
             ),
           ),
-          // Navbar ติดล่างสุด
           FooterNav(
             pageName: "home",
           ),

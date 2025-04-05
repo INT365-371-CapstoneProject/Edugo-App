@@ -1,7 +1,7 @@
 import 'package:edugo/features/scholarship/screens/provider_add.dart';
 import 'package:edugo/features/scholarship/screens/provider_detail.dart';
 import 'package:edugo/features/profile/screens/profile.dart';
-import 'package:edugo/features/subject/screens/subject_manage.dart';
+import 'package:edugo/pages/subject_manage.dart';
 import 'package:edugo/services/scholarship_card.dart';
 import 'package:edugo/services/status_box.dart';
 import 'package:flutter/cupertino.dart';

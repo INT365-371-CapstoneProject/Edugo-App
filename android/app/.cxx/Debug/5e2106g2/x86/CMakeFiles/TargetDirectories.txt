@@ -1,0 +1,2 @@
+D:/Edugo-App/android/app/.cxx/Debug/5e2106g2/x86/CMakeFiles/edit_cache.dir
+D:/Edugo-App/android/app/.cxx/Debug/5e2106g2/x86/CMakeFiles/rebuild_cache.dir
