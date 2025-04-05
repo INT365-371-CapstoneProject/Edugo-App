@@ -1,14 +1,14 @@
 import 'dart:convert';
 import 'dart:typed_data';
-import 'package:edugo/features/bookmark/screens/bookmark_management.dart';
+import 'package:edugo/features/bookmark/screens/bookmark_list.dart';
 import 'package:edugo/features/login&register/login.dart';
 import 'package:edugo/features/notification/screens/notification_management.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:edugo/features/profile/screens/edit_profile.dart';
 import 'package:edugo/features/scholarship/screens/provider_management.dart';
-import 'package:edugo/pages/subject_add_edit.dart';
-import 'package:edugo/pages/subject_manage.dart';
+import 'package:edugo/features/subject/screens/subject_add_edit.dart';
+import 'package:edugo/features/subject/screens/subject_manage.dart';
 import 'package:edugo/services/auth_service.dart';
 import 'package:edugo/services/footer.dart';
 import 'package:flutter/cupertino.dart';

@@ -4,7 +4,7 @@ import 'package:edugo/features/profile/screens/profile.dart';
 import 'package:edugo/firebase_options.dart';
 import 'package:edugo/pages/intro.dart';
 import 'package:edugo/pages/splash_screen.dart';
-import 'package:edugo/pages/subject_manage.dart';
+import 'package:edugo/features/subject/screens/subject_manage.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 
