@@ -1,7 +1,6 @@
 import 'package:edugo/features/scholarship/models/provider_add_model.dart';
 import 'package:edugo/features/scholarship/screens/provider_detail.dart';
 import 'package:edugo/features/scholarship/screens/provider_management.dart';
-import 'package:edugo/features/scholarship/services/provider_add_service.dart';
 import 'package:edugo/services/auth_service.dart';
 import 'package:edugo/services/datetime_provider_add.dart';
 import 'package:edugo/services/dropdown_provider_add.dart';
@@ -69,7 +68,6 @@ class _ProviderAddEditState extends State<ProviderAddEdit> {
   String? urlError;
   bool isValidUrl = false;
   Color urlBorderColor = const Color(0xFFCBD5E0);
-  final ApiService apiService = ApiService(); // สร้าง Instance ของ ApiService
 
   // สร้าง controller สำหรับ TextField
   TextEditingController titleController = TextEditingController();

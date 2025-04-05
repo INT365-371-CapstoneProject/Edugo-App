@@ -2,7 +2,6 @@ import 'package:edugo/shared/utils/endpoint.dart';
 import 'package:http/http.dart' as http;
 import 'package:edugo/services/auth_service.dart';
 import 'dart:convert';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class BookmarkService {
   final AuthService _authService = AuthService();
