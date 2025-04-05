@@ -1,15 +1,16 @@
-// services/bookmark_service.dart
 import 'package:http/http.dart' as http;
 import 'package:edugo/services/auth_service.dart';
 import 'dart:convert';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class BookmarkService {
   final AuthService _authService = AuthService();
 
+  String? get apiBaseUrl => dotenv.env['API_BASE_URL'];
+
   Future<List<dynamic>> fetchBookmarks(int userId) async {
     final String? token = await _authService.getToken();
-    final String url =
-        "https://capstone24.sit.kmutt.ac.th/un2/api/bookmark/acc/$userId";
+    final String url = "$apiBaseUrl/bookmark/acc/$userId";
 
     final headers = {
       if (token != null) 'Authorization': 'Bearer $token',
@@ -28,8 +29,7 @@ class BookmarkService {
   Future<Map<String, dynamic>> fetchAnnounceDetails(
       List<int> announceIds) async {
     String? token = await _authService.getToken();
-    final url =
-        "https://capstone24.sit.kmutt.ac.th/un2/api/announce-user/bookmark";
+    final url = "$apiBaseUrl/announce-user/bookmark";
 
     final response = await http.post(
       Uri.parse(url),
@@ -49,7 +49,7 @@ class BookmarkService {
 
   Future<void> deleteBookmark(int id) async {
     String? token = await _authService.getToken();
-    final url = "https://capstone24.sit.kmutt.ac.th/un2/api/bookmark/ann/$id";
+    final url = "$apiBaseUrl/bookmark/ann/$id";
 
     final response = await http.delete(Uri.parse(url), headers: {
       'Authorization': token != null ? 'Bearer $token' : '',

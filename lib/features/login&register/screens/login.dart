@@ -1,12 +1,12 @@
 import 'dart:convert';
 import 'package:edugo/features/home/screens/home_screen.dart';
-import 'package:edugo/features/login&register/forgetPassword.dart';
+import 'package:edugo/features/login&register/screens/forgetPassword.dart';
 import 'package:edugo/features/question/screens/question.dart';
 import 'package:edugo/features/scholarship/screens/provider_management.dart';
 import 'package:edugo/features/profile/screens/profile.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 
-import '../../services/auth_service.dart';
+import '../../../services/auth_service.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
