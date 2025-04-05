@@ -1,4 +1,5 @@
 import 'package:edugo/pages/subject_manage.dart';
+import 'package:edugo/services/auth_service.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -37,7 +38,7 @@ class _SubjectAddEditState extends State<SubjectAddEdit> {
   Color descriptionBorderColor = Color(0xFFF8F8F8);
   String? descriptionError;
   bool isValidDescription = false;
-
+  final AuthService authService = AuthService(); // Instance of AuthService
   TextEditingController _descriptionController =
       TextEditingController(); // Controller for description text field
 
@@ -118,22 +119,26 @@ class _SubjectAddEditState extends State<SubjectAddEdit> {
   }
 
   Future<void> submitAddData() async {
+    String? token = await authService.getToken();
+
     final String apiUrl =
         "https://capstone24.sit.kmutt.ac.th/un2/api/subject/add";
 
     var request = http.MultipartRequest('POST', Uri.parse(apiUrl));
 
-    request.fields['title'] =
-        "Title Subject"; // You can replace this with dynamic data
-    request.fields['description'] =
-        _descriptionController.text; // Get description from the text field
+    request.headers.addAll({
+      'Authorization': 'Bearer $token',
+      'Content-Type': 'multipart/form-data',
+    });
+
+    request.fields['title'] = "Title Subject"; // Replace with dynamic data
+    request.fields['description'] = _descriptionController.text;
     request.fields['posts_type'] = 'Subject';
     request.fields['publish_date'] =
         '${DateTime.now().toUtc().toIso8601String().split('.')[0]}Z';
     request.fields['country_id'] = '1';
 
     if (_selectedImage != null) {
-      // ตรวจสอบนามสกุลไฟล์
       String fileExtension = _selectedImage!.path.split('.').last.toLowerCase();
       MediaType? contentType;
 
@@ -142,27 +147,24 @@ class _SubjectAddEditState extends State<SubjectAddEdit> {
       } else if (fileExtension == 'png') {
         contentType = MediaType('image', 'png');
       } else {
-        // หากรูปภาพไม่ใช่ jpg หรือ png
         showError("Unsupported file format. Please upload a JPG or PNG image.");
         return;
       }
 
-      // อ่านไฟล์เป็นไบต์และเพิ่มเข้าไปในคำขอ
       List<int> imageBytes = await _selectedImage!.readAsBytes();
       request.files.add(
         http.MultipartFile.fromBytes(
           'image',
           imageBytes,
-          filename: 'image.$fileExtension', // ใช้นามสกุลไฟล์จริง
-          contentType: contentType, // กำหนด MediaType ตามประเภทของไฟล์
+          filename: 'image.$fileExtension',
+          contentType: contentType,
         ),
       );
     }
 
     showDialog(
       context: context,
-      barrierDismissible:
-          false, // Prevent dismissing the dialog by tapping outside
+      barrierDismissible: false,
       builder: (BuildContext context) {
         return Dialog(
           shape: RoundedRectangleBorder(
@@ -198,7 +200,6 @@ class _SubjectAddEditState extends State<SubjectAddEdit> {
     );
 
     try {
-      // Delay for 3 seconds to simulate waiting time
       await Future.delayed(Duration(seconds: 3));
 
       var response = await request.send();
@@ -230,7 +231,7 @@ class _SubjectAddEditState extends State<SubjectAddEdit> {
         showError("Failed to submit data. Status code: ${response.statusCode}");
       }
     } catch (e) {
-      Navigator.of(context).pop(); // Close the loading dialog
+      Navigator.of(context).pop();
       showError("Error occurred: $e");
     }
   }

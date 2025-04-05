@@ -37,6 +37,50 @@ class _SubjectManagementState extends State<SubjectManagement> {
   void initState() {
     super.initState();
     _delayedLoad(); // เรียกใช้งานฟังก์ชัน _delayedLoad
+    fetchAvatarImage();
+  }
+
+  Uint8List? imageAvatar;
+
+  Uint8List? imagePostAvatar;
+
+  Future<void> fetchAvatarImage() async {
+    String? token = await authService.getToken();
+
+    final response = await http.get(
+      Uri.parse('https://capstone24.sit.kmutt.ac.th/un2/api/profile/avatar'),
+      headers: {
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      setState(() {
+        imageAvatar = response.bodyBytes; // แปลง response เป็น Uint8List
+      });
+    } else {
+      throw Exception('Failed to load country data');
+    }
+  }
+
+  Future<void> fetchPostAvatarImage(int id) async {
+    String? token = await authService.getToken();
+
+    final response = await http.get(
+      Uri.parse(
+          'https://capstone24.sit.kmutt.ac.th/un2/api/subject/$id/avatar'),
+      headers: {
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      setState(() {
+        imagePostAvatar = response.bodyBytes; // แปลง response เป็น Uint8List
+      });
+    } else {
+      imagePostAvatar = null;
+    }
   }
 
   Future<void> fetchsubject() async {
@@ -67,6 +111,7 @@ class _SubjectManagementState extends State<SubjectManagement> {
                 subject['description'] ?? 'No Description Available';
             subject['published_date'] =
                 subject['published_date'] ?? subject['publish_date'];
+
             return subject;
           }).toList();
           subject.sort(
@@ -416,11 +461,20 @@ class _SubjectManagementState extends State<SubjectManagement> {
                   children: [
                     CircleAvatar(
                       radius: 20,
-                      child: Image.asset(
-                        'assets/images/avatar.png',
-                        width: 40.0,
-                        height: 40.0,
-                        colorBlendMode: BlendMode.srcIn,
+                      child: ClipOval(
+                        child: imageAvatar != null
+                            ? Image.memory(
+                                imageAvatar!,
+                                width: 40, // กำหนดขนาดให้พอดีกับ avatar
+                                height: 40,
+                                fit: BoxFit.cover,
+                              )
+                            : Image.asset(
+                                'assets/images/avatar.png',
+                                width: 40,
+                                height: 40,
+                                fit: BoxFit.cover,
+                              ),
                       ),
                     ),
                     SizedBox(width: 16), // เพิ่มช่องว่างระหว่าง Avatar กับ Text
@@ -447,15 +501,21 @@ class _SubjectManagementState extends State<SubjectManagement> {
                       ],
                     ),
                     Spacer(), // ใช้ Spacer เพื่อให้ notification ชิดขวา
-                    CircleAvatar(
-                      radius: 20,
-                      backgroundColor: const Color(0xFFDAFB59),
-                      child: Image.asset(
-                        'assets/images/notification.png',
-                        width: 40.0,
-                        height: 40.0,
+                    GestureDetector(
+                      onTap: () {
+                        print(useItem);
+                        print(subject);
+                      },
+                      child: CircleAvatar(
+                        radius: 20,
+                        backgroundColor: const Color(0xFFDAFB59),
+                        child: Image.asset(
+                          'assets/images/notification.png',
+                          width: 40.0,
+                          height: 40.0,
+                        ),
                       ),
-                    ),
+                    )
                   ],
                 )
               ],
@@ -490,6 +550,14 @@ class _SubjectManagementState extends State<SubjectManagement> {
                                   ? DateFormat('dd MMMM yyyy  hh:mm a')
                                       .format(publishedDate)
                                   : 'N/A';
+                              final fullname =
+                                  subject['fullname']?.isNotEmpty ?? false
+                                      ? subject['fullname']
+                                      : 'No Name';
+
+                              // fetchPostAvatarImage(id);
+
+                              // print(imagePostAvatar);
 
                               return Padding(
                                 padding: const EdgeInsets.only(bottom: 16.0),
@@ -559,7 +627,7 @@ class _SubjectManagementState extends State<SubjectManagement> {
                                                             .start, // ทำให้ Text ชิดซ้าย
                                                     children: [
                                                       Text(
-                                                        "User Name",
+                                                        fullname,
                                                         style:
                                                             GoogleFonts.dmSans(
                                                           fontSize: 14,
@@ -815,17 +883,6 @@ class _SubjectManagementState extends State<SubjectManagement> {
                                                 ),
                                               ),
                                             ),
-                                          // else
-                                          //   ClipRRect(
-                                          //     borderRadius:
-                                          //         BorderRadius.circular(8.0),
-                                          //     child: Image.asset(
-                                          //       'assets/images/scholarship_program.png', // รูปภาพ fallback
-                                          //       fit: BoxFit.cover,
-                                          //       width: double.infinity,
-                                          //       height: 200,
-                                          //     ),
-                                          //   ),
                                           SizedBox(height: 22),
                                           Container(
                                             width: double
