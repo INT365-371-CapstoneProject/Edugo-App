@@ -17,8 +17,23 @@ class _SplashScreenState extends State<SplashScreen> {
   void initState() {
     super.initState();
     _timer = Timer(const Duration(seconds: 3), () {
-      // Navigate to HomePage with dissolve transition
-      Navigator.of(context).push(_createDissolveRoute());
+      Navigator.pushReplacement(
+        context,
+        PageRouteBuilder(
+          pageBuilder: (context, animation, secondaryAnimation) =>
+              const IntroScreen(),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            const begin = 0.0;
+            const end = 1.0;
+            const curve = Curves.easeOut;
+            var tween =
+                Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+            return FadeTransition(
+                opacity: animation.drive(tween), child: child);
+          },
+          transitionDuration: const Duration(milliseconds: 300),
+        ),
+      );
     });
   }
 

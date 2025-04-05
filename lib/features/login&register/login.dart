@@ -21,6 +21,8 @@ class _LoginState extends State<Login> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   bool _isPasswordVisible = false;
+  bool _isLoading = false;
+  final AuthService _authService = AuthService(); // เพิ่มบรรทัดนี้
 
   bool _emailError = false;
   bool _passwordError = false;
@@ -32,49 +34,72 @@ class _LoginState extends State<Login> {
     });
 
     if (!_emailError && !_passwordError) {
-      loginUser(_emailController.text.trim(), _passwordController.text.trim());
+      loginUser();
     }
   }
 
-  final AuthService _authService = AuthService();
+  Future<void> loginUser() async {
+    setState(() {
+      _isLoading = true;
+    });
 
-  Future<void> loginUser(String emailOrUsername, String password) async {
-    final url = Uri.parse('https://capstone24.sit.kmutt.ac.th/un2/api/login');
-
-    _showLoadingDialog(); // แสดง Popup Loading ก่อนเริ่ม request
-
-    // ตรวจสอบว่าเป็น Email หรือ Username
-    bool isEmail = RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(emailOrUsername);
-    String key = isEmail ? 'email' : 'username';
-
-    print(key);
+    _showLoadingDialog();
 
     try {
+      // ตรวจสอบว่าเป็น email หรือ username
+      final input = _emailController.text.trim();
+      final Map<String, dynamic> requestBody = {
+        'email': input.contains('@') ? input : '',
+        'username': !input.contains('@') ? input : '',
+        'password': _passwordController.text.trim(),
+        'remember_me': true
+      };
+
       final response = await http.post(
-        url,
-        headers: {'Content-Type': 'application/json'},
-        body: json.encode({
-          key: emailOrUsername, // ใช้ 'email' หรือ 'username' ตามที่ตรวจสอบได้
-          'password': password,
-          "remember_me": true
-        }),
+        Uri.parse('https://capstone24.sit.kmutt.ac.th/un2/api/login'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: json.encode(requestBody),
       );
 
-      Navigator.of(context).pop(); // ปิด Popup Loading
+      if (mounted) {
+        Navigator.pop(context);
+      }
+
+      print('Response status: ${response.statusCode}');
+      print('Response body: ${response.body}');
 
       if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        final token = data['token'];
+        final Map<String, dynamic> data = json.decode(response.body);
+        final String token = data['token'];
 
         await _authService.saveToken(token);
-        addFCMToken();
-        _showSuccessDialog(); // แสดง Popup สำเร็จ
+        await addFCMToken();
+
+        if (mounted) {
+          _showSuccessDialog();
+        }
       } else {
-        _showErrorDialog("Login Failed", "Invalid email or password.");
+        if (mounted) {
+          _showErrorDialog("Login Failed",
+              "Invalid email/username or password. Please try again.");
+        }
       }
     } catch (e) {
-      Navigator.of(context).pop(); // ปิด Popup Loading
-      _showErrorDialog("Error", "Something went wrong. Please try again.");
+      print('Error during login: $e');
+      if (mounted) {
+        Navigator.pop(context);
+        _showErrorDialog("Connection Error",
+            "Please check your internet connection and try again.");
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 
@@ -189,7 +214,7 @@ class _LoginState extends State<Login> {
           // ถ้าข้อมูลไม่มีให้ไปหน้า Question
           _navigateToPage(const Question());
         } else {
-          // ถ้าข้อมูลมีให้ไปหน้า HomeScreenApp
+          // ถ้าข้อมูลมีให้ไปหน้า HomeScreen
           _navigateToPage(const HomeScreenApp());
         }
       } else {
@@ -200,7 +225,7 @@ class _LoginState extends State<Login> {
   }
 
   void _navigateToPage(Widget page) {
-    Navigator.pushReplacement(
+    Navigator.pushAndRemoveUntil(
       context,
       PageRouteBuilder(
         pageBuilder: (context, animation, secondaryAnimation) => page,
@@ -217,6 +242,7 @@ class _LoginState extends State<Login> {
         },
         transitionDuration: const Duration(milliseconds: 300),
       ),
+      (route) => false, // เพิ่มพารามิเตอร์นี้เพื่อลบทุก route ก่อนหน้า
     );
   }
 

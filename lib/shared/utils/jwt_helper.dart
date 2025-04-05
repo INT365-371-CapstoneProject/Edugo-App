@@ -1,13 +1,22 @@
-import 'package:jwt_decoder/jwt_decoder.dart';
+import 'dart:convert';
 
 class JwtHelper {
-  // ตรวจสอบ Token หมดอายุหรือไม่
   static bool isExpired(String token) {
-    return JwtDecoder.isExpired(token);
-  }
+    try {
+      final parts = token.split('.');
+      if (parts.length != 3) return true;
 
-  // ดึงข้อมูลจาก Payload ของ Token
-  static Map<String, dynamic> decode(String token) {
-    return JwtDecoder.decode(token);
+      final payload = json
+          .decode(utf8.decode(base64Url.decode(base64Url.normalize(parts[1]))));
+
+      final exp = payload['exp'];
+      if (exp == null) return true;
+
+      final expiry = DateTime.fromMillisecondsSinceEpoch(exp * 1000);
+      return DateTime.now().isAfter(expiry);
+    } catch (e) {
+      print('Error parsing JWT: $e');
+      return true;
+    }
   }
 }

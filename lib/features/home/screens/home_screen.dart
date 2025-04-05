@@ -9,19 +9,23 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:edugo/services/auth_service.dart';
 import 'package:intl/intl.dart';
+import 'package:edugo/features/login&register/login.dart';
 
 import '../../../services/scholarship_card.dart';
+import 'package:edugo/features/search/screens/search_screen.dart';
 
 class CountryFilter extends StatelessWidget {
   final String name;
   final int countryId;
   final String flagImage;
+  final Color backgroundColor;
 
   const CountryFilter({
     Key? key,
     required this.name,
     required this.countryId,
     required this.flagImage,
+    required this.backgroundColor,
   }) : super(key: key);
 
   @override
@@ -42,13 +46,10 @@ class CountryFilter extends StatelessWidget {
               const begin = 0.0;
               const end = 1.0;
               const curve = Curves.easeOut;
-
               var tween =
                   Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
               return FadeTransition(
-                opacity: animation.drive(tween),
-                child: child,
-              );
+                  opacity: animation.drive(tween), child: child);
             },
             transitionDuration: const Duration(milliseconds: 300),
           ),
@@ -58,7 +59,7 @@ class CountryFilter extends StatelessWidget {
         children: [
           CircleAvatar(
             radius: 25,
-            backgroundColor: const Color(0xFFEBEFFF),
+            backgroundColor: backgroundColor,
             child: ClipOval(
               child: Image.asset(
                 flagImage,
@@ -66,12 +67,11 @@ class CountryFilter extends StatelessWidget {
                 height: 32,
                 fit: BoxFit.contain,
                 errorBuilder: (context, error, stackTrace) {
-                  // Fallback to showing first letter if image fails to load
                   return Center(
                     child: Text(
                       name.substring(0, 1),
                       style: const TextStyle(
-                        color: Color(0xFF355FFF),
+                        color: Colors.white,
                         fontWeight: FontWeight.bold,
                         fontSize: 18,
                       ),
@@ -111,55 +111,54 @@ class _HomeScreenAppState extends State<HomeScreenApp> {
     {
       'name': 'Australia',
       'countryId': 9,
-      'flagImage': 'assets/images/flags/australia.png'
+      'flagImage': 'assets/images/flags/australia.png',
+      'backgroundColor': const Color(0xFFAAD2DB)
     },
     {
       'name': 'Italy',
       'countryId': 82,
-      'flagImage': 'assets/images/flags/italy.png'
+      'flagImage': 'assets/images/flags/italy.png',
+      'backgroundColor': const Color(0xFFD7E4A8)
     },
     {
       'name': 'America',
       'countryId': 186,
-      'flagImage': 'assets/images/flags/usa.png'
+      'flagImage': 'assets/images/flags/usa.png',
+      'backgroundColor': const Color(0xFF7F97F2)
     },
     {
       'name': 'Canada',
       'countryId': 31,
-      'flagImage': 'assets/images/flags/canada.png'
+      'flagImage': 'assets/images/flags/canada.png',
+      'backgroundColor': const Color(0xFFD1B2DF)
     },
     {
       'name': 'Japan',
       'countryId': 84,
-      'flagImage': 'assets/images/flags/japan.png'
-    },
-    {
-      'name': 'New Zealand',
-      'countryId': 125,
-      'flagImage': 'assets/images/flags/new_zealand.png'
-    },
-    {
-      'name': 'China',
-      'countryId': 36,
-      'flagImage': 'assets/images/flags/china.png'
-    },
-    {'name': 'UK', 'countryId': 185, 'flagImage': 'assets/images/flags/uk.png'},
-    {
-      'name': 'Singapore',
-      'countryId': 157,
-      'flagImage': 'assets/images/flags/singapore.png'
-    },
-    {
-      'name': 'Germany',
-      'countryId': 64,
-      'flagImage': 'assets/images/flags/germany.png'
+      'flagImage': 'assets/images/flags/japan.png',
+      'backgroundColor': const Color(0xFFE4B58A)
     },
   ];
 
   @override
   void initState() {
     super.initState();
+    _checkToken();
     fetchScholarships();
+  }
+
+  Future<void> _checkToken() async {
+    bool isValid = await authService.validateToken();
+    if (!isValid) {
+      // ถ้า token ไม่ถูกต้องหรือหมดอายุ ให้ลบ token และนำไปหน้า login
+      await authService.removeToken();
+      if (mounted) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const Login()),
+        );
+      }
+    }
   }
 
   Future<void> fetchScholarships() async {
@@ -460,9 +459,27 @@ class _HomeScreenAppState extends State<HomeScreenApp> {
                             ),
                             TextButton(
                               onPressed: () {
-                                setState(() {
-                                  _showAllCountries = !_showAllCountries;
-                                });
+                                Navigator.push(
+                                  context,
+                                  PageRouteBuilder(
+                                    pageBuilder: (context, animation,
+                                            secondaryAnimation) =>
+                                        const SearchScreen(),
+                                    transitionsBuilder: (context, animation,
+                                        secondaryAnimation, child) {
+                                      const begin = 0.0;
+                                      const end = 1.0;
+                                      const curve = Curves.easeOut;
+                                      var tween = Tween(begin: begin, end: end)
+                                          .chain(CurveTween(curve: curve));
+                                      return FadeTransition(
+                                          opacity: animation.drive(tween),
+                                          child: child);
+                                    },
+                                    transitionDuration:
+                                        const Duration(milliseconds: 300),
+                                  ),
+                                );
                               },
                               child: Text(
                                 _showAllCountries ? "See Less" : "See More",
@@ -485,17 +502,14 @@ class _HomeScreenAppState extends State<HomeScreenApp> {
                           mainAxisSpacing: 8.0,
                           crossAxisSpacing: 8.0,
                           childAspectRatio: 0.8,
-                          children: List.generate(
-                            _showAllCountries ? countryList.length : 5,
-                            (index) {
-                              final country = countryList[index];
-                              return CountryFilter(
-                                name: country['name'],
-                                countryId: country['countryId'],
-                                flagImage: country['flagImage'],
-                              );
-                            },
-                          ),
+                          children: countryList.take(5).map((country) {
+                            return CountryFilter(
+                              name: country['name'],
+                              countryId: country['countryId'],
+                              flagImage: country['flagImage'],
+                              backgroundColor: country['backgroundColor'],
+                            );
+                          }).toList(),
                         ),
                       ],
                     ),

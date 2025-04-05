@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
+import 'package:edugo/features/home/screens/home_screen.dart';
 
 class AnimationQuestion extends StatefulWidget {
   final List<int> selectedCountries; // ใช้ int แทน String
@@ -57,6 +58,14 @@ class _AnimationQuestionState extends State<AnimationQuestion> {
     }
   }
 
+  void _navigateToHomeScreen() {
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (context) => const HomeScreenApp()),
+      (route) => false,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -105,10 +114,16 @@ class _AnimationQuestionState extends State<AnimationQuestion> {
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Center(
               child: ElevatedButton(
-                onPressed: () {
-                  SentAnswer();
-                  print("Selected Countries: ${widget.selectedCountries}");
-                  print("Selected Education: ${widget.selectedEducation}");
+                onPressed: () async {
+                  await SentAnswer();
+                  if (mounted) {
+                    Navigator.pushAndRemoveUntil(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => const HomeScreenApp()),
+                      (route) => false,
+                    );
+                  }
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color.fromARGB(255, 44, 33, 243),

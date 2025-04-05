@@ -353,30 +353,7 @@ class _ProviderProfileState extends State<ProviderProfile> {
                       ),
                     ),
                     title: Text("Logout"),
-                    onTap: () {
-                      Navigator.pushReplacement(
-                        context,
-                        PageRouteBuilder(
-                          pageBuilder:
-                              (context, animation, secondaryAnimation) =>
-                                  const Login(),
-                          transitionsBuilder:
-                              (context, animation, secondaryAnimation, child) {
-                            const begin = 0.0;
-                            const end = 1.0;
-                            const curve = Curves.easeOut;
-
-                            var tween = Tween(begin: begin, end: end)
-                                .chain(CurveTween(curve: curve));
-                            return FadeTransition(
-                              opacity: animation.drive(tween),
-                              child: child,
-                            );
-                          },
-                          transitionDuration: const Duration(milliseconds: 300),
-                        ),
-                      );
-                    },
+                    onTap: _handleLogout,
                   ),
                 ),
                 // Conditional rendering of verification button only for providers
@@ -446,5 +423,34 @@ class _ProviderProfileState extends State<ProviderProfile> {
         onTap: onTap,
       ),
     );
+  }
+
+  void _handleLogout() async {
+    try {
+      final AuthService authService = AuthService();
+      String? token = await authService.getToken();
+
+      // เรียก API logout
+      if (token != null) {
+        await http.post(
+          Uri.parse('https://capstone24.sit.kmutt.ac.th/un2/api/logout'),
+          headers: {'Authorization': 'Bearer $token'},
+        );
+      }
+
+      // ลบ token ทั้งหมด
+      await authService.removeToken();
+      await authService.removeFCMToken();
+
+      if (mounted) {
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (context) => const Login()),
+          (route) => false,
+        );
+      }
+    } catch (e) {
+      print('Error during logout: $e');
+    }
   }
 }

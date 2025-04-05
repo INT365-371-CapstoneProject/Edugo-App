@@ -11,6 +11,21 @@ class IntroScreen extends StatefulWidget {
 class _IntroScreenState extends State<IntroScreen> {
   bool isIntro1 = true;
 
+  void _onNextPage() {
+    if (isIntro1) {
+      setState(() {
+        isIntro1 = false;
+      });
+    } else {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => const ProviderOrUser(),
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -112,39 +127,7 @@ class _IntroScreenState extends State<IntroScreen> {
               FractionallySizedBox(
                 widthFactor: 0.94,
                 child: ElevatedButton(
-                  onPressed: () {
-                    setState(() {
-                      if (isIntro1) {
-                        setState(() {
-                          isIntro1 = false;
-                        });
-                      } else {
-                        Navigator.push(
-                          context,
-                          PageRouteBuilder(
-                            pageBuilder:
-                                (context, animation, secondaryAnimation) =>
-                                    const ProviderOrUser(),
-                            transitionsBuilder: (context, animation,
-                                secondaryAnimation, child) {
-                              const begin = 0.0;
-                              const end = 1.0;
-                              const curve = Curves.easeOut;
-
-                              var tween = Tween(begin: begin, end: end)
-                                  .chain(CurveTween(curve: curve));
-                              return FadeTransition(
-                                opacity: animation.drive(tween),
-                                child: child,
-                              );
-                            },
-                            transitionDuration:
-                                const Duration(milliseconds: 300),
-                          ),
-                        );
-                      }
-                    });
-                  },
+                  onPressed: _onNextPage,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF3056E6),
                     shape: RoundedRectangleBorder(

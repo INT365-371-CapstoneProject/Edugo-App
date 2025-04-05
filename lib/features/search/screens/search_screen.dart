@@ -121,6 +121,69 @@ class _SearchScreenState extends State<SearchScreen> {
     {'name': 'Japan', 'flag': 'assets/images/brower.png'},
   ];
 
+  final List<Map<String, dynamic>> countryList = [
+    {
+      'name': 'Australia',
+      'countryId': 9,
+      'flagImage': 'assets/images/flags/australia.png',
+      'backgroundColor': const Color(0xFFAAD2DB)
+    },
+    {
+      'name': 'Italy',
+      'countryId': 82,
+      'flagImage': 'assets/images/flags/italy.png',
+      'backgroundColor': const Color(0xFFD7E4A8)
+    },
+    {
+      'name': 'America',
+      'countryId': 186,
+      'flagImage': 'assets/images/flags/usa.png',
+      'backgroundColor': const Color(0xFF7F97F2)
+    },
+    {
+      'name': 'Canada',
+      'countryId': 31,
+      'flagImage': 'assets/images/flags/canada.png',
+      'backgroundColor': const Color(0xFFD1B2DF)
+    },
+    {
+      'name': 'Japan',
+      'countryId': 84,
+      'flagImage': 'assets/images/flags/japan.png',
+      'backgroundColor': const Color(0xFFE4B58A)
+    },
+    {
+      'name': 'New Zealand',
+      'countryId': 125,
+      'flagImage': 'assets/images/flags/new_zealand.png',
+      'backgroundColor': const Color(0xFFD1B2DF)
+    },
+    {
+      'name': 'China',
+      'countryId': 36,
+      'flagImage': 'assets/images/flags/china.png',
+      'backgroundColor': const Color(0xFFAAD2DB)
+    },
+    {
+      'name': 'UK',
+      'countryId': 185,
+      'flagImage': 'assets/images/flags/uk.png',
+      'backgroundColor': const Color(0xFFE4B58A)
+    },
+    {
+      'name': 'Singapore',
+      'countryId': 157,
+      'flagImage': 'assets/images/flags/singapore.png',
+      'backgroundColor': const Color(0xFFD7E4A8)
+    },
+    {
+      'name': 'Germany',
+      'countryId': 64,
+      'flagImage': 'assets/images/flags/germany.png',
+      'backgroundColor': const Color(0xFF7F97F2)
+    },
+  ];
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -287,20 +350,19 @@ class _SearchScreenState extends State<SearchScreen> {
                             style: TextStyle(
                                 fontSize: 18, fontWeight: FontWeight.bold)),
                         const SizedBox(height: 12.0),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceAround,
-                          children: countries.map((country) {
-                            return Column(
-                              children: [
-                                CircleAvatar(
-                                  radius: 25,
-                                  backgroundColor: const Color.fromARGB(255, 6,
-                                      72, 225), // ใช้ backgroundColor แทน
-                                ),
-                                const SizedBox(height: 6.0),
-                                Text(country['name']!,
-                                    style: const TextStyle(fontSize: 12)),
-                              ],
+                        GridView.count(
+                          crossAxisCount: 5,
+                          mainAxisSpacing: 8.0,
+                          crossAxisSpacing: 8.0,
+                          childAspectRatio: 0.8,
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          children: countryList.map((country) {
+                            return CountryFilter(
+                              name: country['name'],
+                              countryId: country['countryId'],
+                              flagImage: country['flagImage'],
+                              backgroundColor: country['backgroundColor'],
                             );
                           }).toList(),
                         ),
@@ -451,6 +513,88 @@ class _SearchScreenState extends State<SearchScreen> {
                 ],
               ),
             ),
+          ),
+          FooterNav(
+            pageName: "search",
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class CountryFilter extends StatelessWidget {
+  final String name;
+  final int countryId;
+  final String flagImage;
+  final Color backgroundColor;
+
+  const CountryFilter({
+    Key? key,
+    required this.name,
+    required this.countryId,
+    required this.flagImage,
+    required this.backgroundColor,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          PageRouteBuilder(
+            pageBuilder: (context, animation, secondaryAnimation) => SearchList(
+              searchQuery: "",
+              selectedFilters: {
+                'countries': {countryId.toString()}
+              },
+            ),
+            transitionsBuilder:
+                (context, animation, secondaryAnimation, child) {
+              const begin = 0.0;
+              const end = 1.0;
+              const curve = Curves.easeOut;
+              var tween =
+                  Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+              return FadeTransition(
+                  opacity: animation.drive(tween), child: child);
+            },
+            transitionDuration: const Duration(milliseconds: 300),
+          ),
+        );
+      },
+      child: Column(
+        children: [
+          CircleAvatar(
+            radius: 25,
+            backgroundColor: backgroundColor,
+            child: ClipOval(
+              child: Image.asset(
+                flagImage,
+                width: 32,
+                height: 32,
+                fit: BoxFit.contain,
+                errorBuilder: (context, error, stackTrace) {
+                  return Center(
+                    child: Text(
+                      name.substring(0, 1),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18,
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ),
+          const SizedBox(height: 6.0),
+          Text(
+            name,
+            style: const TextStyle(fontSize: 12),
+            overflow: TextOverflow.ellipsis,
           ),
         ],
       ),

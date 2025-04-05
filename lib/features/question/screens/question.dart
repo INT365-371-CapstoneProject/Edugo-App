@@ -1,5 +1,6 @@
 import 'package:edugo/features/question/screens/animation.dart';
 import 'package:flutter/material.dart';
+import 'package:edugo/features/home/screens/home_screen.dart';
 
 class Question extends StatefulWidget {
   const Question({super.key});
@@ -245,6 +246,14 @@ class _QuestionState extends State<Question> {
           ),
         );
       }),
+    );
+  }
+
+  void _navigateToHome() {
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (context) => const HomeScreenApp()),
+      (route) => false,
     );
   }
 }
