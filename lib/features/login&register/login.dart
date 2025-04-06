@@ -5,6 +5,7 @@ import 'package:edugo/features/question/screens/question.dart';
 import 'package:edugo/features/scholarship/screens/provider_management.dart';
 import 'package:edugo/features/profile/screens/profile.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:edugo/features/login&register/register.dart';
 
 import '../../services/auth_service.dart';
 import 'package:flutter/material.dart';
@@ -457,21 +458,71 @@ class _LoginState extends State<Login> {
                     ),
                     const SizedBox(height: 16),
 
-                    // Register Section
-                    Center(
-                      child: Text.rich(
-                        TextSpan(
-                          text: "Don’t have an account? ",
-                          style: TextStyle(color: Colors.grey[600]),
-                          children: [
-                            TextSpan(
-                              text: "Register",
-                              style: TextStyle(color: Colors.blue),
-                              // Action for register
-                              recognizer: null,
-                            ),
-                          ],
-                        ),
+                    // Register Section แบ่งเป็น 2 ส่วน
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8.0),
+                      child: Column(
+                        children: [
+                          // User Register
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                "Don't have an account? ",
+                                style: TextStyle(color: Colors.grey[600]),
+                              ),
+                              GestureDetector(
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) =>
+                                          const Register(isUser: true),
+                                    ),
+                                  );
+                                },
+                                child: const Text(
+                                  "Register",
+                                  style: TextStyle(
+                                    color: Color(0xFF355FFF),
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+
+                          const SizedBox(height: 8),
+
+                          // Provider Register
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                "Want to become a provider? ",
+                                style: TextStyle(color: Colors.grey[600]),
+                              ),
+                              GestureDetector(
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) =>
+                                          const Register(isProvider: true),
+                                    ),
+                                  );
+                                },
+                                child: const Text(
+                                  "Register as Provider",
+                                  style: TextStyle(
+                                    color: Color(0xFF355FFF),
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
                       ),
                     ),
                   ],

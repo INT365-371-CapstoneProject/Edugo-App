@@ -16,6 +16,7 @@ import 'package:edugo/features/search/screens/search_screen.dart';
 
 class CountryFilter extends StatelessWidget {
   final String name;
+  final String fullName; // เพิ่ม property
   final int countryId;
   final String flagImage;
   final Color backgroundColor;
@@ -23,6 +24,7 @@ class CountryFilter extends StatelessWidget {
   const CountryFilter({
     Key? key,
     required this.name,
+    required this.fullName, // เพิ่ม parameter
     required this.countryId,
     required this.flagImage,
     required this.backgroundColor,
@@ -32,13 +34,14 @@ class CountryFilter extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () {
+        print("Selected country: $fullName"); // ใช้ fullName ที่รับเข้ามา
         Navigator.push(
           context,
           PageRouteBuilder(
             pageBuilder: (context, animation, secondaryAnimation) => SearchList(
               searchQuery: "",
               selectedFilters: {
-                'countries': {countryId.toString()}
+                'countries': {fullName}, // ใช้ fullName แทน name
               },
             ),
             transitionsBuilder:
@@ -110,30 +113,35 @@ class _HomeScreenAppState extends State<HomeScreenApp> {
   final List<Map<String, dynamic>> countryList = [
     {
       'name': 'Australia',
+      'fullName': 'Australia',
       'countryId': 9,
       'flagImage': 'assets/images/flags/australia.png',
       'backgroundColor': const Color(0xFFAAD2DB)
     },
     {
       'name': 'Italy',
+      'fullName': 'Italy',
       'countryId': 82,
       'flagImage': 'assets/images/flags/italy.png',
       'backgroundColor': const Color(0xFFD7E4A8)
     },
     {
       'name': 'America',
+      'fullName': 'United States',
       'countryId': 186,
       'flagImage': 'assets/images/flags/usa.png',
       'backgroundColor': const Color(0xFF7F97F2)
     },
     {
       'name': 'Canada',
+      'fullName': 'Canada',
       'countryId': 31,
       'flagImage': 'assets/images/flags/canada.png',
       'backgroundColor': const Color(0xFFD1B2DF)
     },
     {
       'name': 'Japan',
+      'fullName': 'Japan',
       'countryId': 84,
       'flagImage': 'assets/images/flags/japan.png',
       'backgroundColor': const Color(0xFFE4B58A)
@@ -505,6 +513,8 @@ class _HomeScreenAppState extends State<HomeScreenApp> {
                           children: countryList.take(5).map((country) {
                             return CountryFilter(
                               name: country['name'],
+                              fullName:
+                                  country['fullName'], // เพิ่มการส่ง fullName
                               countryId: country['countryId'],
                               flagImage: country['flagImage'],
                               backgroundColor: country['backgroundColor'],

@@ -9,17 +9,16 @@ import 'package:http/http.dart' as http;
 
 class SearchList extends StatefulWidget {
   final String searchQuery;
-  final Map<String, Set<String>>
-      selectedFilters; // ✅ เพิ่มตัวแปร selectedFilters
+  final Map<String, Set<String>>? selectedFilters;
 
   const SearchList({
-    super.key,
+    Key? key,
     required this.searchQuery,
-    this.selectedFilters = const {}, // ค่าเริ่มต้นเป็น {} (ป้องกัน null)
-  });
+    this.selectedFilters,
+  }) : super(key: key);
 
   @override
-  _SearchListState createState() => _SearchListState();
+  State<SearchList> createState() => _SearchListState(); // เพิ่มส่วนนี้
 }
 
 class _SearchListState extends State<SearchList> {
@@ -33,8 +32,7 @@ class _SearchListState extends State<SearchList> {
     super.initState();
     _searchController = TextEditingController(text: widget.searchQuery);
 
-    // ✅ อัปเดตตัวแปร selectedFilters จาก widget.selectedFilters
-    selectedFilters = Map.from(widget.selectedFilters);
+    selectedFilters = Map.from(widget.selectedFilters ?? {});
 
     searchScholarships(widget.searchQuery, filters: selectedFilters);
   }
@@ -57,7 +55,6 @@ class _SearchListState extends State<SearchList> {
       queryParams.add("search=$searchQuery");
     }
 
-    // เพิ่มค่าตัวกรองให้รองรับหลายค่า
     if (activeFilters.containsKey('educationLevels') &&
         activeFilters['educationLevels']!.isNotEmpty) {
       queryParams.addAll(activeFilters['educationLevels']!
@@ -68,6 +65,11 @@ class _SearchListState extends State<SearchList> {
         activeFilters['scholarshipTypes']!.isNotEmpty) {
       queryParams.addAll(
           activeFilters['scholarshipTypes']!.map((type) => "category=$type"));
+    }
+
+    if (activeFilters.containsKey('countries') &&
+        activeFilters['countries']!.isNotEmpty) {
+      queryParams.add("country=${activeFilters['countries']!.first}");
     }
 
     String url =
@@ -155,8 +157,7 @@ class _SearchListState extends State<SearchList> {
                                             secondaryAnimation) =>
                                         SearchList(
                                             searchQuery: value,
-                                            selectedFilters:
-                                                selectedFilters), // ✅ ส่ง selectedFilters ไปด้วย
+                                            selectedFilters: selectedFilters),
                                     transitionsBuilder: (context, animation,
                                         secondaryAnimation, child) {
                                       var tween = Tween(begin: 0.0, end: 1.0)

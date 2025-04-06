@@ -154,7 +154,7 @@ class _FilterDrawerState extends State<FilterDrawer> {
                       'educationLevels': selectedEducationLevels.toSet(),
                     });
                   },
-                  child: Text("Post"),
+                  child: Text("Seach"),
                 ),
               ),
             ],

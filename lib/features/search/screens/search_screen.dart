@@ -124,60 +124,70 @@ class _SearchScreenState extends State<SearchScreen> {
   final List<Map<String, dynamic>> countryList = [
     {
       'name': 'Australia',
+      'fullName': 'Australia',
       'countryId': 9,
       'flagImage': 'assets/images/flags/australia.png',
       'backgroundColor': const Color(0xFFAAD2DB)
     },
     {
       'name': 'Italy',
+      'fullName': 'Italy',
       'countryId': 82,
       'flagImage': 'assets/images/flags/italy.png',
       'backgroundColor': const Color(0xFFD7E4A8)
     },
     {
       'name': 'America',
+      'fullName': 'United States',
       'countryId': 186,
       'flagImage': 'assets/images/flags/usa.png',
       'backgroundColor': const Color(0xFF7F97F2)
     },
     {
       'name': 'Canada',
+      'fullName': 'Canada',
       'countryId': 31,
       'flagImage': 'assets/images/flags/canada.png',
       'backgroundColor': const Color(0xFFD1B2DF)
     },
     {
       'name': 'Japan',
+      'fullName': 'Japan',
       'countryId': 84,
       'flagImage': 'assets/images/flags/japan.png',
       'backgroundColor': const Color(0xFFE4B58A)
     },
     {
       'name': 'New Zealand',
+      'fullName': 'New Zealand',
       'countryId': 125,
       'flagImage': 'assets/images/flags/new_zealand.png',
       'backgroundColor': const Color(0xFFD1B2DF)
     },
     {
       'name': 'China',
+      'fullName': 'China',
       'countryId': 36,
       'flagImage': 'assets/images/flags/china.png',
       'backgroundColor': const Color(0xFFAAD2DB)
     },
     {
       'name': 'UK',
+      'fullName': 'United Kingdom',
       'countryId': 185,
       'flagImage': 'assets/images/flags/uk.png',
       'backgroundColor': const Color(0xFFE4B58A)
     },
     {
       'name': 'Singapore',
+      'fullName': 'Singapore',
       'countryId': 157,
       'flagImage': 'assets/images/flags/singapore.png',
       'backgroundColor': const Color(0xFFD7E4A8)
     },
     {
       'name': 'Germany',
+      'fullName': 'Germany',
       'countryId': 64,
       'flagImage': 'assets/images/flags/germany.png',
       'backgroundColor': const Color(0xFF7F97F2)
@@ -360,6 +370,7 @@ class _SearchScreenState extends State<SearchScreen> {
                           children: countryList.map((country) {
                             return CountryFilter(
                               name: country['name'],
+                              fullName: country['fullName'],
                               countryId: country['countryId'],
                               flagImage: country['flagImage'],
                               backgroundColor: country['backgroundColor'],
@@ -525,6 +536,7 @@ class _SearchScreenState extends State<SearchScreen> {
 
 class CountryFilter extends StatelessWidget {
   final String name;
+  final String fullName; // เพิ่ม property
   final int countryId;
   final String flagImage;
   final Color backgroundColor;
@@ -532,6 +544,7 @@ class CountryFilter extends StatelessWidget {
   const CountryFilter({
     Key? key,
     required this.name,
+    required this.fullName, // เพิ่ม parameter
     required this.countryId,
     required this.flagImage,
     required this.backgroundColor,
@@ -541,26 +554,16 @@ class CountryFilter extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () {
+        print("Selected country: $fullName");
         Navigator.push(
           context,
-          PageRouteBuilder(
-            pageBuilder: (context, animation, secondaryAnimation) => SearchList(
+          MaterialPageRoute(
+            builder: (context) => SearchList(
               searchQuery: "",
               selectedFilters: {
-                'countries': {countryId.toString()}
+                'countries': {fullName}, // ใช้ fullName
               },
             ),
-            transitionsBuilder:
-                (context, animation, secondaryAnimation, child) {
-              const begin = 0.0;
-              const end = 1.0;
-              const curve = Curves.easeOut;
-              var tween =
-                  Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
-              return FadeTransition(
-                  opacity: animation.drive(tween), child: child);
-            },
-            transitionDuration: const Duration(milliseconds: 300),
           ),
         );
       },

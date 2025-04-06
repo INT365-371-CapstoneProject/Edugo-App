@@ -350,27 +350,97 @@ class _RegisterState extends State<Register> {
 
   @override
   Widget build(BuildContext context) {
-    return PopScope(
-      canPop: false, // ป้องกันการ pop อัตโนมัติ
-      onPopInvokedWithResult: (didPop, result) {
-        if (didPop) return;
-        _goToPreviousStep();
-      },
-      child: Scaffold(
-        body: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.all(23.0),
-            child: Column(
+    return Scaffold(
+      body: SingleChildScrollView(
+        child: Stack(
+          children: [
+            // เนื้อหาหลัก
+            Column(
               children: [
-                SizedBox(
-                    width: 175,
-                    height: 37.656,
-                    child: Image.asset("assets/images/logoColor.png")),
-                const SizedBox(height: 30),
-                ..._buildStepContent(),
+                // โลโก้ Edugo
+                Center(
+                  child: Padding(
+                    padding: const EdgeInsets.only(top: 64.0),
+                    child: SizedBox(
+                      width: 175,
+                      height: 37.656,
+                      child: Image.asset(
+                        "assets/images/logoColor.png",
+                        fit: BoxFit.contain,
+                      ),
+                    ),
+                  ),
+                ),
+                // เนื้อหาเดิมของหน้า Register
+                Padding(
+                  padding: const EdgeInsets.all(23.0),
+                  child: Form(
+                    child: Column(
+                      children: [
+                        const SizedBox(height: 30),
+                        ..._buildStepContent(),
+                      ],
+                    ),
+                  ),
+                ),
               ],
             ),
-          ),
+
+            // ปุ่มย้อนกลับ (ปรับสไตล์และตำแหน่ง)
+            Positioned(
+              top: 64.0, // ตำแหน่งเดียวกับโลโก้
+              left: 20.0,
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(8),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      spreadRadius: 1,
+                      blurRadius: 3,
+                      offset: const Offset(0, 1),
+                    ),
+                  ],
+                ),
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: () {
+                      Navigator.pushReplacement(
+                        context,
+                        PageRouteBuilder(
+                          pageBuilder:
+                              (context, animation, secondaryAnimation) =>
+                                  const Login(),
+                          transitionsBuilder:
+                              (context, animation, secondaryAnimation, child) {
+                            const begin = 0.0;
+                            const end = 1.0;
+                            const curve = Curves.easeOut;
+                            var tween = Tween(begin: begin, end: end)
+                                .chain(CurveTween(curve: curve));
+                            return FadeTransition(
+                                opacity: animation.drive(tween), child: child);
+                          },
+                          transitionDuration: const Duration(milliseconds: 300),
+                        ),
+                      );
+                    },
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Image.asset(
+                        'assets/images/back_button.png',
+                        width: 24.0,
+                        height: 24.0,
+                        color: const Color(0xFF355FFF),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
