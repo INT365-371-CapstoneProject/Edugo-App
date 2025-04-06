@@ -1,5 +1,5 @@
 import 'package:edugo/config/api_config.dart';
-import 'package:edugo/pages/subject_manage.dart';
+import 'package:edugo/features/subject/subject_manage.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -119,9 +119,8 @@ class _SubjectAddEditState extends State<SubjectAddEdit> {
   }
 
   Future<void> submitAddData() async {
-
-
-    var request = http.MultipartRequest('POST', Uri.parse(ApiConfig.subjectUrl));
+    var request =
+        http.MultipartRequest('POST', Uri.parse(ApiConfig.subjectUrl));
 
     request.fields['title'] =
         "Title Subject"; // You can replace this with dynamic data
@@ -236,8 +235,8 @@ class _SubjectAddEditState extends State<SubjectAddEdit> {
   }
 
   Future<void> submitEditData() async {
-
-    var request = http.MultipartRequest('PUT', Uri.parse('${ApiConfig.subjectUrl}/${id}'));
+    var request = http.MultipartRequest(
+        'PUT', Uri.parse('${ApiConfig.subjectUrl}/${id}'));
 
     // ตรวจสอบว่าข้อมูล description เปลี่ยนไปหรือไม่
     if (_descriptionController.text != originalValues['description']) {

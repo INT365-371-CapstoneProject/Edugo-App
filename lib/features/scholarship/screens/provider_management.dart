@@ -2,7 +2,7 @@ import 'package:edugo/config/api_config.dart';
 import 'package:edugo/features/scholarship/screens/provider_add.dart';
 import 'package:edugo/features/scholarship/screens/provider_detail.dart';
 import 'package:edugo/features/profile/screens/profile.dart';
-import 'package:edugo/pages/subject_manage.dart';
+import 'package:edugo/features/subject/subject_manage.dart';
 import 'package:edugo/services/scholarship_card.dart';
 import 'package:edugo/services/status_box.dart';
 import 'package:flutter/cupertino.dart';
@@ -37,7 +37,6 @@ class _ProviderManagementState extends State<ProviderManagement> {
   }
 
   Future<void> fetchScholarships() async {
-
     try {
       String? token = await authService.getToken();
       Map<String, String> headers = {}; // Explicitly type the map
@@ -45,7 +44,8 @@ class _ProviderManagementState extends State<ProviderManagement> {
         headers['Authorization'] = 'Bearer $token';
       }
 
-      final response = await http.get(Uri.parse(ApiConfig.announceUrl), headers: headers);
+      final response =
+          await http.get(Uri.parse(ApiConfig.announceUrl), headers: headers);
 
       if (response.statusCode == 200) {
         final Map<String, dynamic> data =

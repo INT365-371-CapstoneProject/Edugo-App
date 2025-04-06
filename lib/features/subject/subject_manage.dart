@@ -2,8 +2,8 @@ import 'dart:typed_data';
 import 'package:edugo/config/api_config.dart';
 import 'package:edugo/features/scholarship/screens/provider_management.dart';
 import 'package:edugo/features/profile/screens/profile.dart';
-import 'package:edugo/pages/subject_add_edit.dart';
-import 'package:edugo/pages/subject_detail.dart';
+import 'package:edugo/features/subject/subject_add_edit.dart';
+import 'package:edugo/features/subject/subject_detail.dart';
 import 'package:edugo/services/auth_service.dart';
 import 'package:edugo/services/footer.dart';
 import 'package:flutter/cupertino.dart';
@@ -30,6 +30,7 @@ class _SubjectManagementState extends State<SubjectManagement> {
   bool isLoading = true;
   String selectedStatus = "All";
   Uint8List? _imageBytes;
+  Uint8List? imageAvatar;
   final AuthService authService = AuthService(); // Instance of AuthService
   final TextEditingController titleController = TextEditingController();
   final TextEditingController descriptionController = TextEditingController();
@@ -38,6 +39,26 @@ class _SubjectManagementState extends State<SubjectManagement> {
   void initState() {
     super.initState();
     _delayedLoad(); // เรียกใช้งานฟังก์ชัน _delayedLoad
+    fetchAvatarImage(); // เรียกใช้งานฟังก์ชัน fetchAvatarImage
+  }
+
+  Future<void> fetchAvatarImage() async {
+    String? token = await authService.getToken();
+
+    final response = await http.get(
+      Uri.parse(ApiConfig.profileAvatarUrl),
+      headers: {
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      setState(() {
+        imageAvatar = response.bodyBytes; // แปลง response เป็น Uint8List
+      });
+    } else {
+      throw Exception('Failed to load country data');
+    }
   }
 
   Future<void> fetchsubject() async {
@@ -50,7 +71,8 @@ class _SubjectManagementState extends State<SubjectManagement> {
     const baseImageUrl =
         "https://capstone24.sit.kmutt.ac.th/un2/api/public/images/";
     try {
-      final response = await http.get(Uri.parse(ApiConfig.subjectUrl), headers: headers);
+      final response =
+          await http.get(Uri.parse(ApiConfig.subjectUrl), headers: headers);
       if (response.statusCode == 200) {
         final Map<String, dynamic> responseData = json.decode(response.body);
 
@@ -188,8 +210,7 @@ class _SubjectManagementState extends State<SubjectManagement> {
   }
 
   Future<void> submitDeleteData(int id) async {
-    final String apiUrl =
-        "${ApiConfig.subjectUrl}/${id}";
+    final String apiUrl = "${ApiConfig.subjectUrl}/${id}";
 
     var request = http.MultipartRequest('DELETE', Uri.parse(apiUrl));
 
@@ -416,11 +437,20 @@ class _SubjectManagementState extends State<SubjectManagement> {
                   children: [
                     CircleAvatar(
                       radius: 20,
-                      child: Image.asset(
-                        'assets/images/avatar.png',
-                        width: 40.0,
-                        height: 40.0,
-                        colorBlendMode: BlendMode.srcIn,
+                      child: ClipOval(
+                        child: imageAvatar != null
+                            ? Image.memory(
+                                imageAvatar!,
+                                width: 40, // กำหนดขนาดให้พอดีกับ avatar
+                                height: 40,
+                                fit: BoxFit.cover,
+                              )
+                            : Image.asset(
+                                'assets/images/avatar.png',
+                                width: 40,
+                                height: 40,
+                                fit: BoxFit.cover,
+                              ),
                       ),
                     ),
                     SizedBox(width: 16), // เพิ่มช่องว่างระหว่าง Avatar กับ Text

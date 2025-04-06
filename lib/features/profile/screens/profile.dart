@@ -8,8 +8,8 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:edugo/features/profile/screens/edit_profile.dart';
 import 'package:edugo/features/scholarship/screens/provider_management.dart';
-import 'package:edugo/pages/subject_add_edit.dart';
-import 'package:edugo/pages/subject_manage.dart';
+import 'package:edugo/features/subject/subject_add_edit.dart';
+import 'package:edugo/features/subject/subject_manage.dart';
 import 'package:edugo/services/auth_service.dart';
 import 'package:edugo/services/footer.dart';
 import 'package:flutter/cupertino.dart';
@@ -64,7 +64,6 @@ class _ProviderProfileState extends State<ProviderProfile> {
   }
 
   Future<void> fetchProfile() async {
-
     try {
       String? token = await authService.getToken();
       Map<String, String> headers = {};
@@ -72,7 +71,8 @@ class _ProviderProfileState extends State<ProviderProfile> {
         headers['Authorization'] = 'Bearer $token';
       }
 
-      final response = await http.get(Uri.parse(ApiConfig.profileUrl), headers: headers);
+      final response =
+          await http.get(Uri.parse(ApiConfig.profileUrl), headers: headers);
 
       if (response.statusCode == 200) {
         final Map<String, dynamic> data = json.decode(response.body);

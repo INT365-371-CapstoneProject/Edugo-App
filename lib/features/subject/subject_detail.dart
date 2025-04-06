@@ -1,7 +1,7 @@
 import 'package:edugo/config/api_config.dart';
 import 'package:edugo/features/scholarship/screens/provider_management.dart';
-import 'package:edugo/pages/subject_add_edit.dart';
-import 'package:edugo/pages/subject_manage.dart';
+import 'package:edugo/features/subject/subject_add_edit.dart';
+import 'package:edugo/features/subject/subject_manage.dart';
 import 'package:edugo/services/auth_service.dart';
 import 'package:edugo/services/datetime_provider_add.dart';
 import 'package:flutter/foundation.dart';

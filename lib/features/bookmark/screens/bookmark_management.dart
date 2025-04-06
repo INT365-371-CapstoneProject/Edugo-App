@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import 'dart:typed_data';
 import 'package:edugo/features/scholarship/screens/provider_management.dart';
 import 'package:edugo/features/profile/screens/profile.dart';
-import 'package:edugo/pages/subject_add_edit.dart';
-import 'package:edugo/pages/subject_detail.dart';
+import 'package:edugo/features/subject/subject_add_edit.dart';
+import 'package:edugo/features/subject/subject_detail.dart';
 import 'package:edugo/services/auth_service.dart';
 import 'package:edugo/services/footer.dart';
 import 'package:flutter/cupertino.dart';
@@ -48,8 +48,7 @@ class _BookmarkListState extends State<BookmarkList> {
       headers['Authorization'] = 'Bearer $token';
     }
 
-    final url =
-        "${ApiConfig.bookmarkUrl}/acc/${widget.id}";
+    final url = "${ApiConfig.bookmarkUrl}/acc/${widget.id}";
 
     try {
       final response = await http.get(Uri.parse(url), headers: headers);
