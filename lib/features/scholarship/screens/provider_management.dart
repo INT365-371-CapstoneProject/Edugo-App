@@ -1,3 +1,4 @@
+import 'package:edugo/config/api_config.dart';
 import 'package:edugo/features/scholarship/screens/provider_add.dart';
 import 'package:edugo/features/scholarship/screens/provider_detail.dart';
 import 'package:edugo/features/profile/screens/profile.dart';
@@ -36,8 +37,6 @@ class _ProviderManagementState extends State<ProviderManagement> {
   }
 
   Future<void> fetchScholarships() async {
-    const baseImageUrl = "https://capstone24.sit.kmutt.ac.th/un2/api/announce/";
-    const url = "https://capstone24.sit.kmutt.ac.th/un2/api/announce";
 
     try {
       String? token = await authService.getToken();
@@ -46,7 +45,7 @@ class _ProviderManagementState extends State<ProviderManagement> {
         headers['Authorization'] = 'Bearer $token';
       }
 
-      final response = await http.get(Uri.parse(url), headers: headers);
+      final response = await http.get(Uri.parse(ApiConfig.announceUrl), headers: headers);
 
       if (response.statusCode == 200) {
         final Map<String, dynamic> data =
@@ -58,7 +57,7 @@ class _ProviderManagementState extends State<ProviderManagement> {
           scholarships = scholarshipData.map((scholarship) {
             // ignore: prefer_interpolation_to_compose_strings
             scholarship['image'] =
-                baseImageUrl + scholarship['id'].toString() + "/image";
+                ApiConfig.announceUrl + scholarship['id'].toString() + "/image";
 
             scholarship['title'] = scholarship['title'] ?? 'No Title';
             scholarship['description'] =

@@ -3,7 +3,7 @@ import 'package:edugo/features/login&register/login.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
-
+import 'package:edugo/config/api_config.dart';
 class ForgetPassword extends StatefulWidget {
   const ForgetPassword({super.key});
 
@@ -142,8 +142,7 @@ class _ForgetPasswordState extends State<ForgetPassword> {
 
     try {
       final response = await http.post(
-        Uri.parse(
-            "https://capstone24.sit.kmutt.ac.th/un2/api/auth/forgot-password"),
+        Uri.parse(ApiConfig.forgotPasswordUrl),
         headers: {"Content-Type": "application/json"},
         body: json.encode({"email": email}),
       );
@@ -183,7 +182,7 @@ class _ForgetPasswordState extends State<ForgetPassword> {
 
     try {
       final response = await http.post(
-        Uri.parse("https://capstone24.sit.kmutt.ac.th/un2/api/auth/verify-otp"),
+        Uri.parse(ApiConfig.verifyOtpUrl),
         headers: {"Content-Type": "application/json"},
         body: json.encode({
           "email": email, // ส่ง email ไปด้วย

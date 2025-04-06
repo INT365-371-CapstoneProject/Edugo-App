@@ -1,3 +1,4 @@
+import 'package:edugo/config/api_config.dart';
 import 'package:flutter/material.dart';
 import 'dart:typed_data';
 import 'package:edugo/features/scholarship/screens/provider_management.dart';
@@ -48,7 +49,7 @@ class _BookmarkListState extends State<BookmarkList> {
     }
 
     final url =
-        "https://capstone24.sit.kmutt.ac.th/un2/api/bookmark/acc/${widget.id}";
+        "${ApiConfig.bookmarkUrl}/acc/${widget.id}";
 
     try {
       final response = await http.get(Uri.parse(url), headers: headers);
@@ -78,12 +79,10 @@ class _BookmarkListState extends State<BookmarkList> {
 
   Future<void> fetchAnnounceDetails() async {
     String? token = await authService.getToken();
-    final url =
-        "https://capstone24.sit.kmutt.ac.th/un2/api/announce-user/bookmark";
 
     try {
       final response = await http.post(
-        Uri.parse(url),
+        Uri.parse(ApiConfig.bookmarkUser),
         headers: {
           'Authorization': token != null ? 'Bearer $token' : '',
           'Content-Type': 'application/json',
@@ -107,7 +106,7 @@ class _BookmarkListState extends State<BookmarkList> {
 
   Future<void> deleteBookmark(int id) async {
     String? token = await authService.getToken();
-    final url = "https://capstone24.sit.kmutt.ac.th/un2/api/bookmark/ann/${id}";
+    final url = "${ApiConfig.bookmarkUrl}/ann/${id}";
 
     try {
       final response = await http.delete(Uri.parse(url), headers: {

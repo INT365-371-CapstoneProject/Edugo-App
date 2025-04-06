@@ -1,3 +1,4 @@
+import 'package:edugo/config/api_config.dart';
 import 'package:edugo/features/scholarship/screens/provider_management.dart';
 import 'package:edugo/pages/subject_add_edit.dart';
 import 'package:edugo/pages/subject_manage.dart';
@@ -66,8 +67,7 @@ class _SubjectDetailState extends State<SubjectDetail> {
       headers['Authorization'] = 'Bearer $token';
     }
 
-    final String url =
-        "https://capstone24.sit.kmutt.ac.th/un2/api/comment/post/$id";
+    final String url = "${ApiConfig.commentUrl}/post/$id";
 
     try {
       final response = await http.get(Uri.parse(url), headers: headers);
@@ -105,7 +105,6 @@ class _SubjectDetailState extends State<SubjectDetail> {
       headers['Authorization'] = 'Bearer $token';
     }
 
-    final String url = "https://capstone24.sit.kmutt.ac.th/un2/api/comment";
     final Map<String, dynamic> body = {
       "Comments_Text": _commentController.text,
       "publish_date": DateTime.now().toIso8601String(),
@@ -114,7 +113,7 @@ class _SubjectDetailState extends State<SubjectDetail> {
 
     try {
       final response = await http.post(
-        Uri.parse(url),
+        Uri.parse(ApiConfig.commentUrl),
         headers: headers,
         body: jsonEncode(body), // แปลง Map เป็น JSON String
       );
@@ -230,8 +229,7 @@ class _SubjectDetailState extends State<SubjectDetail> {
   }
 
   Future<void> submitDeleteData(int? id) async {
-    final String apiUrl =
-        "https://capstone24.sit.kmutt.ac.th/un2/api/subject/delete/$id";
+    final String apiUrl = "${ApiConfig.subjectUrl}/${id}";
 
     var request = http.MultipartRequest('DELETE', Uri.parse(apiUrl));
 

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:edugo/config/api_config.dart';
 
 class FilterDrawer extends StatefulWidget {
   @override
@@ -42,8 +43,6 @@ class _FilterDrawerState extends State<FilterDrawer> {
   }
 
   Future<void> fetchScholarshipCategories() async {
-    String url = "https://capstone24.sit.kmutt.ac.th/un2/api/category";
-
     String? token = await authService.getToken();
     Map<String, String> headers = {};
 
@@ -52,7 +51,10 @@ class _FilterDrawerState extends State<FilterDrawer> {
     }
 
     try {
-      final response = await http.get(Uri.parse(url), headers: headers);
+      final response = await http.get(
+        Uri.parse(ApiConfig.categoryUrl),
+        headers: headers,
+      );
 
       if (response.statusCode == 200) {
         final List<dynamic> data = json.decode(response.body);

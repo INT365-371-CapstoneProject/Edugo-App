@@ -1,6 +1,7 @@
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import '../shared/utils/jwt_helper.dart';
+import 'package:edugo/config/api_config.dart';
 
 class AuthService {
   // บันทึก Token
@@ -46,7 +47,7 @@ class AuthService {
 
       // ทดสอบเรียก API เพื่อตรวจสอบความถูกต้องของ token
       final response = await http.get(
-        Uri.parse('https://capstone24.sit.kmutt.ac.th/un2/api/profile'),
+        Uri.parse(ApiConfig.profileUrl),
         headers: {'Authorization': 'Bearer $token'},
       );
 

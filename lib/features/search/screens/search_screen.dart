@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 
+import 'package:edugo/config/api_config.dart';
 import 'package:edugo/features/search/screens/search_list.dart';
 import 'package:flutter/material.dart';
 import 'package:carousel_slider/carousel_slider.dart';
@@ -34,7 +35,6 @@ class _SearchScreenState extends State<SearchScreen> {
   Future<void> fetchScholarships() async {
     const baseImageUrl =
         "https://capstone24.sit.kmutt.ac.th/un2/api/public/images/";
-    const url = "https://capstone24.sit.kmutt.ac.th/un2/api/announce-user";
 
     try {
       String? token = await authService.getToken();
@@ -43,7 +43,7 @@ class _SearchScreenState extends State<SearchScreen> {
         headers['Authorization'] = 'Bearer $token';
       }
 
-      final response = await http.get(Uri.parse(url), headers: headers);
+      final response = await http.get(Uri.parse(ApiConfig.announceUserUrl), headers: headers);
 
       if (response.statusCode == 200) {
         final Map<String, dynamic> data =

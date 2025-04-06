@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:typed_data';
+import 'package:edugo/config/api_config.dart';
 import 'package:edugo/features/bookmark/screens/bookmark_management.dart';
 import 'package:edugo/features/login&register/login.dart';
 import 'package:edugo/features/notification/screens/notification_management.dart';
@@ -47,7 +48,7 @@ class _ProviderProfileState extends State<ProviderProfile> {
     String? token = await authService.getToken();
 
     final response = await http.get(
-      Uri.parse('https://capstone24.sit.kmutt.ac.th/un2/api/profile/avatar'),
+      Uri.parse(ApiConfig.profileAvatarUrl),
       headers: {
         'Authorization': 'Bearer $token',
       },
@@ -63,7 +64,6 @@ class _ProviderProfileState extends State<ProviderProfile> {
   }
 
   Future<void> fetchProfile() async {
-    const url = "https://capstone24.sit.kmutt.ac.th/un2/api/profile";
 
     try {
       String? token = await authService.getToken();
@@ -72,7 +72,7 @@ class _ProviderProfileState extends State<ProviderProfile> {
         headers['Authorization'] = 'Bearer $token';
       }
 
-      final response = await http.get(Uri.parse(url), headers: headers);
+      final response = await http.get(Uri.parse(ApiConfig.profileUrl), headers: headers);
 
       if (response.statusCode == 200) {
         final Map<String, dynamic> data = json.decode(response.body);
@@ -433,7 +433,7 @@ class _ProviderProfileState extends State<ProviderProfile> {
       // เรียก API logout
       if (token != null) {
         await http.post(
-          Uri.parse('https://capstone24.sit.kmutt.ac.th/un2/api/logout'),
+          Uri.parse(ApiConfig.logoutUrl),
           headers: {'Authorization': 'Bearer $token'},
         );
       }

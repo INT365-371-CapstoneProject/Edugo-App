@@ -13,7 +13,8 @@ import 'package:edugo/features/login&register/login.dart';
 
 import '../../../services/scholarship_card.dart';
 import 'package:edugo/features/search/screens/search_screen.dart';
-
+import 'package:edugo/config/api_config.dart';
+import 'package:edugo/config/api_config.dart';
 class CountryFilter extends StatelessWidget {
   final String name;
   final String fullName; // เพิ่ม property
@@ -170,10 +171,6 @@ class _HomeScreenAppState extends State<HomeScreenApp> {
   }
 
   Future<void> fetchScholarships() async {
-    const baseImageUrl =
-        "https://capstone24.sit.kmutt.ac.th/un2/api/public/images/";
-    const url = "https://capstone24.sit.kmutt.ac.th/un2/api/announce-user";
-
     try {
       String? token = await authService.getToken();
       Map<String, String> headers = {};
@@ -181,7 +178,8 @@ class _HomeScreenAppState extends State<HomeScreenApp> {
         headers['Authorization'] = 'Bearer $token';
       }
 
-      final response = await http.get(Uri.parse(url), headers: headers);
+      final response = await http.get(Uri.parse(ApiConfig.announceUserUrl),
+          headers: headers);
 
       if (response.statusCode == 200) {
         final Map<String, dynamic> data = json.decode(response.body);
@@ -190,7 +188,7 @@ class _HomeScreenAppState extends State<HomeScreenApp> {
         setState(() {
           scholarships = scholarshipData.map((scholarship) {
             scholarship['image'] = scholarship['image'] != null
-                ? baseImageUrl + scholarship['image']
+                ? "${ApiConfig.announceUserUrl}/${scholarship['id']}/image"
                 : 'assets/images/scholarship_program.png';
             scholarship['title'] = scholarship['title'] ?? 'No Title';
             scholarship['description'] =
@@ -552,8 +550,8 @@ class _HomeScreenAppState extends State<HomeScreenApp> {
                         final DateTime closeDate =
                             DateTime.tryParse(scholarship['close_date']) ??
                                 DateTime.now();
-                        final String imageUrl =
-                            "https://capstone24.sit.kmutt.ac.th/un2/api/announce/${scholarship['id']}/image";
+                        final String imageUrl = 
+                            "${ApiConfig.announceUserUrl}/${scholarship['id']}/image";
                         final duration =
                             "${DateFormat('d MMM').format(publishedDate)} - ${DateFormat('d MMM yyyy').format(closeDate)}";
 
@@ -620,6 +618,7 @@ class _HomeScreenAppState extends State<HomeScreenApp> {
                                               fit: BoxFit.cover,
                                             ))
                                       : FutureBuilder<Uint8List?>(
+          
                                           future: fetchImage(imageUrl),
                                           builder: (context, snapshot) {
                                             if (snapshot.connectionState ==

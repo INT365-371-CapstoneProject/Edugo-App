@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import '../../services/auth_service.dart';
 import 'package:edugo/features/home/screens/home_screen.dart';
+import 'package:edugo/config/api_config.dart';
 
 class Register extends StatefulWidget {
   final bool isProvider;
@@ -43,14 +44,10 @@ class _RegisterState extends State<Register> {
   }
 
   Future<void> registerUser() async {
-    String path = widget.isProvider
-        ? "provider"
-        : widget.isUser
-            ? "user"
-            : "";
+    String path = widget.isProvider ? "provider" : "user";
+    final url = Uri.parse('${ApiConfig.registerUrl}/$path');
     if (!_validateUserStepTwo()) return;
 
-    final url = Uri.parse('https://capstone24.sit.kmutt.ac.th/un2/api/$path');
     final requestBody = _buildRequestBody();
 
     if (requestBody == null) return;

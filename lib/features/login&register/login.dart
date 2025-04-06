@@ -6,6 +6,7 @@ import 'package:edugo/features/scholarship/screens/provider_management.dart';
 import 'package:edugo/features/profile/screens/profile.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:edugo/features/login&register/register.dart';
+import 'package:edugo/config/api_config.dart';
 
 import '../../services/auth_service.dart';
 import 'package:flutter/material.dart';
@@ -57,7 +58,7 @@ class _LoginState extends State<Login> {
       };
 
       final response = await http.post(
-        Uri.parse('https://capstone24.sit.kmutt.ac.th/un2/api/login'),
+        Uri.parse(ApiConfig.loginUrl),
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
@@ -105,7 +106,7 @@ class _LoginState extends State<Login> {
   }
 
   Future<void> addFCMToken() async {
-    final url = Uri.parse('https://capstone24.sit.kmutt.ac.th/un2/api/fcm');
+    final url = Uri.parse(ApiConfig.fcmUrl);
 
     String? token = await _authService.getToken();
 
@@ -162,7 +163,7 @@ class _LoginState extends State<Login> {
   }
 
   Future<http.Response?> getAnswer() async {
-    final url = Uri.parse('https://capstone24.sit.kmutt.ac.th/un2/api/answer');
+    final url = Uri.parse(ApiConfig.answerUrl);
     final AuthService authService = AuthService();
     String? token = await authService.getToken();
 

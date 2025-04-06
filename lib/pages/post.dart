@@ -1,3 +1,4 @@
+import 'package:edugo/config/api_config.dart';
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
@@ -31,7 +32,7 @@ class _PostListScreenState extends State<PostListScreen> {
 
   Future<void> fetchPosts() async {
     final response = await http
-        .get(Uri.parse('https://capstone24.sit.kmutt.ac.th/un2/api/announce'));
+        .get(Uri.parse(ApiConfig.announceUrl));
 
     if (response.statusCode == 200) {
       List<dynamic> data = json.decode(response.body);

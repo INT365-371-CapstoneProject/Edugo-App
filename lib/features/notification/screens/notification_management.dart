@@ -1,3 +1,4 @@
+import 'package:edugo/config/api_config.dart';
 import 'package:edugo/features/profile/screens/profile.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -37,7 +38,7 @@ class _NotificationListState extends State<NotificationList> {
     }
 
     final url =
-        "https://capstone24.sit.kmutt.ac.th/un2/api/notification/acc/${widget.id}";
+        "${ApiConfig.notificationUrl}/acc/${widget.id}";
 
     try {
       final response = await http.get(Uri.parse(url), headers: headers);

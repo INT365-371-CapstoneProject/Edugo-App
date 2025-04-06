@@ -1,4 +1,5 @@
 import 'dart:typed_data';
+import 'package:edugo/config/api_config.dart';
 import 'package:edugo/features/scholarship/screens/provider_management.dart';
 import 'package:edugo/features/profile/screens/profile.dart';
 import 'package:edugo/pages/subject_add_edit.dart';
@@ -48,9 +49,8 @@ class _SubjectManagementState extends State<SubjectManagement> {
 
     const baseImageUrl =
         "https://capstone24.sit.kmutt.ac.th/un2/api/public/images/";
-    const url = "https://capstone24.sit.kmutt.ac.th/un2/api/subject";
     try {
-      final response = await http.get(Uri.parse(url), headers: headers);
+      final response = await http.get(Uri.parse(ApiConfig.subjectUrl), headers: headers);
       if (response.statusCode == 200) {
         final Map<String, dynamic> responseData = json.decode(response.body);
 
@@ -189,7 +189,7 @@ class _SubjectManagementState extends State<SubjectManagement> {
 
   Future<void> submitDeleteData(int id) async {
     final String apiUrl =
-        "https://capstone24.sit.kmutt.ac.th/un2/api/subject/delete/${id}";
+        "${ApiConfig.subjectUrl}/${id}";
 
     var request = http.MultipartRequest('DELETE', Uri.parse(apiUrl));
 

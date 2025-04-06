@@ -1,3 +1,4 @@
+import 'package:edugo/config/api_config.dart';
 import 'package:edugo/features/scholarship/models/provider_add_model.dart';
 import 'package:edugo/features/scholarship/screens/provider_detail.dart';
 import 'package:edugo/features/scholarship/screens/provider_management.dart';
@@ -164,9 +165,8 @@ class _ProviderAddEditState extends State<ProviderAddEdit> {
   }
 
   Future<void> fetchCountryData() async {
-    const apiUrl = "https://capstone24.sit.kmutt.ac.th/un2/api/country";
     try {
-      var response = await http.get(Uri.parse(apiUrl));
+      var response = await http.get(Uri.parse(ApiConfig.countryUrl));
       if (response.statusCode == 200) {
         final List<dynamic> data = json.decode(response.body);
         setState(() {
@@ -179,9 +179,8 @@ class _ProviderAddEditState extends State<ProviderAddEdit> {
   }
 
   Future<void> fetchCategoryData() async {
-    const apiUrl = "https://capstone24.sit.kmutt.ac.th/un2/api/category";
     try {
-      var response = await http.get(Uri.parse(apiUrl));
+      var response = await http.get(Uri.parse(ApiConfig.categoryUrl));
       if (response.statusCode == 200) {
         final List<dynamic> data = json.decode(response.body);
         setState(() {
@@ -266,10 +265,9 @@ class _ProviderAddEditState extends State<ProviderAddEdit> {
   }
 
   Future<void> submitAddData() async {
-    final String apiUrl =
-        "https://capstone24.sit.kmutt.ac.th/un2/api/announce/add";
 
-    var request = http.MultipartRequest('POST', Uri.parse(apiUrl));
+
+    var request = http.MultipartRequest('POST', Uri.parse(ApiConfig.announceUrl));
 
     request.fields['title'] = title ?? '';
     request.fields['description'] = description ?? '';
@@ -450,7 +448,7 @@ class _ProviderAddEditState extends State<ProviderAddEdit> {
 
   Future<void> submitEditData() async {
     final String apiUrl =
-        "https://capstone24.sit.kmutt.ac.th/un2/api/announce/update/${id}";
+        "${ApiConfig.announceUrl}/update/${id}";
 
     var request = http.MultipartRequest('PUT', Uri.parse(apiUrl));
 
