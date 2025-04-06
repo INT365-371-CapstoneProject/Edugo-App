@@ -34,12 +34,14 @@ class _SubjectManagementState extends State<SubjectManagement> {
   final AuthService authService = AuthService(); // Instance of AuthService
   final TextEditingController titleController = TextEditingController();
   final TextEditingController descriptionController = TextEditingController();
+  final Map<String, Uint8List?> _imageCache = {};
+  final Map<String, Uint8List?> _imageAvatarCache = {};
 
   @override
   void initState() {
     super.initState();
     _delayedLoad(); // เรียกใช้งานฟังก์ชัน _delayedLoad
-    fetchAvatarImage(); // เรียกใช้งานฟังก์ชัน fetchAvatarImage
+    fetchAvatarImage();
   }
 
   Future<void> fetchAvatarImage() async {
@@ -59,6 +61,60 @@ class _SubjectManagementState extends State<SubjectManagement> {
     } else {
       throw Exception('Failed to load country data');
     }
+  }
+
+  Future<Uint8List?> fetchPostImage(String url) async {
+    if (_imageCache.containsKey(url)) {
+      return _imageCache[url];
+    }
+
+    try {
+      String? token = await authService.getToken();
+      Map<String, String> headers = {};
+      if (token != null) {
+        headers['Authorization'] = 'Bearer $token';
+      }
+
+      final response = await http.get(Uri.parse(url), headers: headers);
+
+      if (response.statusCode == 200) {
+        _imageCache[url] = response.bodyBytes;
+        return response.bodyBytes;
+      } else {
+        debugPrint("Failed to load image: ${response.statusCode}");
+      }
+    } catch (e) {
+      debugPrint("Error fetching image: $e");
+    }
+    _imageCache[url] = null;
+    return null;
+  }
+
+  Future<Uint8List?> fetchPostAvatar(String url) async {
+    if (_imageAvatarCache.containsKey(url)) {
+      return _imageAvatarCache[url];
+    }
+
+    try {
+      String? token = await authService.getToken();
+      Map<String, String> headers = {};
+      if (token != null) {
+        headers['Authorization'] = 'Bearer $token';
+      }
+
+      final response = await http.get(Uri.parse(url), headers: headers);
+
+      if (response.statusCode == 200) {
+        _imageAvatarCache[url] = response.bodyBytes;
+        return response.bodyBytes;
+      } else {
+        debugPrint("Failed to load image: ${response.statusCode}");
+      }
+    } catch (e) {
+      debugPrint("Error fetching image: $e");
+    }
+    _imageAvatarCache[url] = null;
+    return null;
   }
 
   Future<void> fetchsubject() async {
@@ -81,9 +137,6 @@ class _SubjectManagementState extends State<SubjectManagement> {
 
         setState(() {
           subject = data.map((subject) {
-            subject['image'] = subject['image'] != null
-                ? baseImageUrl + subject['image']
-                : ''; // fallback ให้เป็นค่าว่างถ้าไม่มีรูป
             subject['title'] = subject['title'] ?? 'No Title';
             subject['description'] =
                 subject['description'] ?? 'No Description Available';
@@ -510,7 +563,6 @@ class _SubjectManagementState extends State<SubjectManagement> {
                             itemBuilder: (context, index) {
                               final subject = useItem[index];
                               final id = subject['id'];
-                              final imageUrl = subject['image'];
                               final title = subject['title'] ?? 'No Title';
                               final description = subject['description'] ??
                                   'No Description Available';
@@ -520,6 +572,11 @@ class _SubjectManagementState extends State<SubjectManagement> {
                                   ? DateFormat('dd MMMM yyyy  hh:mm a')
                                       .format(publishedDate)
                                   : 'N/A';
+                              final String imageUrl =
+                                  "${ApiConfig.subjectUrl}/$id/image";
+
+                              final String avatarImageUrl =
+                                  "${ApiConfig.subjectUrl}/$id/avatar";
 
                               return Padding(
                                 padding: const EdgeInsets.only(bottom: 16.0),
@@ -572,13 +629,53 @@ class _SubjectManagementState extends State<SubjectManagement> {
                                                 children: [
                                                   CircleAvatar(
                                                     radius: 20,
-                                                    child: Image.asset(
-                                                      'assets/images/avatar.png',
-                                                      width: 40.0,
-                                                      height: 40.0,
-                                                      colorBlendMode:
-                                                          BlendMode.srcIn,
-                                                    ),
+                                                    backgroundImage: _imageCache
+                                                                .containsKey(
+                                                                    avatarImageUrl) &&
+                                                            _imageCache[
+                                                                    avatarImageUrl] !=
+                                                                null
+                                                        ? MemoryImage(_imageCache[
+                                                            avatarImageUrl]!) // ใช้ภาพจากแคช
+                                                        : null, // ถ้าไม่มีภาพในแคช
+                                                    child: !_imageCache
+                                                            .containsKey(
+                                                                avatarImageUrl)
+                                                        ? FutureBuilder<
+                                                            Uint8List?>(
+                                                            future: fetchPostAvatar(
+                                                                avatarImageUrl),
+                                                            builder: (context,
+                                                                snapshot) {
+                                                              if (snapshot
+                                                                      .connectionState ==
+                                                                  ConnectionState
+                                                                      .waiting) {
+                                                                return const Center(
+                                                                  child:
+                                                                      CircularProgressIndicator(),
+                                                                );
+                                                              }
+                                                              if (snapshot
+                                                                      .data ==
+                                                                  null) {
+                                                                return Image
+                                                                    .asset(
+                                                                  "assets/images/avatar.png",
+                                                                  fit: BoxFit
+                                                                      .cover,
+                                                                );
+                                                              }
+                                                              return CircleAvatar(
+                                                                radius: 20,
+                                                                backgroundImage:
+                                                                    MemoryImage(
+                                                                        snapshot
+                                                                            .data!),
+                                                              );
+                                                            },
+                                                          )
+                                                        : null,
                                                   ),
                                                   SizedBox(
                                                       width:
@@ -821,41 +918,55 @@ class _SubjectManagementState extends State<SubjectManagement> {
                                             maxLines: 4,
                                             overflow: TextOverflow.ellipsis,
                                           ),
-                                          if (imageUrl.isNotEmpty)
-                                            Padding(
-                                              padding: const EdgeInsets.only(
-                                                  top: 15),
-                                              child: ClipRRect(
-                                                borderRadius:
-                                                    BorderRadius.circular(12.0),
-                                                child: Image.network(
-                                                  imageUrl,
-                                                  fit: BoxFit.cover,
-                                                  height: 137,
-                                                  width: double.infinity,
-                                                  errorBuilder: (context, error,
-                                                      stackTrace) {
-                                                    return Image.asset(
-                                                      'assets/images/scholarship_program.png', // รูปภาพ fallback
+                                          Padding(
+                                            padding:
+                                                const EdgeInsets.only(top: 15),
+                                            child: ClipRRect(
+                                              borderRadius:
+                                                  BorderRadius.circular(12.0),
+                                              child: _imageCache.containsKey(
+                                                          imageUrl) &&
+                                                      _imageCache[imageUrl] !=
+                                                          null
+                                                  ? Image.memory(
+                                                      _imageCache[imageUrl]!,
+                                                      width: 144,
+                                                      height: 160,
                                                       fit: BoxFit.cover,
-                                                      width: double.infinity,
-                                                      height: 200,
-                                                    );
-                                                  },
-                                                ),
-                                              ),
+                                                    )
+                                                  : FutureBuilder<Uint8List?>(
+                                                      future: fetchPostImage(
+                                                          imageUrl),
+                                                      builder:
+                                                          (context, snapshot) {
+                                                        if (snapshot
+                                                                .connectionState ==
+                                                            ConnectionState
+                                                                .waiting) {
+                                                          return const SizedBox(
+                                                            width: 144,
+                                                            height: 160,
+                                                            child: Center(
+                                                                child:
+                                                                    CircularProgressIndicator()),
+                                                          );
+                                                        }
+                                                        if (snapshot.hasData &&
+                                                            snapshot.data !=
+                                                                null) {
+                                                          return Image.memory(
+                                                            snapshot.data!,
+                                                            width: 144,
+                                                            height: 160,
+                                                            fit: BoxFit.cover,
+                                                          );
+                                                        }
+                                                        return const SizedBox
+                                                            .shrink(); // ไม่แสดงอะไรเลยถ้า snapshot.data เป็น null
+                                                      },
+                                                    ),
                                             ),
-                                          // else
-                                          //   ClipRRect(
-                                          //     borderRadius:
-                                          //         BorderRadius.circular(8.0),
-                                          //     child: Image.asset(
-                                          //       'assets/images/scholarship_program.png', // รูปภาพ fallback
-                                          //       fit: BoxFit.cover,
-                                          //       width: double.infinity,
-                                          //       height: 200,
-                                          //     ),
-                                          //   ),
+                                          ),
                                           SizedBox(height: 22),
                                           Container(
                                             width: double

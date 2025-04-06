@@ -1,5 +1,6 @@
 import 'package:edugo/config/api_config.dart';
 import 'package:edugo/features/subject/subject_manage.dart';
+import 'package:edugo/services/auth_service.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -38,6 +39,7 @@ class _SubjectAddEditState extends State<SubjectAddEdit> {
   Color descriptionBorderColor = Color(0xFFF8F8F8);
   String? descriptionError;
   bool isValidDescription = false;
+  AuthService authService = AuthService();
 
   TextEditingController _descriptionController =
       TextEditingController(); // Controller for description text field
@@ -119,9 +121,15 @@ class _SubjectAddEditState extends State<SubjectAddEdit> {
   }
 
   Future<void> submitAddData() async {
+    String? token = await authService.getToken();
+    Map<String, String> headers = {};
+    if (token != null) {
+      headers['Authorization'] = 'Bearer $token';
+    }
+
     var request =
         http.MultipartRequest('POST', Uri.parse(ApiConfig.subjectUrl));
-
+    request.headers.addAll(headers);
     request.fields['title'] =
         "Title Subject"; // You can replace this with dynamic data
     request.fields['description'] =
