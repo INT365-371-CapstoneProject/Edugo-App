@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:edugo/config/api_config.dart';
 import 'package:edugo/features/scholarship/screens/provider_add.dart';
 import 'package:edugo/features/scholarship/screens/provider_detail.dart';
@@ -57,7 +59,7 @@ class _ProviderManagementState extends State<ProviderManagement> {
           scholarships = scholarshipData.map((scholarship) {
             // ignore: prefer_interpolation_to_compose_strings
             scholarship['image'] =
-                ApiConfig.announceUrl + scholarship['id'].toString() + "/image";
+                "${ApiConfig.announceUrl}/${scholarship['id']}/image";
 
             scholarship['title'] = scholarship['title'] ?? 'No Title';
             scholarship['description'] =

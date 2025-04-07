@@ -11,7 +11,7 @@ class ScholarshipCard extends StatelessWidget {
   final String status;
   final String description;
 
-  const ScholarshipCard({
+  ScholarshipCard({
     super.key,
     required this.tag,
     required this.image,
@@ -21,7 +21,13 @@ class ScholarshipCard extends StatelessWidget {
     required this.description,
   });
 
+  final Map<String, Uint8List?> _imageCache = {};
+
   Future<Uint8List?> fetchImage(String url) async {
+    if (_imageCache.containsKey(url)) {
+      return _imageCache[url];
+    }
+
     try {
       final AuthService authService = AuthService();
       String? token = await authService.getToken();
@@ -60,35 +66,49 @@ class ScholarshipCard extends StatelessWidget {
           children: [
             ClipRRect(
               borderRadius: BorderRadius.circular(4),
-              child: FutureBuilder<Uint8List?>(
-                future: fetchImage(image),
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const SizedBox(
-                      width: 101,
-                      height: 143,
-                      child: Center(child: CircularProgressIndicator()),
-                    );
-                  }
-
-                  // ถ้าโหลดรูปไม่สำเร็จ (ไม่มีข้อมูลหรือมี error) ให้ใช้ภาพ default
-                  if (snapshot.data == null) {
-                    return Image.asset(
-                      "assets/images/scholarship_program.png",
-                      width: 101,
-                      height: 143,
-                      fit: BoxFit.cover,
-                    );
-                  }
-
-                  // โหลดภาพสำเร็จ
-                  return Image.memory(
-                    snapshot.data!,
-                    width: 101,
-                    height: 143,
-                    fit: BoxFit.cover,
-                  );
-                },
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(12.0),
+                child: _imageCache.containsKey(image)
+                    ? (_imageCache[image] != null
+                        ? Image.memory(
+                            _imageCache[image]!,
+                            width: 144,
+                            height: 160,
+                            fit: BoxFit.cover,
+                          )
+                        : Image.asset(
+                            "assets/images/scholarship_program.png",
+                            width: 144,
+                            height: 160,
+                            fit: BoxFit.cover,
+                          ))
+                    : FutureBuilder<Uint8List?>(
+                        future: fetchImage(image),
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState ==
+                              ConnectionState.waiting) {
+                            return const SizedBox(
+                              width: 101,
+                              height: 143,
+                              child: Center(child: CircularProgressIndicator()),
+                            );
+                          }
+                          if (snapshot.data == null) {
+                            return Image.asset(
+                              "assets/images/scholarship_program.png",
+                              width: 101,
+                              height: 143,
+                              fit: BoxFit.cover,
+                            );
+                          }
+                          return Image.memory(
+                            snapshot.data!,
+                            width: 101,
+                            height: 143,
+                            fit: BoxFit.cover,
+                          );
+                        },
+                      ),
               ),
             ),
             const SizedBox(width: 11),

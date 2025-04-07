@@ -15,6 +15,7 @@ import '../../../services/scholarship_card.dart';
 import 'package:edugo/features/search/screens/search_screen.dart';
 import 'package:edugo/config/api_config.dart';
 import 'package:edugo/config/api_config.dart';
+
 class CountryFilter extends StatelessWidget {
   final String name;
   final String fullName; // เพิ่ม property
@@ -105,11 +106,13 @@ class HomeScreenApp extends StatefulWidget {
 }
 
 class _HomeScreenAppState extends State<HomeScreenApp> {
+  Map<String, dynamic>? profile; // Define the profile variable
   int _currentIndex = 0;
   bool _showAllCountries = false;
   List<dynamic> scholarships = [];
   final Map<String, Uint8List?> _imageCache = {};
   final AuthService authService = AuthService();
+  bool isProvider = false;
 
   final List<Map<String, dynamic>> countryList = [
     {
@@ -154,6 +157,7 @@ class _HomeScreenAppState extends State<HomeScreenApp> {
     super.initState();
     _checkToken();
     fetchScholarships();
+    fetchProfile();
   }
 
   Future<void> _checkToken() async {
@@ -167,6 +171,40 @@ class _HomeScreenAppState extends State<HomeScreenApp> {
           MaterialPageRoute(builder: (context) => const Login()),
         );
       }
+    }
+  }
+
+  Future<void> fetchProfile() async {
+    try {
+      String? token = await authService.getToken();
+      Map<String, String> headers = {};
+      if (token != null) {
+        headers['Authorization'] = 'Bearer $token';
+      }
+
+      final response =
+          await http.get(Uri.parse(ApiConfig.profileUrl), headers: headers);
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> data = json.decode(response.body);
+        final Map<String, dynamic> profileData = data['profile'];
+
+        // เก็บเฉพาะ id และ role
+        setState(() {
+          profile = {
+            'id': profileData['id'],
+            'role': profileData['role'],
+          };
+
+          // เช็ค role และตั้งค่า isProvider
+          isProvider = profile!['role'] == 'provider';
+        });
+      } else {
+        throw Exception('Failed to load profile');
+      }
+    } catch (e) {
+      setState(() {});
+      print("Error fetching profile: $e");
     }
   }
 
@@ -550,13 +588,13 @@ class _HomeScreenAppState extends State<HomeScreenApp> {
                         final DateTime closeDate =
                             DateTime.tryParse(scholarship['close_date']) ??
                                 DateTime.now();
-                        final String imageUrl = 
+                        final String imageUrl =
                             "${ApiConfig.announceUserUrl}/${scholarship['id']}/image";
                         final duration =
                             "${DateFormat('d MMM').format(publishedDate)} - ${DateFormat('d MMM yyyy').format(closeDate)}";
 
                         return GestureDetector(
-                          onTap: () {
+                          onTap: () async {
                             final existingData = {
                               'id': scholarship['id'],
                               'title': scholarship['title'],
@@ -570,6 +608,11 @@ class _HomeScreenAppState extends State<HomeScreenApp> {
                               'close_date': scholarship['close_date'],
                             };
 
+                            // Fetch the image and update the cache if necessary
+                            final cachedImage = await fetchImage(imageUrl);
+
+                            // Add the cached image to existingData
+                            existingData['cachedImage'] = cachedImage;
                             Navigator.pushReplacement(
                               context,
                               PageRouteBuilder(
@@ -577,7 +620,7 @@ class _HomeScreenAppState extends State<HomeScreenApp> {
                                     (context, animation, secondaryAnimation) =>
                                         ProviderDetail(
                                   initialData: existingData,
-                                  isProvider: false,
+                                  isProvider: isProvider,
                                 ),
                                 transitionsBuilder: (context, animation,
                                     secondaryAnimation, child) {
@@ -618,7 +661,6 @@ class _HomeScreenAppState extends State<HomeScreenApp> {
                                               fit: BoxFit.cover,
                                             ))
                                       : FutureBuilder<Uint8List?>(
-          
                                           future: fetchImage(imageUrl),
                                           builder: (context, snapshot) {
                                             if (snapshot.connectionState ==

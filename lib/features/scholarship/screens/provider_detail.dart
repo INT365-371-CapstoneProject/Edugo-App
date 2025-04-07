@@ -30,7 +30,7 @@ class _ProviderDetailState extends State<ProviderDetail> {
   String? title; // Scholarship Name
   String? description; // Description
   String? url; // Web URL
-  String? image;
+  Uint8List? image;
   String? attachFile;
   String? selectedScholarshipType; // Scholarship Type
   String? selectedCountry;
@@ -57,7 +57,14 @@ class _ProviderDetailState extends State<ProviderDetail> {
       selectedEndDate = data['close_date'] != null
           ? DateTime.tryParse(data['close_date'])
           : null;
-      image = data['image'] ?? '';
+
+      // Handle cachedImage
+      if (data['cachedImage'] != null && data['cachedImage'] is Uint8List) {
+        image = data['cachedImage'];
+      } else {
+        image = null; // Fallback if no cached image is provided
+      }
+
       attachFile = data['attach_file'] ?? 'No Attach Files';
     }
   }
@@ -171,10 +178,16 @@ class _ProviderDetailState extends State<ProviderDetail> {
   }
 
   Future<void> submitDeleteData() async {
-    final String apiUrl =
-        "${ApiConfig.announceUrl}/delete/${id}";
+    final String apiUrl = "${ApiConfig.announceUrl}/$id";
 
+    String? token = await authService.getToken();
+
+    Map<String, String> headers = {}; // Explicitly type the map
+    if (token != null) {
+      headers['Authorization'] = 'Bearer $token';
+    }
     var request = http.MultipartRequest('DELETE', Uri.parse(apiUrl));
+    request.headers.addAll(headers);
 
     try {
       var response = await request.send();
@@ -196,8 +209,7 @@ class _ProviderDetailState extends State<ProviderDetail> {
   }
 
   Future<void> addBookmark() async {
-    final url =
-        Uri.parse(ApiConfig.bookmarkUrl);
+    final url = Uri.parse(ApiConfig.bookmarkUrl);
 
     String? token = await authService.getToken();
 
@@ -370,8 +382,8 @@ class _ProviderDetailState extends State<ProviderDetail> {
                                 image != "assets/images/scholarship_program.png"
                             ? ClipRRect(
                                 borderRadius: BorderRadius.circular(12),
-                                child: Image.network(
-                                  image ?? '',
+                                child: Image.memory(
+                                  image ?? Uint8List(0),
                                   width: 245,
                                   height: 338,
                                   fit: BoxFit.cover,

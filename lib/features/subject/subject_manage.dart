@@ -123,9 +123,6 @@ class _SubjectManagementState extends State<SubjectManagement> {
     if (token != null) {
       headers['Authorization'] = 'Bearer $token';
     }
-
-    const baseImageUrl =
-        "https://capstone24.sit.kmutt.ac.th/un2/api/public/images/";
     try {
       final response =
           await http.get(Uri.parse(ApiConfig.subjectUrl), headers: headers);
