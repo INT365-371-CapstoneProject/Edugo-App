@@ -31,7 +31,6 @@ class ProviderAddEdit extends StatefulWidget {
 }
 
 class _ProviderAddEditState extends State<ProviderAddEdit> {
-  final AuthService authService = AuthService();
   // ตัวแปรเก็บค่าจากฟอร์ม
   int? id;
   String? title; // สำหรับ Scholarship Name
@@ -43,6 +42,8 @@ class _ProviderAddEditState extends State<ProviderAddEdit> {
   String? selectedCountryId; // ตัวแปรเก็บ country_id
   String? selectedCategory;
   String? selectedCategoryId;
+  String? selectedEducationLevel; // สำหรับ Education Level
+  String? selectedEducationLevelId;
   DateTime? selectedStartDate;
   DateTime? selectedEndDate;
   Uint8List? _imageBytes; // Holds the selected image data
@@ -59,6 +60,8 @@ class _ProviderAddEditState extends State<ProviderAddEdit> {
   bool isValidCategory = false;
   String? countryError;
   bool isValidCountry = false;
+  String? educationLevelError;
+  bool isValidEducationLevel = false;
   bool isValidDescription = false;
   String? descriptionError;
   Color descriptionBorderColor = Color(0xFFCBD5E0);
@@ -70,6 +73,7 @@ class _ProviderAddEditState extends State<ProviderAddEdit> {
   bool isValidUrl = false;
   Color urlBorderColor = const Color(0xFFCBD5E0);
   final ApiService apiService = ApiService(); // สร้าง Instance ของ ApiService
+  final AuthService authService = AuthService(); // Instance of AuthService
 
   // สร้าง controller สำหรับ TextField
   TextEditingController titleController = TextEditingController();
@@ -78,6 +82,11 @@ class _ProviderAddEditState extends State<ProviderAddEdit> {
 
   List<Map<String, dynamic>> countryList = []; // Store country data here
   List<Map<String, dynamic>> categoryList = []; // Store country data here
+  List<Map<String, dynamic>> educationLevelList = [
+    {"id": 1, "education_name": "Undergraduate"},
+    {"id": 2, "education_name": "Master"},
+    {"id": 3, "education_name": "Doctorate"},
+  ];
 
   Map<String, dynamic> originalValues = {};
 
@@ -165,8 +174,16 @@ class _ProviderAddEditState extends State<ProviderAddEdit> {
   }
 
   Future<void> fetchCountryData() async {
+    String? token = await authService.getToken();
+    Map<String, String> headers = {}; // Explicitly type the map
+    if (token != null) {
+      headers['Authorization'] = 'Bearer $token';
+    }
+
     try {
-      var response = await http.get(Uri.parse(ApiConfig.countryUrl));
+      var response =
+          await http.get(Uri.parse(ApiConfig.countryUrl), headers: headers);
+
       if (response.statusCode == 200) {
         final List<dynamic> data = json.decode(response.body);
         setState(() {
@@ -179,8 +196,15 @@ class _ProviderAddEditState extends State<ProviderAddEdit> {
   }
 
   Future<void> fetchCategoryData() async {
+    String? token = await authService.getToken();
+    Map<String, String> headers = {}; // Explicitly type the map
+    if (token != null) {
+      headers['Authorization'] = 'Bearer $token';
+    }
+
     try {
-      var response = await http.get(Uri.parse(ApiConfig.categoryUrl));
+      var response =
+          await http.get(Uri.parse(ApiConfig.categoryUrl), headers: headers);
       if (response.statusCode == 200) {
         final List<dynamic> data = json.decode(response.body);
         setState(() {
@@ -192,21 +216,21 @@ class _ProviderAddEditState extends State<ProviderAddEdit> {
     }
   }
 
-  void handleCountrySelection(String? countryId) {
-    setState(() {
-      selectedCountry = countryId; // Store the selected country ID
-    });
-  }
-
-  void handleCategorySelection(String? categoryId) {
-    setState(() {
-      selectedCategory = categoryId; // Store the selected country ID
-    });
-  }
-
-  // void _onImagePicked(Uint8List? image) {
+  // void handleCountrySelection(String? countryId) {
   //   setState(() {
-  //     _imageBytes = image;
+  //     selectedCountry = countryId; // Store the selected country ID
+  //   });
+  // }
+
+  // void handleCategorySelection(String? categoryId) {
+  //   setState(() {
+  //     selectedCategory = categoryId; // Store the selected country ID
+  //   });
+  // }
+
+  // void handleEducationLevelSelection(String? educationId) {
+  //   setState(() {
+  //     selectedEducationLevel = educationId; // Store the selected country ID
   //   });
   // }
 
@@ -265,9 +289,15 @@ class _ProviderAddEditState extends State<ProviderAddEdit> {
   }
 
   Future<void> submitAddData() async {
+    String? token = await authService.getToken();
+    Map<String, String> headers = {}; // Explicitly type the map
+    if (token != null) {
+      headers['Authorization'] = 'Bearer $token';
+    }
 
-
-    var request = http.MultipartRequest('POST', Uri.parse(ApiConfig.announceUrl));
+    var request =
+        http.MultipartRequest('POST', Uri.parse(ApiConfig.announceUrl));
+    request.headers.addAll(headers);
 
     request.fields['title'] = title ?? '';
     request.fields['description'] = description ?? '';
@@ -276,8 +306,9 @@ class _ProviderAddEditState extends State<ProviderAddEdit> {
         '${selectedStartDate?.toIso8601String().split('.')[0]}Z';
     request.fields['close_date'] =
         '${selectedEndDate?.toIso8601String().split('.')[0]}Z';
-    request.fields['category_id'] = selectedCategory ?? '1';
-    request.fields['country_id'] = selectedCountry ?? '1';
+    request.fields['category_id'] = selectedCategoryId!;
+    request.fields['country_id'] = selectedCountryId!;
+    request.fields['education_level'] = selectedEducationLevel!;
 
     if (_imageBytes != null) {
       request.files.add(
@@ -369,86 +400,8 @@ class _ProviderAddEditState extends State<ProviderAddEdit> {
     }
   }
 
-  // Future<void> submitAddData() async {
-  //   final ApiService apiService = ApiService();
-
-  //   final announce = Announce(
-  //     title: title ?? '',
-  //     description: description ?? '',
-  //     publishDate: selectedStartDate,
-  //     closeDate: selectedEndDate,
-  //     categoryId: selectedCategory ?? '1',
-  //     countryId: selectedCountry ?? '1',
-  //     url: url,
-  //   );
-
-  //   showDialog(
-  //     context: context,
-  //     barrierDismissible: false,
-  //     builder: (BuildContext context) {
-  //       return Dialog(
-  //         shape: RoundedRectangleBorder(
-  //           borderRadius: BorderRadius.circular(10),
-  //         ),
-  //         child: SizedBox(
-  //           height: 301,
-  //           width: 298,
-  //           child: Center(
-  //             child: Column(
-  //               mainAxisSize: MainAxisSize.min,
-  //               children: [
-  //                 Stack(
-  //                   alignment: Alignment.center,
-  //                   children: [
-  //                     SizedBox(
-  //                       height: 100,
-  //                       width: 100,
-  //                       child: CircularProgressIndicator(
-  //                         valueColor: AlwaysStoppedAnimation<Color>(
-  //                             const Color.fromARGB(249, 84, 83, 83)),
-  //                         strokeWidth: 18.0,
-  //                       ),
-  //                     ),
-  //                   ],
-  //                 ),
-  //                 SizedBox(height: 40),
-  //                 Text(
-  //                   "Waiting for Posting",
-  //                   style: GoogleFonts.dmSans(
-  //                     fontSize: 24,
-  //                     fontWeight: FontWeight.w600,
-  //                     color: const Color(0xFF000000),
-  //                   ),
-  //                 ),
-  //               ],
-  //             ),
-  //           ),
-  //         ),
-  //       );
-  //     },
-  //   );
-
-  //   try {
-  //     // เพิ่มการหน่วงเวลา 3 วินาที
-  //     await Future.delayed(Duration(seconds: 3));
-
-  //     await apiService.addAnnounce(
-  //       announce,
-  //       image: _imageBytes,
-  //       file: _pdfFileBytes,
-  //     );
-
-  //     Navigator.of(context).pop(); // ปิด Loading Dialog
-  //     showSuccessDialog(context, false);
-  //   } catch (e) {
-  //     Navigator.of(context).pop(); // ปิด Loading Dialog
-  //     showError("Error occurred: $e");
-  //   }
-  // }
-
   Future<void> submitEditData() async {
-    final String apiUrl =
-        "${ApiConfig.announceUrl}/update/${id}";
+    final String apiUrl = "${ApiConfig.announceUrl}/update/${id}";
 
     var request = http.MultipartRequest('PUT', Uri.parse(apiUrl));
 
@@ -660,7 +613,7 @@ class _ProviderAddEditState extends State<ProviderAddEdit> {
                     onImagePicked: _onImagePicked,
                     initialImage: image),
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                  padding: const EdgeInsets.symmetric(horizontal: 28.0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -819,19 +772,28 @@ class _ProviderAddEditState extends State<ProviderAddEdit> {
                         validColor: dropdownBorderColor,
                         initialValue:
                             selectedCategory ?? "Select type of scholarship",
-                        onSelected: (value) {
-                          setState(() {
-                            selectedCategory = value;
-                            if (value != null) {
-                              categoryError =
-                                  null; // ล้างข้อความข้อผิดพลาดเมื่อเลือกค่า
-                              isValidCategory = true;
-                            }
-                          });
+                        onSelected: (String? value) {
+                          if (value != null) {
+                            // Find the category object from categoryList using the ID
+                            var selectedCategoryObj = categoryList.firstWhere(
+                              (category) => category['id'].toString() == value,
+                              orElse: () => {},
+                            );
+
+                            setState(() {
+                              selectedCategoryId = value; // Store the ID
+                              selectedCategory = selectedCategoryObj[
+                                  'category_name']; // Store the display name
+                              if (value != null) {
+                                categoryError = null;
+                                isValidCategory = true;
+                              }
+                            });
+                          }
                         },
                         hintStyle: GoogleFonts.dmSans(
                           fontSize: 14,
-                          color: const Color(0xFFCBD5E0), // Hint color
+                          color: const Color(0xFFCBD5E0),
                         ),
                       ),
                       if (categoryError != null) // แสดงข้อความข้อผิดพลาด
@@ -839,6 +801,56 @@ class _ProviderAddEditState extends State<ProviderAddEdit> {
                           padding: const EdgeInsets.only(top: 4.0),
                           child: Text(
                             categoryError!,
+                            style: TextStyle(
+                              color: Colors.red,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Educational Level*',
+                        style: GoogleFonts.dmSans(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      CustomDropdownExample(
+                        items: educationLevelList,
+                        type: 'education level',
+                        validColor: dropdownBorderColor,
+                        initialValue: selectedEducationLevel ??
+                            "Select education level of scholarship",
+                        onSelected: (String? value) {
+                          if (value != null) {
+                            // Find the education level object
+                            var selectedEducationObj =
+                                educationLevelList.firstWhere(
+                              (education) =>
+                                  education['id'].toString() == value,
+                              orElse: () => {},
+                            );
+
+                            setState(() {
+                              selectedEducationLevelId = value; // Store the ID
+                              selectedEducationLevel = selectedEducationObj[
+                                  'education_name']; // Store the display name
+                              educationLevelError = null;
+                              isValidEducationLevel = true;
+                            });
+                          }
+                        },
+                        hintStyle: GoogleFonts.dmSans(
+                          fontSize: 14,
+                          color: const Color(0xFFCBD5E0),
+                        ),
+                      ),
+                      if (educationLevelError != null) // แสดงข้อความข้อผิดพลาด
+                        Padding(
+                          padding: const EdgeInsets.only(top: 4.0),
+                          child: Text(
+                            educationLevelError!,
                             style: TextStyle(
                               color: Colors.red,
                               fontSize: 12,
@@ -860,19 +872,26 @@ class _ProviderAddEditState extends State<ProviderAddEdit> {
                         validColor: dropdownBorderColor,
                         initialValue:
                             selectedCountry ?? "Select country of scholarship",
-                        onSelected: (value) {
-                          setState(() {
-                            selectedCountry = value;
-                            if (value != null) {
-                              countryError =
-                                  null; // ล้างข้อความข้อผิดพลาดเมื่อเลือกค่า
+                        onSelected: (String? value) {
+                          if (value != null) {
+                            // Find the country object
+                            var selectedCountryObj = countryList.firstWhere(
+                              (country) => country['id'].toString() == value,
+                              orElse: () => {},
+                            );
+
+                            setState(() {
+                              selectedCountryId = value; // Store the ID
+                              selectedCountry = selectedCountryObj[
+                                  'country_name']; // Store the display name
+                              countryError = null;
                               isValidCountry = true;
-                            }
-                          });
+                            });
+                          }
                         },
                         hintStyle: GoogleFonts.dmSans(
                           fontSize: 14,
-                          color: const Color(0xFFCBD5E0), // Hint color
+                          color: const Color(0xFFCBD5E0),
                         ),
                       ),
                       if (countryError != null) // แสดงข้อความข้อผิดพลาด
@@ -1072,7 +1091,7 @@ class _ProviderAddEditState extends State<ProviderAddEdit> {
           // ปุ่มด้านล่าง
           Container(
             color: const Color(0xFFFFFFFF),
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(28),
             height: 113,
             child: Align(
               alignment: Alignment.topCenter, // ชิดด้านบน
@@ -1090,8 +1109,8 @@ class _ProviderAddEditState extends State<ProviderAddEdit> {
                           bool hasAddScholarshipUnsavedChanges = (urlController
                                   .text.isNotEmpty ||
                               title != null && title!.isNotEmpty ||
-                              selectedCategory != null &&
-                                  selectedCategory!.isNotEmpty ||
+                              selectedCategoryId != null &&
+                                  selectedCategoryId!.isNotEmpty ||
                               selectedCountry != null &&
                                   selectedCountry!.isNotEmpty ||
                               description != null && description!.isNotEmpty ||
@@ -1376,8 +1395,8 @@ class _ProviderAddEditState extends State<ProviderAddEdit> {
 
                           setState(() {
                             // ตรวจสอบค่าของ selectedCategory
-                            if (selectedCategory == null ||
-                                selectedCategory!.isEmpty ||
+                            if (selectedCategoryId == null ||
+                                selectedCategoryId!.isEmpty ||
                                 selectedCategory ==
                                     "Select type of scholarship") {
                               categoryError =
@@ -1411,6 +1430,18 @@ class _ProviderAddEditState extends State<ProviderAddEdit> {
                               dropdownBorderColor = Colors.red;
                             } else {
                               isValidCountry = true;
+                            }
+
+                            if (selectedEducationLevel == null ||
+                                selectedEducationLevel!.isEmpty ||
+                                selectedEducationLevel ==
+                                    "Select country of scholarship") {
+                              educationLevelError =
+                                  "Please select a Education Level";
+                              isValidEducationLevel = false;
+                              dropdownBorderColor = Colors.red;
+                            } else {
+                              isValidEducationLevel = true;
                             }
 
                             if (description == null ||
@@ -1455,9 +1486,10 @@ class _ProviderAddEditState extends State<ProviderAddEdit> {
 
                           // ถ้าฟอร์มถูกต้อง ให้ดำเนินการ
                           if (isValidUrl &&
-                              isValidTitle &&
                               isValidCategory &&
+                              isValidTitle &&
                               isValidCountry &&
+                              isValidEducationLevel &&
                               isValidDescription &&
                               isValidDateTime) {
                             if (widget.isEdit) {

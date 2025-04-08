@@ -106,7 +106,7 @@ class _ProviderManagementState extends State<ProviderManagement> {
   }
 
   Future<void> _delayedLoad() async {
-    await Future.delayed(const Duration(seconds: 3)); // Delay 3 seconds
+    await Future.delayed(const Duration(seconds: 1)); // Delay 3 seconds
     fetchScholarships();
   }
 

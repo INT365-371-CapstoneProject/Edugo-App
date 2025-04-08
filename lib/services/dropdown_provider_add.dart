@@ -60,23 +60,26 @@ class _CustomDropdownExampleState extends State<CustomDropdownExample> {
     final offset = renderBox.localToGlobal(Offset.zero);
 
     _overlayEntry = OverlayEntry(
-      builder: (context) => Positioned(
-        left: offset.dx,
-        top: offset.dy + size.height + 3,
-        width: size.width,
-        child: Material(
-          color: Colors.transparent,
-          child: GestureDetector(
-            onTap: () {
-              _removeDropdown(); // Close dropdown if tapped outside
-            },
-            child: Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                border: Border.all(color: const Color(0xFFCBD5E0)),
-                borderRadius: BorderRadius.circular(6),
-              ),
-              child: SingleChildScrollView(
+      builder: (context) => Stack(
+        children: [
+          // ปิดการโต้ตอบกับหน้าจอด้านหลัง
+          ModalBarrier(
+            dismissible: true,
+            color: Colors.transparent,
+            onDismiss: _removeDropdown, // ปิด Dropdown เมื่อแตะด้านนอก
+          ),
+          Positioned(
+            left: offset.dx,
+            top: offset.dy + size.height + 3,
+            width: size.width,
+            child: Material(
+              color: Colors.transparent,
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  border: Border.all(color: const Color(0xFFCBD5E0)),
+                  borderRadius: BorderRadius.circular(6),
+                ),
                 child: Container(
                   constraints: const BoxConstraints(maxHeight: 200),
                   child: ListView(
@@ -85,7 +88,10 @@ class _CustomDropdownExampleState extends State<CustomDropdownExample> {
                     children: widget.items.map((item) {
                       String displayText = widget.type == 'category'
                           ? item['category_name'] ?? 'Unknown Category'
-                          : item['country_name'] ?? 'Unknown Country';
+                          : widget.type == 'country'
+                              ? item['country_name'] ?? 'Unknown Country'
+                              : item['education_name'] ??
+                                  'Unknown Education Level';
 
                       return ListTile(
                         title: Text(displayText),
@@ -93,7 +99,9 @@ class _CustomDropdownExampleState extends State<CustomDropdownExample> {
                           setState(() {
                             selectedValue = displayText;
                           });
+                          // Send both the ID and display text back
                           widget.onSelected(item['id'].toString());
+                          // The selected value is already stored in selectedValue and communicated via onSelected
                           _removeDropdown();
                         },
                       );
@@ -103,7 +111,7 @@ class _CustomDropdownExampleState extends State<CustomDropdownExample> {
               ),
             ),
           ),
-        ),
+        ],
       ),
     );
 
@@ -142,7 +150,9 @@ class _CustomDropdownExampleState extends State<CustomDropdownExample> {
               border: Border.all(
                   color: selectedValue == null ||
                           selectedValue == "Select type of scholarship" ||
-                          selectedValue == "Select country of scholarship"
+                          selectedValue == "Select country of scholarship" ||
+                          selectedValue ==
+                              "Select education level of scholarship"
                       ? widget.validColor
                       : Color(0xFFCBD5E0)),
               borderRadius: BorderRadius.circular(6),
@@ -154,10 +164,14 @@ class _CustomDropdownExampleState extends State<CustomDropdownExample> {
                   selectedValue ??
                       (widget.type == 'category'
                           ? 'Select type of scholarship'
-                          : 'Select country of scholarship'),
+                          : widget.type == 'country'
+                              ? 'Select country of scholarship'
+                              : 'Select education level of scholarship'),
                   style: TextStyle(
                     color: (selectedValue == 'Select type of scholarship' ||
-                            selectedValue == 'Select country of scholarship')
+                            selectedValue == 'Select country of scholarship' ||
+                            selectedValue ==
+                                'Select education level of scholarship')
                         ? const Color(0xFFCBD5E0)
                         : const Color(0xFF000000),
                   ),
