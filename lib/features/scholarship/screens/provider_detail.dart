@@ -34,6 +34,7 @@ class _ProviderDetailState extends State<ProviderDetail> {
   String? attachFile;
   String? selectedScholarshipType; // Scholarship Type
   String? selectedCountry;
+  String? educationLevel;
   DateTime? selectedStartDate;
   DateTime? selectedEndDate;
   final double coverHeight = 227;
@@ -42,6 +43,7 @@ class _ProviderDetailState extends State<ProviderDetail> {
   @override
   void initState() {
     super.initState();
+    // fetchScholarshipsDetail(widget.initialData?['id']);
 
     if (widget.initialData != null) {
       final data = widget.initialData!;
@@ -57,15 +59,22 @@ class _ProviderDetailState extends State<ProviderDetail> {
       selectedEndDate = data['close_date'] != null
           ? DateTime.tryParse(data['close_date'])
           : null;
-
+      educationLevel = data['education_level'] ?? 'No Education Level';
+      if (data['attach_name'] != null) {
+        try {
+          attachFile = utf8.decode(data['attach_name'].toString().codeUnits);
+        } catch (e) {
+          attachFile = data['attach_name'] ?? 'No Attach Files';
+        }
+      } else {
+        attachFile = 'No Attach Files';
+      }
       // Handle cachedImage
       if (data['cachedImage'] != null && data['cachedImage'] is Uint8List) {
         image = data['cachedImage'];
       } else {
         image = null; // Fallback if no cached image is provided
       }
-
-      attachFile = data['attach_file'] ?? 'No Attach Files';
     }
   }
 
@@ -177,6 +186,55 @@ class _ProviderDetailState extends State<ProviderDetail> {
     );
   }
 
+  // Future<void> fetchScholarshipsDetail(int id) async {
+  //   try {
+  //     String? token = await authService.getToken();
+  //     Map<String, String> headers = {};
+  //     if (token != null) {
+  //       headers['Authorization'] = 'Bearer $token';
+  //     }
+
+  //     final response = await http.get(Uri.parse("${ApiConfig.announceUrl}/$id"),
+  //         headers: headers);
+
+  //     if (response.statusCode == 200) {
+  //       final Map<String, dynamic> scholarshipData = json.decode(response.body);
+
+  //       print('Raw publish_date: ${scholarshipData['publish_date']}');
+  //       print('Raw close_date: ${scholarshipData['close_date']}');
+
+  //       setState(() {
+  //         title = scholarshipData['title'] ?? 'No Title';
+  //         description =
+  //             scholarshipData['description'] ?? 'No Description Available';
+  //         url = scholarshipData['url'];
+  //         selectedScholarshipType = scholarshipData['category'];
+  //         selectedCountry = scholarshipData['country'];
+
+  //         selectedStartDate = scholarshipData['publish_date'] != null
+  //             ? DateTime.tryParse(scholarshipData['publish_date'])
+  //             : null;
+
+  //         if (scholarshipData['close_date'] != null) {
+  //           try {
+  //             selectedEndDate = DateTime.parse(scholarshipData['close_date']);
+  //           } catch (e) {
+  //             print('Error parsing close_date: $e');
+  //             selectedEndDate = null;
+  //           }
+  //         }
+
+  //         // Handle attachment
+  //         attachFile = scholarshipData['attach_name'] ?? 'No Attach Files';
+  //       });
+  //     } else {
+  //       throw Exception('Failed to load scholarship details');
+  //     }
+  //   } catch (e) {
+  //     print("Error fetching scholarship details: $e");
+  //   }
+  // }
+
   Future<void> submitDeleteData() async {
     final String apiUrl = "${ApiConfig.announceUrl}/$id";
 
@@ -263,7 +321,7 @@ class _ProviderDetailState extends State<ProviderDetail> {
         children: [
           Expanded(
             child: ListView(
-              padding: EdgeInsets.zero,
+              padding: const EdgeInsets.only(top: 0),
               children: [
                 Stack(
                   alignment: Alignment.center,
@@ -417,7 +475,7 @@ class _ProviderDetailState extends State<ProviderDetail> {
 
                 // Details Section
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 14.0),
+                  padding: const EdgeInsets.symmetric(horizontal: 28.0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -523,9 +581,9 @@ class _ProviderDetailState extends State<ProviderDetail> {
                               ),
                               const SizedBox(height: 16),
                               Padding(
-                                padding: const EdgeInsets.only(left: 11),
+                                padding: const EdgeInsets.only(left: 0),
                                 child: Container(
-                                  width: 160, // กำหนดความกว้างเป็น 150px
+                                  width: 145, // กำหนดความกว้างเป็น 150px
                                   child: Text(
                                     selectedCountry ?? 'Not Specified',
                                     maxLines: 1, // จำกัดแค่ 1 บรรทัด
@@ -542,6 +600,32 @@ class _ProviderDetailState extends State<ProviderDetail> {
                             ],
                           ),
                         ],
+                      ),
+
+                      const SizedBox(height: 16),
+
+                      Text(
+                        'Education Level',
+                        style: GoogleFonts.dmSans(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.black,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Padding(
+                        padding: const EdgeInsets.only(left: 11.0),
+                        child: Text(
+                          educationLevel ?? "No Education Level Available.",
+                          maxLines: 1, // จำกัดให้แสดงเพียง 1 บรรทัด
+                          overflow: TextOverflow
+                              .ellipsis, // แสดง "..." หากข้อความยาวเกิน
+                          style: GoogleFonts.dmSans(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w400,
+                            color: Color(0xFF64738B),
+                          ),
+                        ),
                       ),
 
                       const SizedBox(height: 24),

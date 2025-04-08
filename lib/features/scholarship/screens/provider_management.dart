@@ -29,6 +29,7 @@ class _ProviderManagementState extends State<ProviderManagement> {
   List<dynamic> scholarships = [];
   List<dynamic> useItem = [];
   bool isLoading = true;
+  final Map<String, Uint8List?> _imageCache = {};
   String selectedStatus = "All";
   final AuthService authService = AuthService(); // Instance of AuthService
 
@@ -36,6 +37,33 @@ class _ProviderManagementState extends State<ProviderManagement> {
   void initState() {
     super.initState();
     _delayedLoad(); // เรียกใช้งานฟังก์ชัน _delayedLoad
+  }
+
+  Future<Uint8List?> fetchImage(String url) async {
+    if (_imageCache.containsKey(url)) {
+      return _imageCache[url];
+    }
+
+    try {
+      final AuthService authService = AuthService();
+      String? token = await authService.getToken();
+
+      Map<String, String> headers = {};
+      if (token != null) {
+        headers['Authorization'] = 'Bearer $token';
+      }
+
+      final response = await http.get(Uri.parse(url), headers: headers);
+
+      if (response.statusCode == 200) {
+        return response.bodyBytes; // โหลดรูปสำเร็จ
+      } else {
+        debugPrint("Failed to load image: ${response.statusCode}");
+      }
+    } catch (e) {
+      debugPrint("Error fetching image: $e");
+    }
+    return null; // โหลดรูปไม่ได้ ให้ใช้ภาพเริ่มต้นแทน
   }
 
   Future<void> fetchScholarships() async {
@@ -68,6 +96,10 @@ class _ProviderManagementState extends State<ProviderManagement> {
                 scholarship['published_date'] ?? scholarship['publish_date'];
             scholarship['close_date'] =
                 scholarship['close_date'] ?? scholarship['close_date'];
+            scholarship['education_level'] =
+                scholarship['education_level'] ?? 'No Education Level';
+            scholarship['attach_name'] =
+                scholarship['attach_name'] ?? 'No Attach File Name';
             return scholarship;
           }).toList();
 
@@ -374,7 +406,7 @@ class _ProviderManagementState extends State<ProviderManagement> {
                               return Padding(
                                 padding: const EdgeInsets.only(bottom: 16.0),
                                 child: GestureDetector(
-                                  onTap: () {
+                                  onTap: () async {
                                     final existingData = {
                                       'id': scholarship['id'],
                                       'title': scholarship['title'],
@@ -387,7 +419,17 @@ class _ProviderManagementState extends State<ProviderManagement> {
                                       'published_date':
                                           scholarship['published_date'],
                                       'close_date': scholarship['close_date'],
+                                      'education_level':
+                                          scholarship['education_level'],
+                                      'attach_name': scholarship['attach_name'],
                                     };
+
+                                    // Fetch the image and update the cache if necessary
+                                    final cachedImage =
+                                        await fetchImage(imageUrl);
+
+                                    // Add the cached image to existingData
+                                    existingData['cachedImage'] = cachedImage;
 
                                     Navigator.push(
                                       context,

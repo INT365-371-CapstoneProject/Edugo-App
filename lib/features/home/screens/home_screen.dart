@@ -235,6 +235,10 @@ class _HomeScreenAppState extends State<HomeScreenApp> {
                 scholarship['published_date'] ?? scholarship['publish_date'];
             scholarship['close_date'] =
                 scholarship['close_date'] ?? scholarship['close_date'];
+            scholarship['education_level'] =
+                scholarship['education_level'] ?? 'No Education Level';
+            scholarship['attach_name'] =
+                scholarship['attach_name'] ?? 'No Attach File Name';
             return scholarship;
           }).toList();
 
@@ -606,6 +610,8 @@ class _HomeScreenAppState extends State<HomeScreenApp> {
                               'attach_file': scholarship['attach_file'],
                               'published_date': scholarship['published_date'],
                               'close_date': scholarship['close_date'],
+                              'education_level': scholarship['education_level'],
+                              'attach_name': scholarship['attach_name'],
                             };
 
                             // Fetch the image and update the cache if necessary
