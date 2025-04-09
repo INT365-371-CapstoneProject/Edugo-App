@@ -7,7 +7,7 @@ import 'dart:io'; // เพิ่มการใช้งาน File
 class HeaderProviderAdd extends StatefulWidget {
   final Function(Uint8List?) onImagePicked; // Callback to pass the image
   final bool isEdit; // Add/Edit mode flag
-  final String? initialImage; // Initial image URL for Edit mode
+  final Uint8List? initialImage; // Initial image URL for Edit mode
 
   const HeaderProviderAdd({
     Key? key,
@@ -22,6 +22,12 @@ class HeaderProviderAdd extends StatefulWidget {
 
 class _HeaderProviderAddState extends State<HeaderProviderAdd> {
   Uint8List? _imageBytes; // Stores the currently selected image as bytes
+
+  @override
+  void initState() {
+    super.initState();
+    print('Initial Image URL: ${widget.initialImage}'); // Add this debug print
+  }
 
   // Function to pick an image
   Future<void> _pickImage() async {
@@ -126,9 +132,10 @@ class _HeaderProviderAddState extends State<HeaderProviderAdd> {
                             fit: BoxFit.cover,
                           )
                         : (widget.initialImage != null &&
+                                widget.initialImage != '' &&
                                 widget.initialImage !=
                                     'assets/images/scholarship_program.png')
-                            ? Image.network(
+                            ? Image.memory(
                                 widget.initialImage!,
                                 width: 239,
                                 height: picture,

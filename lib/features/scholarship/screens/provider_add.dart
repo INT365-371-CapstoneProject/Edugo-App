@@ -36,7 +36,7 @@ class _ProviderAddEditState extends State<ProviderAddEdit> {
   String? title; // สำหรับ Scholarship Name
   String? description; // สำหรับ Description
   String? url; // สำหรับ Web URL
-  String? image;
+  Uint8List? cancalImage;
   String? selectedScholarshipType; // สำหรับ Scholarship Type
   String? selectedCountry;
   String? selectedCountryId; // ตัวแปรเก็บ country_id
@@ -125,6 +125,8 @@ class _ProviderAddEditState extends State<ProviderAddEdit> {
     fetchCountryData();
     fetchCategoryData();
 
+    print(widget.initialData);
+
     if (widget.isEdit && widget.initialData != null) {
       final data = widget.initialData!;
       id = data['id'] ?? '';
@@ -139,9 +141,11 @@ class _ProviderAddEditState extends State<ProviderAddEdit> {
       selectedEndDate = data['close_date'] != null
           ? DateTime.tryParse(data['close_date'])
           : null;
-      image = data['image'] ?? '';
+      cancalImage = data['image'] ?? '';
+      _imageBytes = data['image'] ?? '';
       selectedFileName = data['attach_file'];
 
+      selectedEducationLevel = data['education_level'];
       titleController.text = title ?? '';
       urlController.text = url ?? '';
       descriptionController.text = description ?? '';
@@ -154,8 +158,9 @@ class _ProviderAddEditState extends State<ProviderAddEdit> {
         'category': selectedCategory,
         'publish_date': selectedStartDate?.toIso8601String(),
         'close_date': selectedEndDate?.toIso8601String(),
-        'image': image,
+        'image': cancalImage,
         'attach_file': selectedFileName,
+        'education_level': selectedEducationLevel,
       };
     } else {
       // กำหนดค่าเริ่มต้นหากไม่ได้อยู่ในโหมดแก้ไข
@@ -383,7 +388,7 @@ class _ProviderAddEditState extends State<ProviderAddEdit> {
 
     try {
       // เพิ่มการหน่วงเวลา 3 วินาที
-      await Future.delayed(Duration(seconds: 3));
+      await Future.delayed(Duration(seconds: 1));
 
       var response = await request.send();
 
@@ -401,23 +406,37 @@ class _ProviderAddEditState extends State<ProviderAddEdit> {
   }
 
   Future<void> submitEditData() async {
-    final String apiUrl = "${ApiConfig.announceUrl}/update/${id}";
+    String? token = await authService.getToken();
+    Map<String, String> headers = {}; // Explicitly type the map
+    if (token != null) {
+      headers['Authorization'] = 'Bearer $token';
+    }
+
+    final String apiUrl = "${ApiConfig.announceUrl}/$id";
 
     var request = http.MultipartRequest('PUT', Uri.parse(apiUrl));
+    request.headers.addAll(headers);
 
     Map<String, String> updatedFields = {};
+    Map<String, int> updatedFieldsInt = {};
 
     if (title != originalValues['title']) updatedFields['title'] = title ?? '';
     if (description != originalValues['description']) {
       updatedFields['description'] = description ?? '';
     }
-    if (url != originalValues['url']) updatedFields['url'] = url ?? '';
+    if (url != originalValues['url'] && url != null && url!.isNotEmpty)
+      updatedFields['url'] = url!;
 
-    if (selectedCountry != originalValues['country']) {
-      updatedFields['country_id'] = selectedCountry ?? '1';
-    }
-    if (selectedCategory != originalValues['category']) {
-      updatedFields['category_id'] = selectedCategory ?? '1';
+    var selectedCountryObj = countryList.firstWhere(
+        (country) => country['country_name'].toString() == selectedCountry);
+    updatedFieldsInt['country_id'] = selectedCountryObj['id'];
+
+    var selectedCategoryObj = categoryList.firstWhere(
+        (country) => country['category_name'].toString() == selectedCategory);
+    updatedFieldsInt['category_id'] = selectedCategoryObj['id'];
+
+    if (selectedEducationLevel != originalValues['education_level']) {
+      updatedFields['education_level'] = selectedEducationLevel!;
     }
     if (selectedStartDate?.toIso8601String() !=
         originalValues['publish_date']) {
@@ -454,6 +473,29 @@ class _ProviderAddEditState extends State<ProviderAddEdit> {
 
     // เพิ่มเฉพาะฟิลด์ที่เปลี่ยนแปลง
     request.fields.addAll(updatedFields);
+    updatedFieldsInt.forEach((key, value) {
+      request.fields[key] = value.toString();
+    });
+
+    // Print ค่าทั้งหมดที่จะส่งไป
+    print('=== Request Details ===');
+    print('URL: ${request.url}');
+    print('Headers: ${request.headers}');
+    print('Fields: ${request.fields}');
+    print(
+        'Files: ${request.files.map((f) => 'Filename: ${f.filename}, Length: ${f.length} bytes')}');
+    print('Updated Fields: $updatedFields');
+    print('Original Values: $originalValues');
+    print('Current Values:');
+    print('  Title: $title');
+    print('  Description: $description');
+    print('  URL: $url');
+    print('  Country: $selectedCountry');
+    print('  Category: $selectedCategory');
+    print('  Education Level: $selectedEducationLevel');
+    print('  Start Date: $selectedStartDate');
+    print('  End Date: $selectedEndDate');
+    print('====================');
 
     // แสดง Loading Dialog
     showDialog(
@@ -611,7 +653,7 @@ class _ProviderAddEditState extends State<ProviderAddEdit> {
                 HeaderProviderAdd(
                     isEdit: widget.isEdit,
                     onImagePicked: _onImagePicked,
-                    initialImage: image),
+                    initialImage: _imageBytes),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 28.0),
                   child: Column(
@@ -1223,8 +1265,17 @@ class _ProviderAddEditState extends State<ProviderAddEdit> {
                                                                       animation,
                                                                       secondaryAnimation) =>
                                                                   ProviderDetail(
-                                                                initialData: widget
-                                                                    .initialData,
+                                                                // ส่ง initialData เดิมที่มีอยู่
+                                                                initialData: {
+                                                                  ...widget
+                                                                      .initialData!, // คัดลอกข้อมูลเดิมทั้งหมด
+                                                                  // อัพเดทข้อมูลใหม่ที่ต้องการ (ถ้ามี)
+
+                                                                  'cachedImage':
+                                                                      cancalImage,
+                                                                  'attach_name':
+                                                                      selectedFileName
+                                                                },
                                                                 isProvider:
                                                                     true,
                                                               ),
@@ -1395,8 +1446,8 @@ class _ProviderAddEditState extends State<ProviderAddEdit> {
 
                           setState(() {
                             // ตรวจสอบค่าของ selectedCategory
-                            if (selectedCategoryId == null ||
-                                selectedCategoryId!.isEmpty ||
+                            if (selectedCategory == null ||
+                                selectedCategory!.isEmpty ||
                                 selectedCategory ==
                                     "Select type of scholarship") {
                               categoryError =
