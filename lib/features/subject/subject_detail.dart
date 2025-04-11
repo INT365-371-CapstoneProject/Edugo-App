@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:edugo/config/api_config.dart';
 import 'package:edugo/features/scholarship/screens/provider_management.dart';
 import 'package:edugo/features/subject/subject_add_edit.dart';
@@ -11,6 +13,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:intl/intl.dart';
+import 'package:path_provider/path_provider.dart';
 
 class SubjectDetail extends StatefulWidget {
   final Map<String, dynamic>? initialData;
@@ -29,11 +32,17 @@ class _SubjectDetailState extends State<SubjectDetail> {
   String? title;
   String? description;
   String? image;
+  String? fullname;
   DateTime? selectedStartDate;
   List<dynamic> comments = []; // เก็บคอมเมนต์ที่ดึงมา
   final double coverHeight = 138;
   final AuthService authService = AuthService(); // Instance of AuthService
   TextEditingController _commentController = TextEditingController();
+  final Map<String, Uint8List?> _imageAvatarCache = {};
+  Uint8List? postImge;
+  Map<String, dynamic>? profile;
+  Uint8List? imageProfileAvatar;
+  final Map<String, Uint8List?> _imageCache = {};
 
   @override
   void initState() {
@@ -48,11 +57,15 @@ class _SubjectDetailState extends State<SubjectDetail> {
       selectedStartDate = data['published_date'] != null
           ? DateTime.tryParse(data['published_date'])
           : null;
+      fullname = data['fullname'] ?? 'No Name';
 
       image = data['image'] ?? '';
     }
 
     fetchComment();
+    fetchPostImage();
+    fetchProfile();
+    fetchAvatarImage();
   }
 
   Future<void> fetchComment() async {
@@ -87,6 +100,115 @@ class _SubjectDetailState extends State<SubjectDetail> {
     } catch (e) {
       setState(() {});
       print("Error fetching comments: $e");
+    }
+  }
+
+  Future<void> fetchAvatarImage() async {
+    String? token = await authService.getToken();
+
+    final response = await http.get(
+      Uri.parse(ApiConfig.profileAvatarUrl),
+      headers: {
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      setState(() {
+        imageProfileAvatar = response.bodyBytes; // แปลง response เป็น Uint8List
+      });
+    } else {
+      throw Exception('Failed to load country data');
+    }
+  }
+
+  Future<Uint8List?> fetchPostAvatar(String url) async {
+    if (_imageAvatarCache.containsKey(url)) {
+      return _imageAvatarCache[url];
+    }
+
+    try {
+      String? token = await authService.getToken();
+      Map<String, String> headers = {};
+      if (token != null) {
+        headers['Authorization'] = 'Bearer $token';
+      }
+
+      final response = await http.get(Uri.parse(url), headers: headers);
+
+      if (response.statusCode == 200) {
+        _imageAvatarCache[url] = response.bodyBytes;
+        return response.bodyBytes;
+      } else {
+        debugPrint("Failed to load image: ${response.statusCode}");
+      }
+    } catch (e) {
+      debugPrint("Error fetching image: $e");
+    }
+    _imageAvatarCache[url] = null;
+    return null;
+  }
+
+  Future<Uint8List?> fetchPostImage() async {
+    try {
+      String? token = await authService.getToken();
+      Map<String, String> headers = {};
+      if (token != null) {
+        headers['Authorization'] = 'Bearer $token';
+      }
+
+      final response = await http.get(
+        Uri.parse("${ApiConfig.subjectUrl}/$id/image"),
+        headers: headers,
+      );
+
+      if (response.statusCode == 200) {
+        // บันทึก response.bodyBytes ลงในไฟล์ชั่วคราว
+
+        setState(() {
+          postImge = response.bodyBytes; // เก็บไฟล์ใน _selectedImage
+        });
+
+        print(postImge);
+        return response.bodyBytes;
+      } else {
+        debugPrint("Failed to load image: ${response.statusCode}");
+      }
+    } catch (e) {
+      debugPrint("Error fetching image: $e");
+    }
+
+    setState(() {
+      postImge = null; // ถ้าเกิดข้อผิดพลาดให้ตั้งค่าเป็น null
+    });
+    return null;
+  }
+
+  Future<void> fetchProfile() async {
+    try {
+      String? token = await authService.getToken();
+      Map<String, String> headers = {};
+      if (token != null) {
+        headers['Authorization'] = 'Bearer $token';
+      }
+
+      final response =
+          await http.get(Uri.parse(ApiConfig.profileUrl), headers: headers);
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> data = json.decode(response.body);
+        final Map<String, dynamic> profileData =
+            data['profile']; // ดึงข้อมูลโปรไฟล์
+
+        setState(() {
+          profile = {'id': profileData['id']};
+        });
+      } else {
+        throw Exception('Failed to load profile');
+      }
+    } catch (e) {
+      setState(() {});
+      print("Error fetching profile: $e");
     }
   }
 
@@ -388,14 +510,30 @@ class _SubjectDetailState extends State<SubjectDetail> {
                             children: [
                               Row(
                                 children: [
-                                  CircleAvatar(
-                                    radius: 20,
-                                    child: Image.asset(
-                                      'assets/images/avatar.png',
-                                      width: 40.0,
-                                      height: 40.0,
-                                      colorBlendMode: BlendMode.srcIn,
-                                    ),
+                                  FutureBuilder<Uint8List?>(
+                                    future: fetchPostAvatar(
+                                        "${ApiConfig.subjectUrl}/$id/avatar"),
+                                    builder: (context, snapshot) {
+                                      if (snapshot.connectionState ==
+                                          ConnectionState.waiting) {
+                                        return const CircleAvatar(
+                                          radius: 20,
+                                          child: CircularProgressIndicator(),
+                                        );
+                                      }
+                                      if (snapshot.data == null) {
+                                        return CircleAvatar(
+                                          radius: 20,
+                                          backgroundImage: AssetImage(
+                                              "assets/images/avatar.png"),
+                                        );
+                                      }
+                                      return CircleAvatar(
+                                        radius: 20,
+                                        backgroundImage:
+                                            MemoryImage(snapshot.data!),
+                                      );
+                                    },
                                   ),
                                   SizedBox(
                                       width:
@@ -405,7 +543,7 @@ class _SubjectDetailState extends State<SubjectDetail> {
                                         .start, // ทำให้ Text ชิดซ้าย
                                     children: [
                                       Text(
-                                        "User Name",
+                                        fullname.toString(),
                                         style: GoogleFonts.dmSans(
                                           fontSize: 14,
                                           fontWeight: FontWeight.w400,
@@ -424,158 +562,169 @@ class _SubjectDetailState extends State<SubjectDetail> {
                                   ),
                                 ],
                               ),
-                              GestureDetector(
-                                onTap: () {
-                                  showModalBottomSheet(
-                                    context: context,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.vertical(
-                                        top: Radius.circular(16),
+                              if (widget.initialData?['account_id'] ==
+                                  profile?['id'])
+                                GestureDetector(
+                                  onTap: () {
+                                    showModalBottomSheet(
+                                      context: context,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.vertical(
+                                          top: Radius.circular(16),
+                                        ),
                                       ),
-                                    ),
-                                    builder: (BuildContext context) {
-                                      return FractionallySizedBox(
-                                        heightFactor:
-                                            0.45, // กำหนดความสูงเป็น 60% ของหน้าจอ
-                                        child: Container(
-                                          padding: const EdgeInsets.all(16.0),
-                                          decoration: BoxDecoration(
-                                            color: Color(0xFFEBEFFF),
-                                            borderRadius: BorderRadius.vertical(
-                                              top: Radius.circular(16),
+                                      builder: (BuildContext context) {
+                                        return FractionallySizedBox(
+                                          heightFactor:
+                                              0.45, // กำหนดความสูงเป็น 60% ของหน้าจอ
+                                          child: Container(
+                                            padding: const EdgeInsets.all(16.0),
+                                            decoration: BoxDecoration(
+                                              color: Color(0xFFEBEFFF),
+                                              borderRadius:
+                                                  BorderRadius.vertical(
+                                                top: Radius.circular(16),
+                                              ),
+                                            ),
+                                            child: Column(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                Container(
+                                                  width: 42,
+                                                  height: 5,
+                                                  decoration: BoxDecoration(
+                                                    color: Color(0xFFCBD5E0),
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            25),
+                                                  ),
+                                                ),
+                                                SizedBox(height: 10),
+                                                Container(
+                                                  color: const Color.fromARGB(
+                                                      255, 240, 240, 240),
+                                                  child: Column(
+                                                    children: [
+                                                      // ListTile สำหรับ Edit
+                                                      Container(
+                                                        decoration:
+                                                            BoxDecoration(
+                                                          color: Colors.white,
+                                                          borderRadius:
+                                                              BorderRadius.only(
+                                                            topLeft:
+                                                                Radius.circular(
+                                                                    12),
+                                                            topRight:
+                                                                Radius.circular(
+                                                                    12),
+                                                          ),
+                                                        ),
+                                                        child: ListTile(
+                                                          leading:
+                                                              SvgPicture.asset(
+                                                            'assets/images/edit_svg.svg',
+                                                            fit: BoxFit.cover,
+                                                            color: const Color(
+                                                                0xff355FFF),
+                                                          ),
+                                                          title: Text(
+                                                            'Edit post',
+                                                            style: GoogleFonts
+                                                                .dmSans(
+                                                              fontSize: 14,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .w400,
+                                                              color: Color(
+                                                                  0xFF000000),
+                                                            ),
+                                                          ),
+                                                          onTap: () {
+                                                            final existingData =
+                                                                {
+                                                              'id': id,
+                                                              'description':
+                                                                  description,
+                                                              'image': image,
+                                                              'dateTime':
+                                                                  selectedStartDate
+                                                            };
+
+                                                            Navigator.push(
+                                                              context,
+                                                              MaterialPageRoute(
+                                                                builder:
+                                                                    (context) =>
+                                                                        SubjectAddEdit(
+                                                                  isEdit: true,
+                                                                  initialData:
+                                                                      existingData,
+                                                                ),
+                                                              ),
+                                                            );
+                                                          },
+                                                        ),
+                                                      ),
+
+                                                      // ListTile สำหรับ Delete
+                                                      Container(
+                                                        decoration:
+                                                            BoxDecoration(
+                                                          color: Colors.white,
+                                                          borderRadius:
+                                                              BorderRadius.only(
+                                                            bottomLeft:
+                                                                Radius.circular(
+                                                                    12),
+                                                            bottomRight:
+                                                                Radius.circular(
+                                                                    12),
+                                                          ),
+                                                        ),
+                                                        child: ListTile(
+                                                          leading:
+                                                              SvgPicture.asset(
+                                                            'assets/images/delete_svg.svg',
+                                                            fit: BoxFit.cover,
+                                                            color: const Color(
+                                                                0xffED4B9E),
+                                                          ),
+                                                          title: Text(
+                                                            'Delete post',
+                                                            style: GoogleFonts
+                                                                .dmSans(
+                                                              fontSize: 14,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .w400,
+                                                              color: Color(
+                                                                  0xFF000000),
+                                                            ),
+                                                          ),
+                                                          onTap: () {
+                                                            confirmDelete(
+                                                                context, id);
+                                                          },
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                              ],
                                             ),
                                           ),
-                                          child: Column(
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              Container(
-                                                width: 42,
-                                                height: 5,
-                                                decoration: BoxDecoration(
-                                                  color: Color(0xFFCBD5E0),
-                                                  borderRadius:
-                                                      BorderRadius.circular(25),
-                                                ),
-                                              ),
-                                              SizedBox(height: 10),
-                                              Container(
-                                                color: const Color.fromARGB(
-                                                    255, 240, 240, 240),
-                                                child: Column(
-                                                  children: [
-                                                    // ListTile สำหรับ Edit
-                                                    Container(
-                                                      decoration: BoxDecoration(
-                                                        color: Colors.white,
-                                                        borderRadius:
-                                                            BorderRadius.only(
-                                                          topLeft:
-                                                              Radius.circular(
-                                                                  12),
-                                                          topRight:
-                                                              Radius.circular(
-                                                                  12),
-                                                        ),
-                                                      ),
-                                                      child: ListTile(
-                                                        leading:
-                                                            SvgPicture.asset(
-                                                          'assets/images/edit_svg.svg',
-                                                          fit: BoxFit.cover,
-                                                          color: const Color(
-                                                              0xff355FFF),
-                                                        ),
-                                                        title: Text(
-                                                          'Edit post',
-                                                          style: GoogleFonts
-                                                              .dmSans(
-                                                            fontSize: 14,
-                                                            fontWeight:
-                                                                FontWeight.w400,
-                                                            color: Color(
-                                                                0xFF000000),
-                                                          ),
-                                                        ),
-                                                        onTap: () {
-                                                          final existingData = {
-                                                            'id': id,
-                                                            'description':
-                                                                description,
-                                                            'image': image,
-                                                            'dateTime':
-                                                                selectedStartDate
-                                                          };
-
-                                                          Navigator.push(
-                                                            context,
-                                                            MaterialPageRoute(
-                                                              builder: (context) =>
-                                                                  SubjectAddEdit(
-                                                                isEdit: true,
-                                                                initialData:
-                                                                    existingData,
-                                                              ),
-                                                            ),
-                                                          );
-                                                        },
-                                                      ),
-                                                    ),
-
-                                                    // ListTile สำหรับ Delete
-                                                    Container(
-                                                      decoration: BoxDecoration(
-                                                        color: Colors.white,
-                                                        borderRadius:
-                                                            BorderRadius.only(
-                                                          bottomLeft:
-                                                              Radius.circular(
-                                                                  12),
-                                                          bottomRight:
-                                                              Radius.circular(
-                                                                  12),
-                                                        ),
-                                                      ),
-                                                      child: ListTile(
-                                                        leading:
-                                                            SvgPicture.asset(
-                                                          'assets/images/delete_svg.svg',
-                                                          fit: BoxFit.cover,
-                                                          color: const Color(
-                                                              0xffED4B9E),
-                                                        ),
-                                                        title: Text(
-                                                          'Delete post',
-                                                          style: GoogleFonts
-                                                              .dmSans(
-                                                            fontSize: 14,
-                                                            fontWeight:
-                                                                FontWeight.w400,
-                                                            color: Color(
-                                                                0xFF000000),
-                                                          ),
-                                                        ),
-                                                        onTap: () {
-                                                          confirmDelete(
-                                                              context, id);
-                                                        },
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      );
-                                    },
-                                  );
-                                },
-                                child: SvgPicture.asset(
-                                  'assets/images/dot.svg', // ไฟล์ SVG
-                                  fit: BoxFit.cover,
-                                  color: const Color(0xff94A2B8), // สีของไอคอน
+                                        );
+                                      },
+                                    );
+                                  },
+                                  child: SvgPicture.asset(
+                                    'assets/images/dot.svg', // ไฟล์ SVG
+                                    fit: BoxFit.cover,
+                                    color:
+                                        const Color(0xff94A2B8), // สีของไอคอน
+                                  ),
                                 ),
-                              ),
                             ],
                           ),
                           SizedBox(
@@ -589,37 +738,26 @@ class _SubjectDetailState extends State<SubjectDetail> {
                               color: Colors.grey[700],
                             ),
                           ),
-                          if (image!.isNotEmpty)
+                          if (postImge != null && postImge!.isNotEmpty)
                             Padding(
                               padding: const EdgeInsets.only(top: 15),
                               child: ClipRRect(
                                 borderRadius: BorderRadius.circular(12.0),
-                                child: Image.network(
-                                  image.toString(),
-                                  fit: BoxFit.cover,
+                                child: Image.memory(
+                                  postImge!,
+                                  fit: BoxFit
+                                      .fitWidth, // ปรับให้รูปภาพแสดงตามความกว้าง
                                   width: double.infinity,
                                   errorBuilder: (context, error, stackTrace) {
                                     return Image.asset(
-                                      'assets/images/scholarship_program.png', // รูปภาพ fallback
+                                      'assets/images/scholarship_program.png',
                                       fit: BoxFit.cover,
                                       width: double.infinity,
-                                      height: 200,
                                     );
                                   },
                                 ),
                               ),
                             ),
-                          // else
-                          //   ClipRRect(
-                          //     borderRadius:
-                          //         BorderRadius.circular(8.0),
-                          //     child: Image.asset(
-                          //       'assets/images/scholarship_program.png', // รูปภาพ fallback
-                          //       fit: BoxFit.cover,
-                          //       width: double.infinity,
-                          //       height: 200,
-                          //     ),
-                          //   ),
                           SizedBox(height: 6),
                         ],
                       ),
@@ -673,6 +811,10 @@ class _SubjectDetailState extends State<SubjectDetail> {
                                 String formattedDate =
                                     DateFormat('dd MMMM yyyy HH:mm')
                                         .format(publishDate);
+                                final String avatarImageUrl =
+                                    "${ApiConfig.commentUrl}/${comment['id']}/avatar";
+                                String fullname = comment['fullname'] ??
+                                    'No name'; // ใช้ชื่อที่ได้จาก API หรือข้อความเริ่มต้น
 
                                 return Padding(
                                   padding: const EdgeInsets.only(
@@ -711,13 +853,53 @@ class _SubjectDetailState extends State<SubjectDetail> {
                                                   children: [
                                                     CircleAvatar(
                                                       radius: 20,
-                                                      child: Image.asset(
-                                                        'assets/images/avatar.png',
-                                                        width: 40.0,
-                                                        height: 40.0,
-                                                        colorBlendMode:
-                                                            BlendMode.srcIn,
-                                                      ),
+                                                      backgroundImage: _imageCache
+                                                                  .containsKey(
+                                                                      avatarImageUrl) &&
+                                                              _imageCache[
+                                                                      avatarImageUrl] !=
+                                                                  null
+                                                          ? MemoryImage(_imageCache[
+                                                              avatarImageUrl]!) // ใช้ภาพจากแคช
+                                                          : null, // ถ้าไม่มีภาพในแคช
+                                                      child: !_imageCache
+                                                              .containsKey(
+                                                                  avatarImageUrl)
+                                                          ? FutureBuilder<
+                                                              Uint8List?>(
+                                                              future: fetchPostAvatar(
+                                                                  avatarImageUrl),
+                                                              builder: (context,
+                                                                  snapshot) {
+                                                                if (snapshot
+                                                                        .connectionState ==
+                                                                    ConnectionState
+                                                                        .waiting) {
+                                                                  return const Center(
+                                                                    child:
+                                                                        CircularProgressIndicator(),
+                                                                  );
+                                                                }
+                                                                if (snapshot
+                                                                        .data ==
+                                                                    null) {
+                                                                  return Image
+                                                                      .asset(
+                                                                    "assets/images/avatar.png",
+                                                                    fit: BoxFit
+                                                                        .cover,
+                                                                  );
+                                                                }
+                                                                return CircleAvatar(
+                                                                  radius: 20,
+                                                                  backgroundImage:
+                                                                      MemoryImage(
+                                                                          snapshot
+                                                                              .data!),
+                                                                );
+                                                              },
+                                                            )
+                                                          : null,
                                                     ),
                                                     SizedBox(
                                                         width:
@@ -728,7 +910,7 @@ class _SubjectDetailState extends State<SubjectDetail> {
                                                               .start, // ทำให้ Text ชิดซ้าย
                                                       children: [
                                                         Text(
-                                                          "User Name",
+                                                          fullname,
                                                           style: GoogleFonts
                                                               .dmSans(
                                                             fontSize: 14,
@@ -753,183 +935,177 @@ class _SubjectDetailState extends State<SubjectDetail> {
                                                     ),
                                                   ],
                                                 ),
-                                                GestureDetector(
-                                                  onTap: () {
-                                                    showModalBottomSheet(
-                                                      context: context,
-                                                      shape:
-                                                          RoundedRectangleBorder(
-                                                        borderRadius:
-                                                            BorderRadius
-                                                                .vertical(
-                                                          top: Radius.circular(
-                                                              16),
+                                                if (comment['account_id'] ==
+                                                    profile?['id'])
+                                                  GestureDetector(
+                                                    onTap: () {
+                                                      showModalBottomSheet(
+                                                        context: context,
+                                                        shape:
+                                                            RoundedRectangleBorder(
+                                                          borderRadius:
+                                                              BorderRadius
+                                                                  .vertical(
+                                                            top:
+                                                                Radius.circular(
+                                                                    16),
+                                                          ),
                                                         ),
-                                                      ),
-                                                      builder: (BuildContext
-                                                          context) {
-                                                        return FractionallySizedBox(
-                                                          heightFactor:
-                                                              0.45, // กำหนดความสูงเป็น 60% ของหน้าจอ
-                                                          child: Container(
-                                                            padding:
-                                                                const EdgeInsets
-                                                                    .all(16.0),
-                                                            decoration:
-                                                                BoxDecoration(
-                                                              color: Color(
-                                                                  0xFFEBEFFF),
-                                                              borderRadius:
-                                                                  BorderRadius
-                                                                      .vertical(
-                                                                top: Radius
-                                                                    .circular(
-                                                                        16),
+                                                        builder: (BuildContext
+                                                            context) {
+                                                          return FractionallySizedBox(
+                                                            heightFactor:
+                                                                0.45, // กำหนดความสูงเป็น 60% ของหน้าจอ
+                                                            child: Container(
+                                                              padding:
+                                                                  const EdgeInsets
+                                                                      .all(
+                                                                      16.0),
+                                                              decoration:
+                                                                  BoxDecoration(
+                                                                color: Color(
+                                                                    0xFFEBEFFF),
+                                                                borderRadius:
+                                                                    BorderRadius
+                                                                        .vertical(
+                                                                  top: Radius
+                                                                      .circular(
+                                                                          16),
+                                                                ),
+                                                              ),
+                                                              child: Column(
+                                                                mainAxisSize:
+                                                                    MainAxisSize
+                                                                        .min,
+                                                                children: [
+                                                                  Container(
+                                                                    width: 42,
+                                                                    height: 5,
+                                                                    decoration:
+                                                                        BoxDecoration(
+                                                                      color: Color(
+                                                                          0xFFCBD5E0),
+                                                                      borderRadius:
+                                                                          BorderRadius.circular(
+                                                                              25),
+                                                                    ),
+                                                                  ),
+                                                                  SizedBox(
+                                                                      height:
+                                                                          10),
+                                                                  Container(
+                                                                    color: const Color
+                                                                        .fromARGB(
+                                                                        255,
+                                                                        240,
+                                                                        240,
+                                                                        240),
+                                                                    child:
+                                                                        Column(
+                                                                      children: [
+                                                                        // ListTile สำหรับ Edit
+                                                                        Container(
+                                                                          decoration:
+                                                                              BoxDecoration(
+                                                                            color:
+                                                                                Colors.white,
+                                                                            borderRadius:
+                                                                                BorderRadius.only(
+                                                                              topLeft: Radius.circular(12),
+                                                                              topRight: Radius.circular(12),
+                                                                            ),
+                                                                          ),
+                                                                          child:
+                                                                              ListTile(
+                                                                            leading:
+                                                                                SvgPicture.asset(
+                                                                              'assets/images/edit_svg.svg',
+                                                                              fit: BoxFit.cover,
+                                                                              color: const Color(0xff355FFF),
+                                                                            ),
+                                                                            title:
+                                                                                Text(
+                                                                              'Edit post',
+                                                                              style: GoogleFonts.dmSans(
+                                                                                fontSize: 14,
+                                                                                fontWeight: FontWeight.w400,
+                                                                                color: Color(0xFF000000),
+                                                                              ),
+                                                                            ),
+                                                                            onTap:
+                                                                                () {
+                                                                              final existingData = {
+                                                                                'id': id,
+                                                                                'description': description,
+                                                                                'image': image,
+                                                                                'dateTime': selectedStartDate
+                                                                              };
+
+                                                                              Navigator.push(
+                                                                                context,
+                                                                                MaterialPageRoute(
+                                                                                  builder: (context) => SubjectAddEdit(
+                                                                                    isEdit: true,
+                                                                                    initialData: existingData,
+                                                                                  ),
+                                                                                ),
+                                                                              );
+                                                                            },
+                                                                          ),
+                                                                        ),
+
+                                                                        // ListTile สำหรับ Delete
+                                                                        Container(
+                                                                          decoration:
+                                                                              BoxDecoration(
+                                                                            color:
+                                                                                Colors.white,
+                                                                            borderRadius:
+                                                                                BorderRadius.only(
+                                                                              bottomLeft: Radius.circular(12),
+                                                                              bottomRight: Radius.circular(12),
+                                                                            ),
+                                                                          ),
+                                                                          child:
+                                                                              ListTile(
+                                                                            leading:
+                                                                                SvgPicture.asset(
+                                                                              'assets/images/delete_svg.svg',
+                                                                              fit: BoxFit.cover,
+                                                                              color: const Color(0xffED4B9E),
+                                                                            ),
+                                                                            title:
+                                                                                Text(
+                                                                              'Delete post',
+                                                                              style: GoogleFonts.dmSans(
+                                                                                fontSize: 14,
+                                                                                fontWeight: FontWeight.w400,
+                                                                                color: Color(0xFF000000),
+                                                                              ),
+                                                                            ),
+                                                                            onTap:
+                                                                                () {
+                                                                              confirmDelete(context, id);
+                                                                            },
+                                                                          ),
+                                                                        ),
+                                                                      ],
+                                                                    ),
+                                                                  ),
+                                                                ],
                                                               ),
                                                             ),
-                                                            child: Column(
-                                                              mainAxisSize:
-                                                                  MainAxisSize
-                                                                      .min,
-                                                              children: [
-                                                                Container(
-                                                                  width: 42,
-                                                                  height: 5,
-                                                                  decoration:
-                                                                      BoxDecoration(
-                                                                    color: Color(
-                                                                        0xFFCBD5E0),
-                                                                    borderRadius:
-                                                                        BorderRadius.circular(
-                                                                            25),
-                                                                  ),
-                                                                ),
-                                                                SizedBox(
-                                                                    height: 10),
-                                                                Container(
-                                                                  color: const Color
-                                                                      .fromARGB(
-                                                                      255,
-                                                                      240,
-                                                                      240,
-                                                                      240),
-                                                                  child: Column(
-                                                                    children: [
-                                                                      // ListTile สำหรับ Edit
-                                                                      Container(
-                                                                        decoration:
-                                                                            BoxDecoration(
-                                                                          color:
-                                                                              Colors.white,
-                                                                          borderRadius:
-                                                                              BorderRadius.only(
-                                                                            topLeft:
-                                                                                Radius.circular(12),
-                                                                            topRight:
-                                                                                Radius.circular(12),
-                                                                          ),
-                                                                        ),
-                                                                        child:
-                                                                            ListTile(
-                                                                          leading:
-                                                                              SvgPicture.asset(
-                                                                            'assets/images/edit_svg.svg',
-                                                                            fit:
-                                                                                BoxFit.cover,
-                                                                            color:
-                                                                                const Color(0xff355FFF),
-                                                                          ),
-                                                                          title:
-                                                                              Text(
-                                                                            'Edit post',
-                                                                            style:
-                                                                                GoogleFonts.dmSans(
-                                                                              fontSize: 14,
-                                                                              fontWeight: FontWeight.w400,
-                                                                              color: Color(0xFF000000),
-                                                                            ),
-                                                                          ),
-                                                                          onTap:
-                                                                              () {
-                                                                            final existingData =
-                                                                                {
-                                                                              'id': id,
-                                                                              'description': description,
-                                                                              'image': image,
-                                                                              'dateTime': selectedStartDate
-                                                                            };
-
-                                                                            Navigator.push(
-                                                                              context,
-                                                                              MaterialPageRoute(
-                                                                                builder: (context) => SubjectAddEdit(
-                                                                                  isEdit: true,
-                                                                                  initialData: existingData,
-                                                                                ),
-                                                                              ),
-                                                                            );
-                                                                          },
-                                                                        ),
-                                                                      ),
-
-                                                                      // ListTile สำหรับ Delete
-                                                                      Container(
-                                                                        decoration:
-                                                                            BoxDecoration(
-                                                                          color:
-                                                                              Colors.white,
-                                                                          borderRadius:
-                                                                              BorderRadius.only(
-                                                                            bottomLeft:
-                                                                                Radius.circular(12),
-                                                                            bottomRight:
-                                                                                Radius.circular(12),
-                                                                          ),
-                                                                        ),
-                                                                        child:
-                                                                            ListTile(
-                                                                          leading:
-                                                                              SvgPicture.asset(
-                                                                            'assets/images/delete_svg.svg',
-                                                                            fit:
-                                                                                BoxFit.cover,
-                                                                            color:
-                                                                                const Color(0xffED4B9E),
-                                                                          ),
-                                                                          title:
-                                                                              Text(
-                                                                            'Delete post',
-                                                                            style:
-                                                                                GoogleFonts.dmSans(
-                                                                              fontSize: 14,
-                                                                              fontWeight: FontWeight.w400,
-                                                                              color: Color(0xFF000000),
-                                                                            ),
-                                                                          ),
-                                                                          onTap:
-                                                                              () {
-                                                                            confirmDelete(context,
-                                                                                id);
-                                                                          },
-                                                                        ),
-                                                                      ),
-                                                                    ],
-                                                                  ),
-                                                                ),
-                                                              ],
-                                                            ),
-                                                          ),
-                                                        );
-                                                      },
-                                                    );
-                                                  },
-                                                  child: SvgPicture.asset(
-                                                    'assets/images/dot.svg', // ไฟล์ SVG
-                                                    fit: BoxFit.cover,
-                                                    color: const Color(
-                                                        0xff94A2B8), // สีของไอคอน
+                                                          );
+                                                        },
+                                                      );
+                                                    },
+                                                    child: SvgPicture.asset(
+                                                      'assets/images/dot.svg', // ไฟล์ SVG
+                                                      fit: BoxFit.cover,
+                                                      color: const Color(
+                                                          0xff94A2B8), // สีของไอคอน
+                                                    ),
                                                   ),
-                                                ),
                                               ],
                                             ),
                                             SizedBox(
@@ -1018,8 +1194,11 @@ class _SubjectDetailState extends State<SubjectDetail> {
                       children: [
                         CircleAvatar(
                           radius: 20, // ขนาด Avatar
-                          backgroundImage:
-                              AssetImage('assets/images/avatar.png'),
+                          backgroundImage: imageProfileAvatar != null
+                              ? MemoryImage(
+                                  imageProfileAvatar!) // ใช้ MemoryImage ถ้า imageProfileAvatar ไม่เป็น null
+                              : AssetImage('assets/images/avatar.png')
+                                  as ImageProvider, // ใช้ AssetImage ถ้าเป็น null
                         ),
                         SizedBox(
                             width: 8), // ระยะห่างระหว่าง Avatar กับ TextField

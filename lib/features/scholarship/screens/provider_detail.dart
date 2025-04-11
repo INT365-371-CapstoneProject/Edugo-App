@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:edugo/config/api_config.dart';
 import 'package:edugo/features/home/screens/home_screen.dart';
 import 'package:edugo/features/scholarship/screens/provider_add.dart';
@@ -8,7 +10,10 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
+import 'package:path_provider/path_provider.dart';
 import 'dart:convert';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:open_file/open_file.dart';
 
 class ProviderDetail extends StatefulWidget {
   final bool isProvider;
@@ -234,6 +239,32 @@ class _ProviderDetailState extends State<ProviderDetail> {
   //     print("Error fetching scholarship details: $e");
   //   }
   // }
+
+  Future<void> fetchAndOpenPdf(int id) async {
+    final url = Uri.parse(
+        'https://capstone24.sit.kmutt.ac.th/un2/api/announce/$id/attach');
+
+    String? token = await authService.getToken();
+    Map<String, String> headers = {};
+    if (token != null) {
+      headers['Authorization'] = 'Bearer $token';
+    }
+
+    final response = await http.get(url, headers: headers);
+
+    if (response.statusCode == 200) {
+      final bytes = response.bodyBytes;
+
+      final dir = await getTemporaryDirectory();
+      final file = File('${dir.path}/$attachFile.pdf');
+      await file.writeAsBytes(bytes);
+
+      // เปิดไฟล์ PDF
+      await OpenFile.open(file.path);
+    } else {
+      throw Exception('Failed to load PDF');
+    }
+  }
 
   Future<void> submitDeleteData() async {
     final String apiUrl = "${ApiConfig.announceUrl}/$id";
@@ -660,9 +691,8 @@ class _ProviderDetailState extends State<ProviderDetail> {
                         ),
                         const SizedBox(height: 24),
 
-                        // Attach_file
                         Container(
-                          height: 96,
+                          height: 150, // เพิ่มความสูงเพื่อรองรับปุ่ม
                           width: double.infinity,
                           padding: const EdgeInsets.all(14),
                           decoration: BoxDecoration(
@@ -671,74 +701,114 @@ class _ProviderDetailState extends State<ProviderDetail> {
                             ),
                             borderRadius: BorderRadius.circular(6),
                           ),
-                          child: Row(
+                          child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Container(
-                                decoration: BoxDecoration(
-                                  color: Color(0xFFE5EDFB),
-                                  borderRadius: BorderRadius.circular(6),
-                                ),
-                                child: Image.asset(
-                                  'assets/images/attach_file.png',
-                                  width: 66.0,
-                                  height: 66.0,
-                                ),
-                              ),
-                              SizedBox(width: 14),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      'Attach File',
-                                      style: TextStyle(
-                                        fontFamily: 'DM Sans',
-                                        fontSize: 14,
-                                        fontStyle: FontStyle.normal,
-                                        fontWeight: FontWeight.w600,
-                                        color: Color(0xFF94A2B8),
-                                        height: 1.0,
-                                      ),
+                              Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Container(
+                                    decoration: BoxDecoration(
+                                      color: Color(0xFFE5EDFB),
+                                      borderRadius: BorderRadius.circular(6),
                                     ),
-                                    SizedBox(height: 2),
-                                    Text(
-                                      '*upload PDF file with maximum size 50 MB',
-                                      style: TextStyle(
-                                        fontFamily: 'DM Sans',
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.normal,
-                                        color: Color(0xFF94A2B8),
-                                      ),
+                                    child: Image.asset(
+                                      'assets/images/attach_file.png',
+                                      width: 66.0,
+                                      height: 66.0,
                                     ),
-                                    SizedBox(height: 4),
-                                    Container(
-                                      height: 28,
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 8),
-                                      decoration: BoxDecoration(
-                                        border: Border.all(
-                                          color: Color(0xFFC0CDFF),
+                                  ),
+                                  SizedBox(width: 14),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          'Attach File',
+                                          style: TextStyle(
+                                            fontFamily: 'DM Sans',
+                                            fontSize: 14,
+                                            fontStyle: FontStyle.normal,
+                                            fontWeight: FontWeight.w600,
+                                            color: Color(0xFF94A2B8),
+                                            height: 1.0,
+                                          ),
                                         ),
-                                        borderRadius: BorderRadius.circular(6),
-                                      ),
-                                      child: Align(
-                                        alignment: Alignment.centerLeft,
-                                        child: Text(
-                                          attachFile
-                                              .toString(), // แสดงชื่อไฟล์ที่ถูกเลือก
-                                          style: GoogleFonts.dmSans(
-                                            fontSize: 11,
-                                            fontWeight: FontWeight.w400,
-                                            fontStyle: FontStyle.italic,
+                                        SizedBox(height: 2),
+                                        Text(
+                                          '*upload PDF file with maximum size 50 MB',
+                                          style: TextStyle(
+                                            fontFamily: 'DM Sans',
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.normal,
                                             color: Color(0xFF94A2B8),
                                           ),
-                                          overflow: TextOverflow
-                                              .ellipsis, // หากชื่อไฟล์ยาวเกินไป
+                                        ),
+                                        SizedBox(height: 4),
+                                        Container(
+                                          height: 28,
+                                          padding: const EdgeInsets.symmetric(
+                                              horizontal: 8),
+                                          decoration: BoxDecoration(
+                                            border: Border.all(
+                                              color: Color(0xFFC0CDFF),
+                                            ),
+                                            borderRadius:
+                                                BorderRadius.circular(6),
+                                          ),
+                                          child: Align(
+                                            alignment: Alignment.centerLeft,
+                                            child: Text(
+                                              attachFile.toString(), // ชื่อไฟล์
+                                              style: GoogleFonts.dmSans(
+                                                fontSize: 11,
+                                                fontWeight: FontWeight.w400,
+                                                fontStyle: FontStyle.italic,
+                                                color: Color(0xFF94A2B8),
+                                              ),
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 14),
+                              // Button Attach
+                              SizedBox(
+                                height: 36,
+                                width: double.infinity,
+                                child: ElevatedButton(
+                                  onPressed: () async => await fetchAndOpenPdf(
+                                      id!), // เรียก method _pickFile
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: const Color(0xFF355FFF),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(4),
+                                    ),
+                                  ),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Text(
+                                        "Download Attach File",
+                                        style: GoogleFonts.dmSans(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.w500,
+                                          fontSize: 11,
                                         ),
                                       ),
-                                    ),
-                                  ],
+                                      const SizedBox(width: 16),
+                                      Image.asset(
+                                        'assets/images/icon_attach_file.png',
+                                        width: 15.0,
+                                        height: 18.0,
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               ),
                             ],

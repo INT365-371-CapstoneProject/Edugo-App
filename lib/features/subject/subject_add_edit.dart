@@ -15,6 +15,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:http_parser/http_parser.dart';
+import 'package:path_provider/path_provider.dart';
 
 class SubjectAddEdit extends StatefulWidget {
   final bool isEdit;
@@ -40,22 +41,65 @@ class _SubjectAddEditState extends State<SubjectAddEdit> {
   String? descriptionError;
   bool isValidDescription = false;
   AuthService authService = AuthService();
+  Map<String, dynamic>? profile;
+  Uint8List? imageAvatar;
+  final Map<String, Uint8List?> _imageCache = {};
 
-  TextEditingController _descriptionController =
+  final TextEditingController _descriptionController =
       TextEditingController(); // Controller for description text field
 
-  // Function to pick an image using ImagePicker
-  // Future<void> _pickImage() async {
-  //   final ImagePicker _picker = ImagePicker();
-  //   // Show a dialog or options for taking a photo or picking from the gallery
-  //   final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
+  Future<void> fetchAvatarImage() async {
+    String? token = await authService.getToken();
 
-  //   if (image != null) {
-  //     setState(() {
-  //       _selectedImage = File(image.path); // Set the selected image file
-  //     });
-  //   }
-  // }
+    final response = await http.get(
+      Uri.parse(ApiConfig.profileAvatarUrl),
+      headers: {
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      setState(() {
+        imageAvatar = response.bodyBytes; // แปลง response เป็น Uint8List
+      });
+    } else {
+      throw Exception('Failed to load country data');
+    }
+  }
+
+  Future<void> fetchProfile() async {
+    try {
+      String? token = await authService.getToken();
+      Map<String, String> headers = {};
+      if (token != null) {
+        headers['Authorization'] = 'Bearer $token';
+      }
+
+      final response =
+          await http.get(Uri.parse(ApiConfig.profileUrl), headers: headers);
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> data = json.decode(response.body);
+        final Map<String, dynamic> profileData =
+            data['profile']; // ดึงข้อมูลโปรไฟล์
+
+        setState(() {
+          profile = {
+            'id': profileData['id'],
+            'first_name': profileData['first_name'] ?? '',
+            'last_name': profileData['last_name'] ?? '',
+            'role': profileData['role'],
+            'company_name': profileData['company_name'] ?? '',
+          };
+        });
+      } else {
+        throw Exception('Failed to load profile');
+      }
+    } catch (e) {
+      setState(() {});
+      print("Error fetching profile: $e");
+    }
+  }
 
   Future<void> _pickImage() async {
     final ImagePicker _picker = ImagePicker();
@@ -79,8 +123,48 @@ class _SubjectAddEditState extends State<SubjectAddEdit> {
 
       setState(() {
         _selectedImage = File(image.path); // เก็บไฟล์รูปที่ผ่านการตรวจสอบแล้ว
+        print(_selectedImage);
       });
     }
+  }
+
+  Future<Uint8List?> fetchPostImage() async {
+    try {
+      String? token = await authService.getToken();
+      Map<String, String> headers = {};
+      if (token != null) {
+        headers['Authorization'] = 'Bearer $token';
+      }
+
+      final response = await http.get(
+        Uri.parse("${ApiConfig.subjectUrl}/$id/image"),
+        headers: headers,
+      );
+
+      if (response.statusCode == 200) {
+        // บันทึก response.bodyBytes ลงในไฟล์ชั่วคราว
+        final tempDir =
+            await getTemporaryDirectory(); // ใช้ path_provider package
+        final tempFile = File('${tempDir.path}/temp_image.jpg');
+        await tempFile.writeAsBytes(response.bodyBytes);
+
+        setState(() {
+          _selectedImage = tempFile; // เก็บไฟล์ใน _selectedImage
+        });
+
+        print("Image saved to: ${tempFile.path}");
+        return response.bodyBytes;
+      } else {
+        debugPrint("Failed to load image: ${response.statusCode}");
+      }
+    } catch (e) {
+      debugPrint("Error fetching image: $e");
+    }
+
+    setState(() {
+      _selectedImage = null; // ตั้งค่าเป็น null หากเกิดข้อผิดพลาด
+    });
+    return null;
   }
 
   void _showErrorDialog(String message) {
@@ -103,6 +187,9 @@ class _SubjectAddEditState extends State<SubjectAddEdit> {
   void initState() {
     super.initState();
 
+    fetchProfile();
+    fetchAvatarImage();
+    fetchPostImage();
     if (widget.isEdit && widget.initialData != null) {
       final data = widget.initialData!;
       id = data['id'] ?? '';
@@ -243,8 +330,15 @@ class _SubjectAddEditState extends State<SubjectAddEdit> {
   }
 
   Future<void> submitEditData() async {
+    String? token = await authService.getToken();
+    Map<String, String> headers = {};
+    if (token != null) {
+      headers['Authorization'] = 'Bearer $token';
+    }
+
     var request = http.MultipartRequest(
         'PUT', Uri.parse('${ApiConfig.subjectUrl}/${id}'));
+    request.headers.addAll(headers);
 
     // ตรวจสอบว่าข้อมูล description เปลี่ยนไปหรือไม่
     if (_descriptionController.text != originalValues['description']) {
@@ -593,13 +687,29 @@ class _SubjectAddEditState extends State<SubjectAddEdit> {
                           Row(
                             children: [
                               CircleAvatar(
-                                radius: 25,
-                                backgroundImage:
-                                    AssetImage('assets/images/avatar.png'),
+                                radius: 20,
+                                child: ClipOval(
+                                  child: imageAvatar != null
+                                      ? Image.memory(
+                                          imageAvatar!,
+                                          width:
+                                              40, // กำหนดขนาดให้พอดีกับ avatar
+                                          height: 40,
+                                          fit: BoxFit.cover,
+                                        )
+                                      : Image.asset(
+                                          'assets/images/avatar.png',
+                                          width: 40,
+                                          height: 40,
+                                          fit: BoxFit.cover,
+                                        ),
+                                ),
                               ),
                               SizedBox(width: 16),
                               Text(
-                                "User Name",
+                                profile?['role'] == 'provider'
+                                    ? "${profile?['company_name']}"
+                                    : "${profile?['first_name']} ${profile?['last_name']}",
                                 style: GoogleFonts.dmSans(
                                     color: Color(0xFF111111),
                                     fontSize: 14,

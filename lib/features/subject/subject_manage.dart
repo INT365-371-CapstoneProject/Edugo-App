@@ -17,6 +17,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:http_parser/http_parser.dart';
 
+final Map<String, Uint8List?> _imageAvatarCache = {};
+
 class SubjectManagement extends StatefulWidget {
   const SubjectManagement({super.key});
 
@@ -28,7 +30,6 @@ class _SubjectManagementState extends State<SubjectManagement> {
   List<dynamic> subject = [];
   List<dynamic> useItem = [];
   bool isLoading = true;
-  String selectedStatus = "All";
   Uint8List? _imageBytes;
   Uint8List? imageAvatar;
   final AuthService authService = AuthService(); // Instance of AuthService
@@ -36,12 +37,14 @@ class _SubjectManagementState extends State<SubjectManagement> {
   final TextEditingController descriptionController = TextEditingController();
   final Map<String, Uint8List?> _imageCache = {};
   final Map<String, Uint8List?> _imageAvatarCache = {};
+  Map<String, dynamic>? profile;
 
   @override
   void initState() {
     super.initState();
     _delayedLoad(); // เรียกใช้งานฟังก์ชัน _delayedLoad
     fetchAvatarImage();
+    fetchProfile();
   }
 
   Future<void> fetchAvatarImage() async {
@@ -60,6 +63,40 @@ class _SubjectManagementState extends State<SubjectManagement> {
       });
     } else {
       throw Exception('Failed to load country data');
+    }
+  }
+
+  Future<void> fetchProfile() async {
+    try {
+      String? token = await authService.getToken();
+      Map<String, String> headers = {};
+      if (token != null) {
+        headers['Authorization'] = 'Bearer $token';
+      }
+
+      final response =
+          await http.get(Uri.parse(ApiConfig.profileUrl), headers: headers);
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> data = json.decode(response.body);
+        final Map<String, dynamic> profileData =
+            data['profile']; // ดึงข้อมูลโปรไฟล์
+
+        setState(() {
+          profile = {
+            'id': profileData['id'],
+            'first_name': profileData['first_name'] ?? '',
+            'last_name': profileData['last_name'] ?? '',
+            'role': profileData['role'],
+            'company_name': profileData['company_name'] ?? '',
+          };
+        });
+      } else {
+        throw Exception('Failed to load profile');
+      }
+    } catch (e) {
+      setState(() {});
+      print("Error fetching profile: $e");
     }
   }
 
@@ -134,11 +171,16 @@ class _SubjectManagementState extends State<SubjectManagement> {
 
         setState(() {
           subject = data.map((subject) {
+            subject['id'] = subject['id'];
+
             subject['title'] = subject['title'] ?? 'No Title';
             subject['description'] =
                 subject['description'] ?? 'No Description Available';
             subject['published_date'] =
                 subject['published_date'] ?? subject['publish_date'];
+            subject['fullname'] = subject['fullname'] ?? 'No Name';
+            subject['account_id'] = subject['account_id'];
+
             return subject;
           }).toList();
           subject.sort(
@@ -560,7 +602,6 @@ class _SubjectManagementState extends State<SubjectManagement> {
                             itemBuilder: (context, index) {
                               final subject = useItem[index];
                               final id = subject['id'];
-                              final title = subject['title'] ?? 'No Title';
                               final description = subject['description'] ??
                                   'No Description Available';
                               final publishedDate = DateTime.tryParse(
@@ -575,6 +616,9 @@ class _SubjectManagementState extends State<SubjectManagement> {
                               final String avatarImageUrl =
                                   "${ApiConfig.subjectUrl}/$id/avatar";
 
+                              final String userName =
+                                  subject['fullname'] ?? 'No Name';
+
                               return Padding(
                                 padding: const EdgeInsets.only(bottom: 16.0),
                                 child: GestureDetector(
@@ -582,10 +626,11 @@ class _SubjectManagementState extends State<SubjectManagement> {
                                     final existingData = {
                                       'id': subject['id'],
                                       'title': subject['title'],
+                                      'account_id': subject['account_id'],
                                       'description': subject['description'],
-                                      'image': subject['image'],
                                       'published_date':
                                           subject['published_date'],
+                                      'fullname': userName,
                                     };
 
                                     Navigator.push(
@@ -683,7 +728,7 @@ class _SubjectManagementState extends State<SubjectManagement> {
                                                             .start, // ทำให้ Text ชิดซ้าย
                                                     children: [
                                                       Text(
-                                                        "User Name",
+                                                        userName,
                                                         style:
                                                             GoogleFonts.dmSans(
                                                           fontSize: 14,
@@ -708,198 +753,196 @@ class _SubjectManagementState extends State<SubjectManagement> {
                                                   ),
                                                 ],
                                               ),
-                                              GestureDetector(
-                                                onTap: () {
-                                                  showModalBottomSheet(
-                                                    context: context,
-                                                    shape:
-                                                        RoundedRectangleBorder(
-                                                      borderRadius:
-                                                          BorderRadius.vertical(
-                                                        top:
-                                                            Radius.circular(16),
+                                              if (subject['account_id'] ==
+                                                  profile?['id'])
+                                                GestureDetector(
+                                                  onTap: () {
+                                                    showModalBottomSheet(
+                                                      context: context,
+                                                      shape:
+                                                          RoundedRectangleBorder(
+                                                        borderRadius:
+                                                            BorderRadius
+                                                                .vertical(
+                                                          top: Radius.circular(
+                                                              16),
+                                                        ),
                                                       ),
-                                                    ),
-                                                    builder:
-                                                        (BuildContext context) {
-                                                      return Container(
-                                                        padding:
-                                                            const EdgeInsets
-                                                                .all(16.0),
-                                                        decoration:
-                                                            BoxDecoration(
-                                                          color: Color(
-                                                              0xFFEBEFFF), // สีพื้นหลังของ modal
-                                                          borderRadius:
-                                                              BorderRadius
-                                                                  .vertical(
-                                                            top:
-                                                                Radius.circular(
-                                                                    16),
+                                                      builder: (BuildContext
+                                                          context) {
+                                                        return Container(
+                                                          padding:
+                                                              const EdgeInsets
+                                                                  .all(16.0),
+                                                          decoration:
+                                                              BoxDecoration(
+                                                            color: Color(
+                                                                0xFFEBEFFF), // สีพื้นหลังของ modal
+                                                            borderRadius:
+                                                                BorderRadius
+                                                                    .vertical(
+                                                              top: Radius
+                                                                  .circular(16),
+                                                            ),
                                                           ),
-                                                        ),
-                                                        child: Column(
-                                                          mainAxisSize:
-                                                              MainAxisSize.min,
-                                                          children: [
-                                                            Container(
-                                                              width:
-                                                                  42, // Ensures the container takes up full width
-                                                              height:
-                                                                  5, // You can specify the height you want
-                                                              decoration:
-                                                                  BoxDecoration(
-                                                                color: Color(
-                                                                    0xFFCBD5E0), // Set the background color to red
-                                                                borderRadius:
-                                                                    BorderRadius
-                                                                        .circular(
-                                                                            25), // Set the border radius to 25 for rounded corners
+                                                          child: Column(
+                                                            mainAxisSize:
+                                                                MainAxisSize
+                                                                    .min,
+                                                            children: [
+                                                              Container(
+                                                                width:
+                                                                    42, // Ensures the container takes up full width
+                                                                height:
+                                                                    5, // You can specify the height you want
+                                                                decoration:
+                                                                    BoxDecoration(
+                                                                  color: Color(
+                                                                      0xFFCBD5E0), // Set the background color to red
+                                                                  borderRadius:
+                                                                      BorderRadius
+                                                                          .circular(
+                                                                              25), // Set the border radius to 25 for rounded corners
+                                                                ),
                                                               ),
-                                                            ),
-                                                            SizedBox(
-                                                                height: 10),
-                                                            // เพิ่ม Container รอบๆ Column เพื่อกำหนดพื้นหลัง
-                                                            Container(
-                                                              color: const Color
-                                                                  .fromARGB(
-                                                                  255,
-                                                                  240,
-                                                                  240,
-                                                                  240), // กำหนดสีพื้นหลังที่นี่
-                                                              child: Column(
-                                                                children: [
-                                                                  // ListTile สำหรับ Edit
-                                                                  Container(
-                                                                    decoration:
-                                                                        BoxDecoration(
-                                                                      color: Colors
-                                                                          .white, // พื้นหลังของแต่ละรายการ
-                                                                      borderRadius:
-                                                                          BorderRadius
-                                                                              .only(
-                                                                        topLeft:
-                                                                            Radius.circular(12), // มุมบนซ้าย
-                                                                        topRight:
-                                                                            Radius.circular(12), // มุมบนขวา
-                                                                      ),
-                                                                    ),
-                                                                    child:
-                                                                        ListTile(
-                                                                      leading:
-                                                                          SvgPicture
-                                                                              .asset(
-                                                                        'assets/images/edit_svg.svg', // ไฟล์ SVG
-                                                                        fit: BoxFit
-                                                                            .cover,
-                                                                        color: const Color(
-                                                                            0xff355FFF), // สีของไอคอน
-                                                                      ),
-                                                                      title:
-                                                                          Text(
-                                                                        'Edit post',
-                                                                        style: GoogleFonts
-                                                                            .dmSans(
-                                                                          fontSize:
-                                                                              14,
-                                                                          fontWeight:
-                                                                              FontWeight.w400,
-                                                                          color:
-                                                                              Color(0xFF000000),
+                                                              SizedBox(
+                                                                  height: 10),
+                                                              // เพิ่ม Container รอบๆ Column เพื่อกำหนดพื้นหลัง
+                                                              Container(
+                                                                color: const Color
+                                                                    .fromARGB(
+                                                                    255,
+                                                                    240,
+                                                                    240,
+                                                                    240), // กำหนดสีพื้นหลังที่นี่
+                                                                child: Column(
+                                                                  children: [
+                                                                    // ListTile สำหรับ Edit
+                                                                    Container(
+                                                                      decoration:
+                                                                          BoxDecoration(
+                                                                        color: Colors
+                                                                            .white, // พื้นหลังของแต่ละรายการ
+                                                                        borderRadius:
+                                                                            BorderRadius.only(
+                                                                          topLeft:
+                                                                              Radius.circular(12), // มุมบนซ้าย
+                                                                          topRight:
+                                                                              Radius.circular(12), // มุมบนขวา
                                                                         ),
                                                                       ),
-                                                                      onTap:
-                                                                          () {
-                                                                        final existingData =
-                                                                            {
-                                                                          'id':
-                                                                              subject['id'],
-                                                                          'description':
-                                                                              subject['description'],
-                                                                          'image':
-                                                                              subject['image'],
-                                                                          'dateTime':
-                                                                              subject['published_date']
-                                                                        };
-
-                                                                        Navigator
-                                                                            .push(
-                                                                          context,
-                                                                          MaterialPageRoute(
-                                                                            builder: (context) =>
-                                                                                SubjectAddEdit(
-                                                                              isEdit: true,
-                                                                              initialData: existingData,
-                                                                            ),
+                                                                      child:
+                                                                          ListTile(
+                                                                        leading:
+                                                                            SvgPicture.asset(
+                                                                          'assets/images/edit_svg.svg', // ไฟล์ SVG
+                                                                          fit: BoxFit
+                                                                              .cover,
+                                                                          color:
+                                                                              const Color(0xff355FFF), // สีของไอคอน
+                                                                        ),
+                                                                        title:
+                                                                            Text(
+                                                                          'Edit post',
+                                                                          style:
+                                                                              GoogleFonts.dmSans(
+                                                                            fontSize:
+                                                                                14,
+                                                                            fontWeight:
+                                                                                FontWeight.w400,
+                                                                            color:
+                                                                                Color(0xFF000000),
                                                                           ),
-                                                                        );
-                                                                      },
-                                                                    ),
-                                                                  ),
+                                                                        ),
+                                                                        onTap:
+                                                                            () {
+                                                                          final existingData =
+                                                                              {
+                                                                            'id':
+                                                                                subject['id'],
+                                                                            'description':
+                                                                                subject['description'],
+                                                                            'image':
+                                                                                subject['image'],
+                                                                            'dateTime':
+                                                                                subject['published_date']
+                                                                          };
 
-                                                                  // ListTile สำหรับ Delete
-                                                                  Container(
-                                                                    decoration:
-                                                                        BoxDecoration(
-                                                                      color: Colors
-                                                                          .white, // พื้นหลังของแต่ละรายการ
-                                                                      borderRadius:
-                                                                          BorderRadius
-                                                                              .only(
-                                                                        bottomLeft:
-                                                                            Radius.circular(12), // มุมบนซ้าย
-                                                                        bottomRight:
-                                                                            Radius.circular(12), // มุมบนขวา
+                                                                          Navigator
+                                                                              .push(
+                                                                            context,
+                                                                            MaterialPageRoute(
+                                                                              builder: (context) => SubjectAddEdit(
+                                                                                isEdit: true,
+                                                                                initialData: existingData,
+                                                                              ),
+                                                                            ),
+                                                                          );
+                                                                        },
                                                                       ),
                                                                     ),
-                                                                    child:
-                                                                        ListTile(
-                                                                      leading:
-                                                                          SvgPicture
-                                                                              .asset(
-                                                                        'assets/images/delete_svg.svg', // ไฟล์ SVG
-                                                                        fit: BoxFit
-                                                                            .cover,
-                                                                        color: const Color(
-                                                                            0xffED4B9E), // สีของไอคอน
-                                                                      ),
-                                                                      title:
-                                                                          Text(
-                                                                        'Delete post',
-                                                                        style: GoogleFonts
-                                                                            .dmSans(
-                                                                          fontSize:
-                                                                              14,
-                                                                          fontWeight:
-                                                                              FontWeight.w400,
-                                                                          color:
-                                                                              Color(0xFF000000),
+
+                                                                    // ListTile สำหรับ Delete
+                                                                    Container(
+                                                                      decoration:
+                                                                          BoxDecoration(
+                                                                        color: Colors
+                                                                            .white, // พื้นหลังของแต่ละรายการ
+                                                                        borderRadius:
+                                                                            BorderRadius.only(
+                                                                          bottomLeft:
+                                                                              Radius.circular(12), // มุมบนซ้าย
+                                                                          bottomRight:
+                                                                              Radius.circular(12), // มุมบนขวา
                                                                         ),
                                                                       ),
-                                                                      onTap:
-                                                                          () {
-                                                                        confirmDelete(
-                                                                            context,
-                                                                            subject['id']);
-                                                                      },
+                                                                      child:
+                                                                          ListTile(
+                                                                        leading:
+                                                                            SvgPicture.asset(
+                                                                          'assets/images/delete_svg.svg', // ไฟล์ SVG
+                                                                          fit: BoxFit
+                                                                              .cover,
+                                                                          color:
+                                                                              const Color(0xffED4B9E), // สีของไอคอน
+                                                                        ),
+                                                                        title:
+                                                                            Text(
+                                                                          'Delete post',
+                                                                          style:
+                                                                              GoogleFonts.dmSans(
+                                                                            fontSize:
+                                                                                14,
+                                                                            fontWeight:
+                                                                                FontWeight.w400,
+                                                                            color:
+                                                                                Color(0xFF000000),
+                                                                          ),
+                                                                        ),
+                                                                        onTap:
+                                                                            () {
+                                                                          confirmDelete(
+                                                                              context,
+                                                                              subject['id']);
+                                                                        },
+                                                                      ),
                                                                     ),
-                                                                  ),
-                                                                ],
+                                                                  ],
+                                                                ),
                                                               ),
-                                                            ),
-                                                          ],
-                                                        ),
-                                                      );
-                                                    },
-                                                  );
-                                                },
-                                                child: SvgPicture.asset(
-                                                  'assets/images/dot.svg', // ไฟล์ SVG
-                                                  fit: BoxFit.cover,
-                                                  color: const Color(
-                                                      0xff94A2B8), // สีของไอคอน
+                                                            ],
+                                                          ),
+                                                        );
+                                                      },
+                                                    );
+                                                  },
+                                                  child: SvgPicture.asset(
+                                                    'assets/images/dot.svg', // ไฟล์ SVG
+                                                    fit: BoxFit.cover,
+                                                    color: const Color(
+                                                        0xff94A2B8), // สีของไอคอน
+                                                  ),
                                                 ),
-                                              ),
                                             ],
                                           ),
                                           SizedBox(
@@ -927,8 +970,9 @@ class _SubjectManagementState extends State<SubjectManagement> {
                                                           null
                                                   ? Image.memory(
                                                       _imageCache[imageUrl]!,
-                                                      width: 144,
-                                                      height: 160,
+                                                      width: double
+                                                          .infinity, // Use double.infinity for full width or specify a fixed width
+                                                      height: 200,
                                                       fit: BoxFit.cover,
                                                     )
                                                   : FutureBuilder<Uint8List?>(
@@ -941,8 +985,9 @@ class _SubjectManagementState extends State<SubjectManagement> {
                                                             ConnectionState
                                                                 .waiting) {
                                                           return const SizedBox(
-                                                            width: 144,
-                                                            height: 160,
+                                                            width:
+                                                                double.infinity,
+                                                            height: 200,
                                                             child: Center(
                                                                 child:
                                                                     CircularProgressIndicator()),
@@ -953,8 +998,9 @@ class _SubjectManagementState extends State<SubjectManagement> {
                                                                 null) {
                                                           return Image.memory(
                                                             snapshot.data!,
-                                                            width: 144,
-                                                            height: 160,
+                                                            width:
+                                                                double.infinity,
+                                                            height: 200,
                                                             fit: BoxFit.cover,
                                                           );
                                                         }
@@ -987,14 +1033,34 @@ class _SubjectManagementState extends State<SubjectManagement> {
                                                         6), // Optional padding for some space from the left
                                                 child: Row(
                                                   children: [
-                                                    Image.asset(
-                                                      'assets/images/avatar.png',
-                                                      width: 27.0,
-                                                      height: 27.0,
-                                                      colorBlendMode:
-                                                          BlendMode.srcIn,
+                                                    CircleAvatar(
+                                                      child: ClipOval(
+                                                        child:
+                                                            imageAvatar != null
+                                                                ? Image.memory(
+                                                                    imageAvatar!,
+                                                                    width:
+                                                                        20, // กำหนดขนาดให้พอดีกับ avatar
+                                                                    height: 20,
+                                                                    fit: BoxFit
+                                                                        .cover,
+                                                                    colorBlendMode:
+                                                                        BlendMode
+                                                                            .srcIn,
+                                                                  )
+                                                                : Image.asset(
+                                                                    'assets/images/avatar.png',
+                                                                    width: 20,
+                                                                    height: 20,
+                                                                    fit: BoxFit
+                                                                        .cover,
+                                                                    colorBlendMode:
+                                                                        BlendMode
+                                                                            .srcIn,
+                                                                  ),
+                                                      ),
                                                     ),
-                                                    SizedBox(width: 9),
+                                                    SizedBox(width: 0),
                                                     Text(
                                                       'What about your opinion ?',
                                                       style: TextStyle(

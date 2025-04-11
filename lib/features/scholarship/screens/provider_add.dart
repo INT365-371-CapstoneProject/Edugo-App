@@ -477,26 +477,6 @@ class _ProviderAddEditState extends State<ProviderAddEdit> {
       request.fields[key] = value.toString();
     });
 
-    // Print ค่าทั้งหมดที่จะส่งไป
-    print('=== Request Details ===');
-    print('URL: ${request.url}');
-    print('Headers: ${request.headers}');
-    print('Fields: ${request.fields}');
-    print(
-        'Files: ${request.files.map((f) => 'Filename: ${f.filename}, Length: ${f.length} bytes')}');
-    print('Updated Fields: $updatedFields');
-    print('Original Values: $originalValues');
-    print('Current Values:');
-    print('  Title: $title');
-    print('  Description: $description');
-    print('  URL: $url');
-    print('  Country: $selectedCountry');
-    print('  Category: $selectedCategory');
-    print('  Education Level: $selectedEducationLevel');
-    print('  Start Date: $selectedStartDate');
-    print('  End Date: $selectedEndDate');
-    print('====================');
-
     // แสดง Loading Dialog
     showDialog(
       context: context,
