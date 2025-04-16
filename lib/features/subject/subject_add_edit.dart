@@ -16,6 +16,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 import 'package:http_parser/http_parser.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:edugo/main.dart'; // Import main.dart เพื่อเข้าถึง navigatorKey
 
 class SubjectAddEdit extends StatefulWidget {
   final bool isEdit;
@@ -40,7 +41,7 @@ class _SubjectAddEditState extends State<SubjectAddEdit> {
   Color descriptionBorderColor = Color(0xFFF8F8F8);
   String? descriptionError;
   bool isValidDescription = false;
-  AuthService authService = AuthService();
+  final AuthService authService = AuthService(navigatorKey: navigatorKey);
   Map<String, dynamic>? profile;
   Uint8List? imageAvatar;
   final Map<String, Uint8List?> _imageCache = {};

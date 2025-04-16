@@ -11,6 +11,7 @@ import 'dart:convert';
 import 'package:edugo/services/auth_service.dart';
 import 'package:intl/intl.dart';
 import 'package:edugo/features/login&register/login.dart';
+import 'package:edugo/main.dart'; // Import main.dart เพื่อเข้าถึง navigatorKey
 
 import '../../../services/scholarship_card.dart';
 import 'package:edugo/features/search/screens/search_screen.dart';
@@ -112,7 +113,7 @@ class _HomeScreenAppState extends State<HomeScreenApp> {
   bool _showAllCountries = false;
   List<dynamic> scholarships = [];
   final Map<String, Uint8List?> _imageCache = {};
-  final AuthService authService = AuthService();
+  final AuthService authService = AuthService(navigatorKey: navigatorKey);
   bool isProvider = false;
 
   final List<Map<String, dynamic>> countryList = [
@@ -156,6 +157,7 @@ class _HomeScreenAppState extends State<HomeScreenApp> {
   @override
   void initState() {
     super.initState();
+    authService.checkSessionValidity(); // เพิ่มการตรวจสอบ session ที่นี่
     _checkToken();
     fetchScholarships();
     fetchProfile();

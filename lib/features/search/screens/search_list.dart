@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:edugo/config/api_config.dart';
+import 'package:edugo/main.dart'; // Import main.dart เพื่อเข้าถึง navigatorKey
 
 class SearchList extends StatefulWidget {
   final String searchQuery;
@@ -25,7 +26,8 @@ class SearchList extends StatefulWidget {
 class _SearchListState extends State<SearchList> {
   late TextEditingController _searchController;
   List<dynamic> scholarships = [];
-  final AuthService authService = AuthService();
+  final AuthService authService =
+      AuthService(navigatorKey: navigatorKey); // Instance of AuthService
   Map<String, Set<String>> selectedFilters = {};
 
   @override

@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'package:edugo/features/scholarship/screens/provider_management.dart';
+import 'package:edugo/features/home/screens/home_screen.dart'; // เปลี่ยน import
 import 'package:edugo/pages/intro.dart';
 import 'package:flutter/material.dart';
 
@@ -17,53 +17,35 @@ class _SplashScreenState extends State<SplashScreen> {
   void initState() {
     super.initState();
     _timer = Timer(const Duration(seconds: 3), () {
-      Navigator.pushReplacement(
-        context,
-        PageRouteBuilder(
-          pageBuilder: (context, animation, secondaryAnimation) =>
-              const IntroScreen(),
-          transitionsBuilder: (context, animation, secondaryAnimation, child) {
-            const begin = 0.0;
-            const end = 1.0;
-            const curve = Curves.easeOut;
-            var tween =
-                Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
-            return FadeTransition(
-                opacity: animation.drive(tween), child: child);
-          },
-          transitionDuration: const Duration(milliseconds: 300),
-        ),
-      );
+      // ตรวจสอบว่า widget ยังอยู่ใน tree ก่อนเรียก Navigator
+      if (mounted) {
+        Navigator.pushReplacement(
+          context,
+          PageRouteBuilder(
+            pageBuilder: (context, animation, secondaryAnimation) =>
+                const HomeScreenApp(), // เปลี่ยนเป็น HomeScreenApp
+            transitionsBuilder:
+                (context, animation, secondaryAnimation, child) {
+              // ...existing transition code...
+              const begin = 0.0;
+              const end = 1.0;
+              const curve = Curves.easeOut;
+              var tween =
+                  Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+              return FadeTransition(
+                  opacity: animation.drive(tween), child: child);
+            },
+            transitionDuration: const Duration(milliseconds: 300),
+          ),
+        );
+      }
     });
   }
 
   @override
   void dispose() {
+    _timer?.cancel(); // ยกเลิก Timer เมื่อ dispose
     super.dispose();
-    _timer?.cancel();
-  }
-
-  // Create a custom route with dissolve animation
-  Route _createDissolveRoute() {
-    return PageRouteBuilder(
-      pageBuilder: (context, animation, secondaryAnimation) =>
-          const IntroScreen(),
-      transitionsBuilder: (context, animation, secondaryAnimation, child) {
-        const begin = 0.0;
-        const end = 1.0;
-        const curve = Curves.easeIn;
-
-        var tween = Tween<double>(begin: begin, end: end)
-            .chain(CurveTween(curve: curve));
-        var opacityAnimation = animation.drive(tween);
-
-        return FadeTransition(
-          opacity: opacityAnimation,
-          child: child,
-        );
-      },
-      transitionDuration: const Duration(milliseconds: 300),
-    );
   }
 
   @override

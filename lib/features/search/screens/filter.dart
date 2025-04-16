@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:edugo/config/api_config.dart';
+import 'package:edugo/main.dart'; // Import main.dart เพื่อเข้าถึง navigatorKey
 
 class FilterDrawer extends StatefulWidget {
   @override
@@ -15,7 +16,8 @@ class _FilterDrawerState extends State<FilterDrawer> {
   final List<String> educationLevels = ["Undergraduate", "Master", "Doctorate"];
   final Set<String> selectedScholarshipTypes = {};
   final Set<String> selectedEducationLevels = {};
-  final AuthService authService = AuthService();
+  final AuthService authService =
+      AuthService(navigatorKey: navigatorKey); // Instance of AuthService
 
   @override
   void initState() {

@@ -1,4 +1,5 @@
 import 'package:edugo/services/auth_service.dart';
+import 'package:edugo/main.dart'; // Import main.dart เพื่อเข้าถึง navigatorKey
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:typed_data';
@@ -29,7 +30,8 @@ class ScholarshipCard extends StatelessWidget {
     }
 
     try {
-      final AuthService authService = AuthService();
+      // สร้าง AuthService พร้อม navigatorKey
+      final AuthService authService = AuthService(navigatorKey: navigatorKey);
       String? token = await authService.getToken();
 
       Map<String, String> headers = {};

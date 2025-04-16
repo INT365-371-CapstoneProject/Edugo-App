@@ -14,6 +14,7 @@ import 'dart:convert';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:edugo/main.dart'; // Import main.dart เพื่อเข้าถึง navigatorKey
 
 class SubjectDetail extends StatefulWidget {
   final Map<String, dynamic>? initialData;
@@ -36,7 +37,8 @@ class _SubjectDetailState extends State<SubjectDetail> {
   DateTime? selectedStartDate;
   List<dynamic> comments = []; // เก็บคอมเมนต์ที่ดึงมา
   final double coverHeight = 138;
-  final AuthService authService = AuthService(); // Instance of AuthService
+  final AuthService authService =
+      AuthService(navigatorKey: navigatorKey); // Instance of AuthService
   TextEditingController _commentController = TextEditingController();
   final Map<String, Uint8List?> _imageAvatarCache = {};
   Uint8List? postImge;

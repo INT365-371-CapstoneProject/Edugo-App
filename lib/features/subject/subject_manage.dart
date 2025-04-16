@@ -6,6 +6,7 @@ import 'package:edugo/features/profile/screens/profile.dart';
 import 'package:edugo/features/subject/subject_add_edit.dart';
 import 'package:edugo/features/subject/subject_detail.dart';
 import 'package:edugo/services/auth_service.dart';
+import 'package:edugo/main.dart'; // Import main.dart เพื่อเข้าถึง navigatorKey
 import 'package:edugo/services/footer.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -33,7 +34,8 @@ class _SubjectManagementState extends State<SubjectManagement> {
   bool isLoading = true;
   Uint8List? _imageBytes;
   Uint8List? imageAvatar;
-  final AuthService authService = AuthService(); // Instance of AuthService
+  final AuthService authService =
+      AuthService(navigatorKey: navigatorKey); // Instance of AuthService
   final TextEditingController titleController = TextEditingController();
   final TextEditingController descriptionController = TextEditingController();
   final Map<String, Uint8List?> _imageCache = {};
@@ -43,6 +45,7 @@ class _SubjectManagementState extends State<SubjectManagement> {
   @override
   void initState() {
     super.initState();
+    authService.checkSessionValidity(); // เพิ่มการตรวจสอบ session ที่นี่
     _delayedLoad(); // เรียกใช้งานฟังก์ชัน _delayedLoad
     fetchAvatarImage();
     fetchProfile();

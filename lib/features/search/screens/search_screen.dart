@@ -11,6 +11,7 @@ import 'package:edugo/services/auth_service.dart';
 import 'package:intl/intl.dart'; // นำเข้า DateFormat
 import 'package:edugo/features/scholarship/screens/provider_detail.dart'; // เพิ่ม import
 import 'package:edugo/features/search/screens/search_screen.dart'; // เพิ่ม import SearchScreen
+import 'package:edugo/main.dart'; // Import main.dart เพื่อเข้าถึง navigatorKey
 
 import '../../../services/scholarship_card.dart';
 
@@ -24,7 +25,8 @@ class SearchScreen extends StatefulWidget {
 class _SearchScreenState extends State<SearchScreen> {
   int _currentIndex = 0;
   List<dynamic> scholarships = [];
-  final AuthService authService = AuthService(); // Instance of AuthService
+  final AuthService authService =
+      AuthService(navigatorKey: navigatorKey); // Instance of AuthService
   final TextEditingController _searchController = TextEditingController();
   final Map<String, Uint8List?> _imageCache = {};
 
@@ -87,7 +89,6 @@ class _SearchScreenState extends State<SearchScreen> {
     }
 
     try {
-      final AuthService authService = AuthService();
       String? token = await authService.getToken();
 
       Map<String, String> headers = {};
