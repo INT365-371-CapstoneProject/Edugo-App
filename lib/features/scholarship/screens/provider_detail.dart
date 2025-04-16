@@ -44,11 +44,16 @@ class _ProviderDetailState extends State<ProviderDetail> {
   DateTime? selectedEndDate;
   final double coverHeight = 227;
   final double pictureHeight = 114;
+  Map<String, dynamic>? profile; // Define the profile variable
+  List<int> announceIds = []; // เก็บแค่ announce_id
+  List<dynamic> bookmarks = [];
+  bool isBookmarked = false;
 
   @override
   void initState() {
     super.initState();
     // fetchScholarshipsDetail(widget.initialData?['id']);
+    fetchProfile(); // เรียกใช้ฟังก์ชันนี้เพื่อดึงข้อมูลโปรไฟล์
 
     if (widget.initialData != null) {
       final data = widget.initialData!;
@@ -191,6 +196,38 @@ class _ProviderDetailState extends State<ProviderDetail> {
     );
   }
 
+  Future<void> fetchProfile() async {
+    try {
+      String? token = await authService.getToken();
+      Map<String, String> headers = {};
+      if (token != null) {
+        headers['Authorization'] = 'Bearer $token';
+      }
+
+      final response =
+          await http.get(Uri.parse(ApiConfig.profileUrl), headers: headers);
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> data = json.decode(response.body);
+        final Map<String, dynamic> profileData = data['profile'];
+
+        // เก็บเฉพาะ id และ role
+        setState(() {
+          profile = {
+            'id': profileData['id'],
+          };
+        });
+        print(profile);
+        fetchBookmark(profile?['id']);
+      } else {
+        throw Exception('Failed to load profile');
+      }
+    } catch (e) {
+      setState(() {});
+      print("Error fetching profile: $e");
+    }
+  }
+
   // Future<void> fetchScholarshipsDetail(int id) async {
   //   try {
   //     String? token = await authService.getToken();
@@ -239,6 +276,44 @@ class _ProviderDetailState extends State<ProviderDetail> {
   //     print("Error fetching scholarship details: $e");
   //   }
   // }
+
+  Future<void> fetchBookmark(int id) async {
+    String? token = await authService.getToken();
+    Map<String, String> headers = {};
+    if (token != null) {
+      headers['Authorization'] = 'Bearer $token';
+    }
+
+    final url = "${ApiConfig.bookmarkUrl}/acc/$id}";
+
+    try {
+      final response = await http.get(Uri.parse(url), headers: headers);
+      if (response.statusCode == 200) {
+        final List<dynamic> responseData = json.decode(response.body);
+
+        setState(() {
+          bookmarks = responseData; // เก็บข้อมูลเต็ม
+
+          // ใช้ Set เพื่อเก็บ announce_id ไม่ให้ซ้ำ
+          announceIds = responseData
+              .map<int>(
+                  (item) => item['announce_id'] as int) // ดึงเฉพาะ announce_id
+              .toSet() // ลบค่าซ้ำ
+              .toList(); // แปลงกลับเป็น List
+
+          print(announceIds);
+          if (widget.initialData?['id'] != null &&
+              announceIds.contains(widget.initialData?['id'])) {
+            isBookmarked = true;
+          }
+        });
+      } else {
+        throw Exception('Failed to load bookmarks');
+      }
+    } catch (e) {
+      print("Error fetching bookmarks: $e");
+    }
+  }
 
   Future<void> fetchAndOpenPdf(int id) async {
     final url = Uri.parse(
@@ -297,33 +372,53 @@ class _ProviderDetailState extends State<ProviderDetail> {
     }
   }
 
-  Future<void> addBookmark() async {
+  Future<void> toggleBookmark() async {
     final url = Uri.parse(ApiConfig.bookmarkUrl);
 
     String? token = await authService.getToken();
-
-    // Create headers map
     Map<String, String> headers = {'Content-Type': 'application/json'};
 
-    // Add Authorization header if token is available
     if (token != null) {
       headers['Authorization'] = 'Bearer $token';
     }
 
     try {
-      final response = await http.post(
-        url,
-        headers: headers, // Use the headers with the token
-        body: json.encode({"announce_id": id}),
-      );
+      if (isBookmarked) {
+        // Remove bookmark
+        final response = await http.delete(
+          Uri.parse("$url/ann/$id"),
+          headers: headers,
+        );
 
-      if (response.statusCode == 201 || response.statusCode == 200) {
-        print("Success");
+        if (response.statusCode == 200 || response.statusCode == 204) {
+          setState(() {
+            isBookmarked = false;
+            announceIds.remove(id); // เอา id ออกจากรายการ
+          });
+          // showSuccess("Bookmark removed.");
+        } else {
+          // showError("Failed to remove bookmark.");
+        }
       } else {
-        print(response);
+        // Add bookmark
+        final response = await http.post(
+          url,
+          headers: headers,
+          body: json.encode({"announce_id": id}),
+        );
+
+        if (response.statusCode == 201 || response.statusCode == 200) {
+          setState(() {
+            isBookmarked = true;
+            announceIds.add(id!); // เพิ่ม id เข้าไปในรายการ
+          });
+          // showSuccess("Bookmark added.");
+        } else {
+          // showError("Failed to add bookmark.");
+        }
       }
     } catch (e) {
-      print(e);
+      showError("Error occurred: $e");
     }
   }
 
@@ -429,7 +524,7 @@ class _ProviderDetailState extends State<ProviderDetail> {
                                       confirmDelete(context);
                                     } else {
                                       // ใส่ action สำหรับผู้ใช้ทั่วไป เช่น กดถูกใจ
-                                      addBookmark();
+                                      toggleBookmark();
                                     }
                                   },
                                   child: CircleAvatar(
@@ -445,10 +540,14 @@ class _ProviderDetailState extends State<ProviderDetail> {
                                             colorBlendMode: BlendMode.srcIn,
                                           )
                                         : Icon(
-                                            Icons.favorite,
-                                            color: Colors
-                                                .red, // กำหนดสีให้ไอคอนหัวใจ
-                                            size: 24, // ขนาดของไอคอน
+                                            isBookmarked
+                                                ? Icons.favorite
+                                                : Icons
+                                                    .favorite_border, // หัวใจเต็มหรือขอบ
+                                            color: isBookmarked
+                                                ? Colors.red
+                                                : Colors.grey, // สีแดงหรือสีเทา
+                                            size: 24,
                                           ),
                                   ),
                                 ),

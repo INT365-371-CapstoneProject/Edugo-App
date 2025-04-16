@@ -1,5 +1,7 @@
 import 'package:edugo/pages/provider_or_user.dart';
+import 'package:edugo/shared/utils/textStyle.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 class IntroScreen extends StatefulWidget {
   const IntroScreen({super.key});
@@ -26,14 +28,41 @@ class _IntroScreenState extends State<IntroScreen> {
     }
   }
 
+  void _onSkipOrBack() {
+    if (isIntro1) {
+      Navigator.push(
+        context,
+        PageRouteBuilder(
+          pageBuilder: (context, animation, secondaryAnimation) =>
+              const ProviderOrUser(),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            const curve = Curves.easeOut;
+            var tween =
+                Tween(begin: 0.0, end: 1.0).chain(CurveTween(curve: curve));
+            return FadeTransition(
+              opacity: animation.drive(tween),
+              child: child,
+            );
+          },
+          transitionDuration: const Duration(milliseconds: 300),
+        ),
+      );
+    } else {
+      setState(() {
+        isIntro1 = true;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
       body: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisAlignment: MainAxisAlignment.start, // ติดด้านบนสุด
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
+          const SizedBox(height: 87),
           // Logo at the top
           SizedBox(
             width: 175,
@@ -43,169 +72,142 @@ class _IntroScreenState extends State<IntroScreen> {
               fit: BoxFit.contain,
             ),
           ),
-          const SizedBox(height: 20.0), // Space between logo and text
+          const SizedBox(height: 48.34),
 
-          // Placeholder for the main image
+          // Main image
           SizedBox(
-            height: 300,
-            width: 200,
-            child: Transform.scale(
-              scale: 1.5,
-              child: Image.asset(isIntro1
-                  ? "assets/images/intro1.png"
-                  : "assets/images/intro2.png"),
+            width: 302,
+            height: 264,
+            child: SvgPicture.asset(
+              isIntro1
+                  ? "assets/images/intro1.svg"
+                  : "assets/images/intro2.svg",
             ),
           ),
-          const SizedBox(height: 30.0),
 
+          const SizedBox(height: 48.0),
+
+          // Indicator dots
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Container(
-                width: 29,
-                height: 8,
-                decoration: BoxDecoration(
-                  color: isIntro1
-                      ? const Color(0xFF3056E6)
-                      : const Color(0xFFD9D9D9),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-              ),
+              _buildIndicator(isActive: isIntro1),
               const SizedBox(width: 5),
-              Container(
-                width: 29,
-                height: 8,
-                decoration: BoxDecoration(
-                  color: isIntro1
-                      ? const Color(0xFFD9D9D9)
-                      : const Color(0xFF3056E6),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-              ),
+              _buildIndicator(isActive: !isIntro1),
             ],
           ),
-          const SizedBox(height: 30),
+          const SizedBox(height: 23.66),
 
           // Title text
-          Text(
-            isIntro1 ? "Display" : "Join Our Community",
-            style: const TextStyle(
-              fontFamily: 'DM Sans',
-              fontSize: 32,
-              fontWeight: FontWeight.bold,
+          SizedBox(
+            height: 48,
+            width: 312,
+            child: Text(
+              textAlign: TextAlign.center,
+              isIntro1 ? "Discover" : "Join Our Community",
+              style: TextStyleService.getDmSans(
+                fontSize: 32,
+                fontWeight: FontWeight.w600,
+                height: 1.5,
+                color: const Color(0xFF000000), // ส่งสีดำ
+              ),
             ),
           ),
-          const SizedBox(height: 10.0),
+          const SizedBox(height: 8.0),
 
           // Description text
           SizedBox(
-            height: 72,
+            height: 54,
             width: 312,
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20.0),
+              padding: const EdgeInsets.symmetric(horizontal: 0.0),
               child: Text(
                 isIntro1
-                    ? "Easily find international scholarships that match your needs and abilities, and get prepared for studying abroad with trusted information."
+                    ? "Easily find international scholarships that match\n your needs and abilities, and get prepared for\n studying abroad with trusted information."
                     : "Share experiences and learn from peers who have gone through scholarship applications and studying abroad. Build a strong educational network with the support of our community.",
                 textAlign: TextAlign.center,
-                style: const TextStyle(
-                  fontFamily: 'DM Sans',
-                  fontSize: 14,
-                  fontStyle: FontStyle.normal,
-                  fontWeight: FontWeight.w200,
+                style: TextStyleService.getDmSans(
                   color: Color(0xFF465468),
-                  height: 1.0,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w200,
+                  height: 1,
                 ),
               ),
             ),
           ),
-          const SizedBox(height: 40.0),
+          const SizedBox(height: 48.34),
 
-          // Button Row
-          Column(
-            children: [
-              FractionallySizedBox(
-                widthFactor: 0.94,
-                child: ElevatedButton(
-                  onPressed: _onNextPage,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF3056E6),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
+          // Buttons
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: Column(
+              children: [
+                FractionallySizedBox(
+                  widthFactor: 1,
+                  child: ElevatedButton(
+                    onPressed: _onNextPage,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF3056E6),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      minimumSize: const Size.fromHeight(48),
                     ),
-                    minimumSize: const Size.fromHeight(48),
-                  ),
-                  child: const Text(
-                    'Next',
-                    style: TextStyle(
-                      fontSize: 18,
-                      color: Colors.white,
+                    child: const Text(
+                      'Next',
+                      style: TextStyle(
+                        fontFamily: "DM Sans",
+                        color: Color(0xFFFFFFFF),
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        height: 1,
+                      ),
                     ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 10.0),
-
-              // Skip/Back button
-              FractionallySizedBox(
-                widthFactor: 0.94,
-                child: OutlinedButton(
-                  onPressed: () {
-                    // Set intro to true when Back is pressed
-                    setState(() {
-                      if (isIntro1) {
-                        setState(() {
-                          Navigator.push(
-                            context,
-                            PageRouteBuilder(
-                              pageBuilder:
-                                  (context, animation, secondaryAnimation) =>
-                                      const ProviderOrUser(),
-                              transitionsBuilder: (context, animation,
-                                  secondaryAnimation, child) {
-                                const begin = 0.0;
-                                const end = 1.0;
-                                const curve = Curves.easeOut;
-
-                                var tween = Tween(begin: begin, end: end)
-                                    .chain(CurveTween(curve: curve));
-                                return FadeTransition(
-                                  opacity: animation.drive(tween),
-                                  child: child,
-                                );
-                              },
-                              transitionDuration:
-                                  const Duration(milliseconds: 300),
-                            ),
-                          );
-                        });
-                      } else {
-                        isIntro1 = true;
-                      }
-                    });
-                  },
-                  style: OutlinedButton.styleFrom(
-                    side: const BorderSide(
-                      color: Color(0xFF3056E6),
-                      width: 0.5,
+                const SizedBox(height: 7.66),
+                FractionallySizedBox(
+                  widthFactor: 1,
+                  child: OutlinedButton(
+                    onPressed: _onSkipOrBack,
+                    style: OutlinedButton.styleFrom(
+                      side: const BorderSide(
+                        color: Color(0xFFC0CDFF),
+                        width: 1.0,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      backgroundColor: const Color(0xFFFFFFFF),
+                      minimumSize: const Size.fromHeight(48),
                     ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    minimumSize: const Size.fromHeight(48),
-                  ),
-                  child: Text(
-                    isIntro1 ? 'Skip' : 'Back',
-                    style: const TextStyle(
-                      fontSize: 18,
-                      color: Color(0xFF3056E6),
+                    child: Text(
+                      isIntro1 ? 'Skip' : 'Back',
+                      style: const TextStyle(
+                        fontFamily: "DM Sans",
+                        color: Color(0xFF0E1729),
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        height: 1,
+                      ),
                     ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildIndicator({required bool isActive}) {
+    return Container(
+      width: 29,
+      height: 8,
+      decoration: BoxDecoration(
+        color: isActive ? const Color(0xFF3056E6) : const Color(0xFFD9D9D9),
+        borderRadius: BorderRadius.circular(10),
       ),
     );
   }

@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 import 'package:edugo/config/api_config.dart';
+import 'package:edugo/features/notification/screens/notification_management.dart';
 import 'package:edugo/features/scholarship/screens/provider_management.dart';
 import 'package:edugo/features/profile/screens/profile.dart';
 import 'package:edugo/features/subject/subject_add_edit.dart';
@@ -304,7 +305,14 @@ class _SubjectManagementState extends State<SubjectManagement> {
   Future<void> submitDeleteData(int id) async {
     final String apiUrl = "${ApiConfig.subjectUrl}/${id}";
 
+    String? token = await authService.getToken();
+    Map<String, String> headers = {};
+    if (token != null) {
+      headers['Authorization'] = 'Bearer $token';
+    }
+
     var request = http.MultipartRequest('DELETE', Uri.parse(apiUrl));
+    request.headers.addAll(headers);
 
     try {
       var response = await request.send();
@@ -569,13 +577,42 @@ class _SubjectManagementState extends State<SubjectManagement> {
                       ],
                     ),
                     Spacer(), // ใช้ Spacer เพื่อให้ notification ชิดขวา
-                    CircleAvatar(
-                      radius: 20,
-                      backgroundColor: const Color(0xFFDAFB59),
-                      child: Image.asset(
-                        'assets/images/notification.png',
-                        width: 40.0,
-                        height: 40.0,
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          PageRouteBuilder(
+                            pageBuilder:
+                                (context, animation, secondaryAnimation) =>
+                                    NotificationList(
+                              id: profile?['id'],
+                            ),
+                            transitionsBuilder: (context, animation,
+                                secondaryAnimation, child) {
+                              const begin = 0.0;
+                              const end = 1.0;
+                              const curve = Curves.easeOut;
+
+                              var tween = Tween(begin: begin, end: end)
+                                  .chain(CurveTween(curve: curve));
+                              return FadeTransition(
+                                opacity: animation.drive(tween),
+                                child: child,
+                              );
+                            },
+                            transitionDuration:
+                                const Duration(milliseconds: 300),
+                          ),
+                        );
+                      },
+                      child: CircleAvatar(
+                        radius: 20,
+                        backgroundColor: const Color(0xFFDAFB59),
+                        child: Image.asset(
+                          'assets/images/notification.png',
+                          width: 40.0,
+                          height: 40.0,
+                        ),
                       ),
                     ),
                   ],

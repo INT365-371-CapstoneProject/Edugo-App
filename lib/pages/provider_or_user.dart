@@ -1,6 +1,8 @@
 import 'package:edugo/features/login&register/login.dart';
 import 'package:edugo/pages/welcome_user_page.dart';
+import 'package:edugo/shared/utils/textStyle.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 class ProviderOrUser extends StatelessWidget {
   const ProviderOrUser({super.key});
@@ -13,188 +15,161 @@ class ProviderOrUser extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Logo at the top
             Padding(
-              padding: const EdgeInsets.only(top: 87.0, left: 40.0),
-              child: SizedBox(
-                width: 175,
-                height: 37.656,
-                child: Image.asset(
-                  "assets/images/logoColor.png",
-                  fit: BoxFit.contain, // Adjust the image to fit within the box
-                ),
-              ),
-            ),
-            // Add spacing of 50.34px below the logo
-            const SizedBox(height: 50.34),
-            // Heading text "Tell us who you are?"
-            const Padding(
-              padding: EdgeInsets.only(
-                left: 39.0,
-                right: 39.0,
-              ), // Align text with the logo
-              child: Text(
-                "Tell us who you are?",
-                style: TextStyle(
-                  fontFamily: "DM Sans",
-                  fontSize: 32.0,
-                  fontWeight: FontWeight.w600,
-                  color:
-                      Color(0xFF000000), // color: var(--Labels-Primary, #000)
-                ),
-              ),
-            ),
-            // Container for the paragraph with 39px margin on both sides
-            const Padding(
-              padding: EdgeInsets.only(
-                  left: 39.0,
-                  right: 39.0,
-                  top: 8.0), // Apply left and right margins of 39
-              child: Text(
-                "Tell us a little about yourself! You can easily select your role in this app. If you're a scholarship provider, please choose 'Provider' above. However, if you're looking for educational opportunities and additional experiences, please select 'User' below.",
-                style: TextStyle(
-                  fontFamily: "DM Sans",
-                  fontSize: 14.0,
-                  fontWeight: FontWeight.w200,
-                  color:
-                      Color(0xFF000000), // color: var(--Labels-Primary, #000)
-                ),
-              ),
-            ),
-            // Add some spacing between text and buttons
-            const SizedBox(height: 40),
-            // Button for "I'm providing scholarships"
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 40.0),
-              child: GestureDetector(
-                onTap: () {
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) =>
-                          const WelcomeUserPage(isProvider: true),
+              padding: const EdgeInsets.symmetric(horizontal: 44.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SizedBox(height: 87), // Space at the top
+                  // Logo at the top
+                  SizedBox(
+                    width: 175,
+                    height: 37.656,
+                    child: Image.asset(
+                      "assets/images/logoColor.png",
+                      fit: BoxFit.contain,
                     ),
-                  );
-                },
-                child: Container(
-                  height: 128, // Set specific height
-                  decoration: BoxDecoration(
-                    border: Border.all(color: Colors.blueAccent),
-                    borderRadius: BorderRadius.circular(12),
                   ),
-                  child: Row(
-                    crossAxisAlignment:
-                        CrossAxisAlignment.center, // Align vertically
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.all(
-                            16.0), // Add padding around image
-                        child: Image.asset("assets/images/provider.png"),
-                      ),
-                      const Expanded(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment
-                              .center, // Center text vertically
-                          crossAxisAlignment: CrossAxisAlignment
-                              .start, // Align text to the left
-                          children: [
-                            Text(
-                              "I'm providing scholarships",
-                              style: TextStyle(
-                                fontFamily: "DM Sans",
-                                fontSize: 14.0,
-                                fontWeight: FontWeight.w500,
-                                color: Color(0xFF000000),
-                              ),
-                            ),
-                            SizedBox(
-                                height:
-                                    8), // Spacing between title and subtitle
-                            Text(
-                              "For scholarship providers, you can share exciting and valuable scholarship opportunities with users in our app!",
-                              style: TextStyle(
-                                fontFamily: "DM Sans",
-                                fontSize: 11.0,
-                                fontWeight: FontWeight.w300,
-                                color: Color(0xFF7A7A7A),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
+                  const SizedBox(height: 50.34),
+                  // Heading text
+                  Text(
+                    "Tell us who you are?",
+                    style: TextStyleService.getDmSans(
+                      fontSize: 32.0,
+                      fontWeight: FontWeight.w600,
+                      fontStyle: FontStyle.normal,
+                      color: Color(0xFF000000),
+                      height: 1.5,
+                    ),
                   ),
-                ),
+                  const SizedBox(height: 8.0),
+                  // Description text
+                  Text(
+                    "Tell us a little about yourself! You can easily select your role in this app. If you're a scholarship provider, please choose 'Provider' above. However, if you're looking for educational opportunities and additional experiences, please select 'User' below.",
+                    style: TextStyleService.getDmSans(
+                      fontSize: 14.0,
+                      fontWeight: FontWeight.w200,
+                      fontStyle: FontStyle.normal,
+                      color: Color(0xFF465468),
+                    ),
+                  ),
+                  const SizedBox(height: 40),
+                ],
               ),
             ),
-
-            // Add spacing between buttons
-            const SizedBox(height: 20),
-            // Button for "I'm seeking scholarships"
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 40.0),
-              child: GestureDetector(
-                onTap: () {
-                  Navigator.pushReplacement(
+              padding: const EdgeInsets.symmetric(horizontal: 31.0),
+              child: Column(
+                children: [
+                  // Button for "I'm providing scholarships"
+                  _buildRoleButton(
                     context,
-                    MaterialPageRoute(
-                      builder: (context) => const WelcomeUserPage(isUser: true),
-                    ),
-                  );
-                },
-                child: Container(
-                  height: 128, // Set specific height
-                  decoration: BoxDecoration(
-                    border: Border.all(
-                        color: const Color.fromARGB(255, 95, 113, 145)),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Row(
-                    crossAxisAlignment:
-                        CrossAxisAlignment.center, // Align vertically
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.all(
-                            16.0), // Add padding around image
-                        child: Image.asset("assets/images/user.png"),
-                      ),
-                      const Expanded(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment
-                              .center, // Center text vertically
-                          crossAxisAlignment: CrossAxisAlignment
-                              .start, // Align text to the left
-                          children: [
-                            Text(
-                              "I'm seeking scholarships",
-                              style: TextStyle(
-                                fontFamily: "DM Sans",
-                                fontSize: 14.0,
-                                fontWeight: FontWeight.w500,
-                                color: Color(0xFF000000),
-                              ),
-                            ),
-                            SizedBox(
-                                height:
-                                    8), // Spacing between title and subtitle
-                            Text(
-                              "If you're looking for reliable sources of knowledge and scholarship information, sign up now! Start exploring unlimited learning opportunities today!",
-                              style: TextStyle(
-                                fontFamily: "DM Sans",
-                                fontSize: 11.0,
-                                fontWeight: FontWeight.w300,
-                                color: Color(0xFF7A7A7A),
-                              ),
-                            ),
-                          ],
+                    title: "I'm providing scholarships",
+                    description:
+                        "For scholarship providers, you can\nshare exciting and valuable\nscholarship opportunities with users\nin our app!",
+                    imagePath: "assets/images/provider.svg",
+                    borderColor: Color(0xFF355FFF),
+                    onTap: () {
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              const WelcomeUserPage(isProvider: true),
                         ),
-                      ),
-                    ],
+                      );
+                    },
+                    rowPadding: const EdgeInsets.symmetric(
+                        horizontal: 32.0), // กำหนด padding สำหรับ Row
+                    spacingWidget:
+                        const SizedBox(width: 0), // กำหนด spacing ที่แตกต่างได้
                   ),
-                ),
+                  const SizedBox(height: 24),
+                  // Button for "I'm seeking scholarships"
+                  _buildRoleButton(
+                    context,
+                    title: "I'm seeking scholarships",
+                    description:
+                        "If you're looking for reliable sources of\nknowledge and scholarship information,\nsign up now! Start exploring unlimited\nlearning opportunities today!",
+                    imagePath: "assets/images/user.svg",
+                    borderColor: Color(0xFF355FFF),
+                    onTap: () {
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              const WelcomeUserPage(isUser: true),
+                        ),
+                      );
+                    },
+                    rowPadding: const EdgeInsets.symmetric(
+                        horizontal: 21.0), // กำหนด padding สำหรับ Row
+                    spacingWidget: const SizedBox(
+                        width: 19), // กำหนด spacing ที่แตกต่างได้
+                  ),
+                ],
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRoleButton(
+    BuildContext context, {
+    required String title,
+    required String description,
+    required String imagePath,
+    required Color borderColor,
+    required VoidCallback onTap,
+    EdgeInsets? rowPadding, // เพิ่มพารามิเตอร์สำหรับ padding ของ Row
+    Widget spacingWidget =
+        const SizedBox(width: 0), // เพิ่มพารามิเตอร์สำหรับ spacing
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        height: 128,
+        decoration: BoxDecoration(
+          border: Border.all(color: borderColor),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Padding(
+          padding: rowPadding ??
+              EdgeInsets.all(16.0), // ใช้ padding ที่ส่งมา หรือค่าเริ่มต้น
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              SvgPicture.asset(imagePath),
+              spacingWidget, // ใช้ spacingWidget ที่ส่งเข้ามา
+              Expanded(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: TextStyleService.getDmSans(
+                        fontSize: 14.0,
+                        fontWeight: FontWeight.w500,
+                        color: Color(0xFF000000),
+                        height: 1.42857, // คำนวณจาก 20px / 14px
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      description,
+                      style: TextStyleService.getDmSans(
+                        fontSize: 11.0,
+                        fontWeight: FontWeight.w200,
+                        color: Color(0xFF465468),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

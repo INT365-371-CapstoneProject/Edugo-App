@@ -1,4 +1,5 @@
 import 'package:edugo/config/api_config.dart';
+import 'package:edugo/features/scholarship/screens/provider_detail.dart';
 import 'package:flutter/material.dart';
 import 'dart:typed_data';
 import 'package:edugo/features/scholarship/screens/provider_management.dart';
@@ -94,6 +95,7 @@ class _BookmarkListState extends State<BookmarkList> {
 
         setState(() {
           announceDetails = responseData; // เก็บข้อมูลที่ได้
+          print(announceDetails); // Debug
         });
       } else {
         throw Exception('Failed to load announcement details');
@@ -228,14 +230,44 @@ class _BookmarkListState extends State<BookmarkList> {
                               color: Colors.grey[600],
                             ),
                           ),
-                          trailing: IconButton(
-                            icon: Icon(Icons.delete, color: Colors.red),
-                            onPressed: () {
-                              deleteBookmark(item['id']);
-                            },
-                          ),
-                          onTap: () {
-                            // print("Tapped on: ${item['title']}");
+                          // trailing: IconButton(
+                          //   icon: Icon(Icons.delete, color: Colors.red),
+                          //   onPressed: () {
+                          //     deleteBookmark(item['id']);
+                          //   },
+                          // ),
+                          onTap: () async {
+                            final existingData = {
+                              'id': item['id'],
+                              'title': item['title'],
+                              'url': item['url'],
+                              'category': item['category'],
+                              'country': item['country'],
+                              'description': item['description'],
+                              'image': item['image'],
+                              'attach_file': item['attach_file'],
+                              'published_date': item['published_date'],
+                              'close_date': item['close_date'],
+                              'education_level': item['education_level'],
+                              'attach_name': item['attach_name'],
+                            };
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => ProviderDetail(
+                                  initialData: existingData,
+                                  isProvider:
+                                      false, // ส่ง existingData ไปยังหน้าแก้ไข
+                                ),
+                              ),
+                              // MaterialPageRoute(
+                              //   builder: (context) => ProviderAddEdit(
+                              //     isEdit: true,
+                              //     initialData:
+                              //         existingData, // ส่ง existingData ไปยังหน้าแก้ไข
+                              //   ),
+                              // ),
+                            );
                           },
                         ),
                       );

@@ -253,7 +253,7 @@ class _SubjectDetailState extends State<SubjectDetail> {
     }
   }
 
-  void confirmDelete(BuildContext context, int? id) {
+  void confirmDelete(BuildContext context, int? id, bool isComment) {
     showDialog(
       context: context,
       barrierDismissible: false, // ไม่ให้กดปิดนอกกรอบ Dialog
@@ -273,7 +273,9 @@ class _SubjectDetailState extends State<SubjectDetail> {
               ),
               const SizedBox(height: 16),
               Text(
-                'Are you sure you want to delete this post?',
+                isComment
+                    ? 'Are you sure you want to delete this comment?'
+                    : 'Are you sure you want to delete this post?',
                 textAlign: TextAlign.center,
                 style: GoogleFonts.dmSans(
                   fontSize: 24,
@@ -323,7 +325,8 @@ class _SubjectDetailState extends State<SubjectDetail> {
                     child: ElevatedButton(
                       onPressed: () async {
                         Navigator.of(dialogContext).pop(); // ปิด Dialog
-                        await submitDeleteData(id); // ดำเนินการลบข้อมูล
+                        await submitDeleteData(
+                            id, isComment); // ดำเนินการลบข้อมูล
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFFD5448E),
@@ -350,22 +353,27 @@ class _SubjectDetailState extends State<SubjectDetail> {
     );
   }
 
-  Future<void> submitDeleteData(int? id) async {
-    final String apiUrl = "${ApiConfig.subjectUrl}/${id}";
+  Future<void> submitDeleteData(int? id, bool isComment) async {
+    String apiUrl = isComment
+        ? "${ApiConfig.commentUrl}/${id}"
+        : "${ApiConfig.subjectUrl}/${id}";
+
+    String? token = await authService.getToken();
+    Map<String, String> headers = {};
+    if (token != null) {
+      headers['Authorization'] = 'Bearer $token';
+    }
 
     var request = http.MultipartRequest('DELETE', Uri.parse(apiUrl));
+    request.headers.addAll(headers);
 
     try {
       var response = await request.send();
 
-      if (response.statusCode == 200) {
-        Navigator.pushAndRemoveUntil(
-          context,
-          MaterialPageRoute(
-            builder: (context) => SubjectManagement(),
-          ),
-          (route) => false, // ลบ stack ทั้งหมด
-        );
+      if (isComment) {
+        // Close both pop-ups and refresh the page
+        Navigator.pop(context); // Close the first pop-up
+        fetchComment();
       } else {
         showError("Failed to delete data. Status code: ${response.statusCode}");
       }
@@ -704,7 +712,9 @@ class _SubjectDetailState extends State<SubjectDetail> {
                                                           ),
                                                           onTap: () {
                                                             confirmDelete(
-                                                                context, id);
+                                                                context,
+                                                                id,
+                                                                false);
                                                           },
                                                         ),
                                                       ),
@@ -778,171 +788,183 @@ class _SubjectDetailState extends State<SubjectDetail> {
                           color: Colors.black87,
                         ),
                       ),
-                      comments.isEmpty
-                          ? Padding(
-                              padding: const EdgeInsets.only(top: 16.0),
-                              child: Center(
-                                // ทำให้ข้อความอยู่ตรงกลาง
-                                child: Text(
-                                  "No comments",
-                                  style: GoogleFonts.dmSans(
-                                    fontSize: 36, // ปรับขนาดเป็น 72
-                                    fontWeight: FontWeight
-                                        .bold, // เพิ่มความหนาให้อ่านง่าย
-                                    color: Colors
-                                        .grey[400], // ใช้สีเทาอ่อนให้ดูดีขึ้น
-                                  ),
-                                  textAlign: TextAlign
-                                      .center, // เผื่อกรณีข้อความยาวขึ้น
+                      // comments.isEmpty
+                      //     ? Padding(
+                      //         padding: const EdgeInsets.only(top: 16.0),
+                      //         child: Center(
+                      //           // ทำให้ข้อความอยู่ตรงกลาง
+                      //           child: Text(
+                      //             "No comments",
+                      //             style: GoogleFonts.dmSans(
+                      //               fontSize: 36, // ปรับขนาดเป็น 72
+                      //               fontWeight: FontWeight
+                      //                   .bold, // เพิ่มความหนาให้อ่านง่าย
+                      //               color: Colors
+                      //                   .grey[400], // ใช้สีเทาอ่อนให้ดูดีขึ้น
+                      //             ),
+                      //             textAlign: TextAlign
+                      //                 .center, // เผื่อกรณีข้อความยาวขึ้น
+                      //           ),
+                      //         ),
+                      //       )
+                      //     :
+                      ListView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: comments.length,
+                        itemBuilder: (context, index) {
+                          final comment = comments[index];
+
+                          int? commentId = comment['id'];
+
+                          // แปลงวันที่ให้เป็นรูปแบบอ่านง่าย
+                          DateTime publishDate =
+                              DateTime.tryParse(comment['publish_date']) ??
+                                  DateTime.now();
+                          String formattedDate =
+                              DateFormat('dd MMMM yyyy HH:mm')
+                                  .format(publishDate);
+                          final String avatarImageUrl =
+                              "${ApiConfig.commentUrl}/${comment['id']}/avatar";
+                          String fullname = comment['fullname'] ??
+                              'No name'; // ใช้ชื่อที่ได้จาก API หรือข้อความเริ่มต้น
+
+                          return Padding(
+                            padding: const EdgeInsets.only(
+                                top: 0.0,
+                                bottom:
+                                    16.0), // ลดระยะห่างของคอมเมนต์แต่ละอันให้ชิดขึ้น
+                            child: Card(
+                              margin: EdgeInsets.zero,
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color: Color(0xFFECF0F6),
+                                  borderRadius: BorderRadius.circular(10.0),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.grey.withOpacity(0.2),
+                                      spreadRadius: 2,
+                                      blurRadius: 5,
+                                      offset: const Offset(0, 3),
+                                    ),
+                                  ],
                                 ),
-                              ),
-                            )
-                          : ListView.builder(
-                              shrinkWrap: true,
-                              physics: const NeverScrollableScrollPhysics(),
-                              itemCount: comments.length,
-                              itemBuilder: (context, index) {
-                                final comment = comments[index];
-
-                                // แปลงวันที่ให้เป็นรูปแบบอ่านง่าย
-                                DateTime publishDate = DateTime.tryParse(
-                                        comment['publish_date']) ??
-                                    DateTime.now();
-                                String formattedDate =
-                                    DateFormat('dd MMMM yyyy HH:mm')
-                                        .format(publishDate);
-                                final String avatarImageUrl =
-                                    "${ApiConfig.commentUrl}/${comment['id']}/avatar";
-                                String fullname = comment['fullname'] ??
-                                    'No name'; // ใช้ชื่อที่ได้จาก API หรือข้อความเริ่มต้น
-
-                                return Padding(
-                                  padding: const EdgeInsets.only(
-                                      top: 0.0,
-                                      bottom:
-                                          16.0), // ลดระยะห่างของคอมเมนต์แต่ละอันให้ชิดขึ้น
-                                  child: Card(
-                                    margin: EdgeInsets.zero,
-                                    child: Container(
-                                      decoration: BoxDecoration(
-                                        color: Color(0xFFECF0F6),
-                                        borderRadius:
-                                            BorderRadius.circular(10.0),
-                                        boxShadow: [
-                                          BoxShadow(
-                                            color: Colors.grey.withOpacity(0.2),
-                                            spreadRadius: 2,
-                                            blurRadius: 5,
-                                            offset: const Offset(0, 3),
+                                child: Padding(
+                                  padding: const EdgeInsets.all(22.0),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
+                                        crossAxisAlignment: CrossAxisAlignment
+                                            .start, // ทำให้ Column ชิดขอบบนสุด
+                                        mainAxisAlignment: MainAxisAlignment
+                                            .spaceBetween, // กระจายเนื้อหาทั้งสองด้าน
+                                        children: [
+                                          Row(
+                                            children: [
+                                              CircleAvatar(
+                                                radius: 20,
+                                                backgroundImage: _imageCache
+                                                            .containsKey(
+                                                                avatarImageUrl) &&
+                                                        _imageCache[
+                                                                avatarImageUrl] !=
+                                                            null
+                                                    ? MemoryImage(_imageCache[
+                                                        avatarImageUrl]!) // ใช้ภาพจากแคช
+                                                    : null, // ถ้าไม่มีภาพในแคช
+                                                child: !_imageCache.containsKey(
+                                                        avatarImageUrl)
+                                                    ? FutureBuilder<Uint8List?>(
+                                                        future: fetchPostAvatar(
+                                                            avatarImageUrl),
+                                                        builder: (context,
+                                                            snapshot) {
+                                                          if (snapshot
+                                                                  .connectionState ==
+                                                              ConnectionState
+                                                                  .waiting) {
+                                                            return const Center(
+                                                              child:
+                                                                  CircularProgressIndicator(),
+                                                            );
+                                                          }
+                                                          if (snapshot.data ==
+                                                              null) {
+                                                            return Image.asset(
+                                                              "assets/images/avatar.png",
+                                                              fit: BoxFit.cover,
+                                                            );
+                                                          }
+                                                          return CircleAvatar(
+                                                            radius: 20,
+                                                            backgroundImage:
+                                                                MemoryImage(
+                                                                    snapshot
+                                                                        .data!),
+                                                          );
+                                                        },
+                                                      )
+                                                    : null,
+                                              ),
+                                              SizedBox(
+                                                  width:
+                                                      24), // เพิ่มช่องว่างระหว่าง Avatar กับ Column
+                                              Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment
+                                                        .start, // ทำให้ Text ชิดซ้าย
+                                                children: [
+                                                  Text(
+                                                    fullname,
+                                                    style: GoogleFonts.dmSans(
+                                                      fontSize: 14,
+                                                      fontWeight:
+                                                          FontWeight.w400,
+                                                      color: const Color(
+                                                          0xFF111111),
+                                                    ),
+                                                  ),
+                                                  Text(
+                                                    formattedDate,
+                                                    style: GoogleFonts.dmSans(
+                                                      fontSize: 10,
+                                                      fontWeight:
+                                                          FontWeight.w400,
+                                                      color: const Color(
+                                                          0xFF94A2B8),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ],
                                           ),
-                                        ],
-                                      ),
-                                      child: Padding(
-                                        padding: const EdgeInsets.all(22.0),
-                                        child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            Row(
-                                              crossAxisAlignment: CrossAxisAlignment
-                                                  .start, // ทำให้ Column ชิดขอบบนสุด
-                                              mainAxisAlignment: MainAxisAlignment
-                                                  .spaceBetween, // กระจายเนื้อหาทั้งสองด้าน
-                                              children: [
-                                                Row(
-                                                  children: [
-                                                    CircleAvatar(
-                                                      radius: 20,
-                                                      backgroundImage: _imageCache
-                                                                  .containsKey(
-                                                                      avatarImageUrl) &&
-                                                              _imageCache[
-                                                                      avatarImageUrl] !=
-                                                                  null
-                                                          ? MemoryImage(_imageCache[
-                                                              avatarImageUrl]!) // ใช้ภาพจากแคช
-                                                          : null, // ถ้าไม่มีภาพในแคช
-                                                      child: !_imageCache
-                                                              .containsKey(
-                                                                  avatarImageUrl)
-                                                          ? FutureBuilder<
-                                                              Uint8List?>(
-                                                              future: fetchPostAvatar(
-                                                                  avatarImageUrl),
-                                                              builder: (context,
-                                                                  snapshot) {
-                                                                if (snapshot
-                                                                        .connectionState ==
-                                                                    ConnectionState
-                                                                        .waiting) {
-                                                                  return const Center(
-                                                                    child:
-                                                                        CircularProgressIndicator(),
-                                                                  );
-                                                                }
-                                                                if (snapshot
-                                                                        .data ==
-                                                                    null) {
-                                                                  return Image
-                                                                      .asset(
-                                                                    "assets/images/avatar.png",
-                                                                    fit: BoxFit
-                                                                        .cover,
-                                                                  );
-                                                                }
-                                                                return CircleAvatar(
-                                                                  radius: 20,
-                                                                  backgroundImage:
-                                                                      MemoryImage(
-                                                                          snapshot
-                                                                              .data!),
-                                                                );
-                                                              },
-                                                            )
-                                                          : null,
+                                          if (comment['account_id'] ==
+                                              profile?['id'])
+                                            GestureDetector(
+                                              onTap: () {
+                                                showModalBottomSheet(
+                                                  context: context,
+                                                  shape: RoundedRectangleBorder(
+                                                    borderRadius:
+                                                        BorderRadius.vertical(
+                                                      top: Radius.circular(16),
                                                     ),
-                                                    SizedBox(
-                                                        width:
-                                                            24), // เพิ่มช่องว่างระหว่าง Avatar กับ Column
-                                                    Column(
-                                                      crossAxisAlignment:
-                                                          CrossAxisAlignment
-                                                              .start, // ทำให้ Text ชิดซ้าย
-                                                      children: [
-                                                        Text(
-                                                          fullname,
-                                                          style: GoogleFonts
-                                                              .dmSans(
-                                                            fontSize: 14,
-                                                            fontWeight:
-                                                                FontWeight.w400,
-                                                            color: const Color(
-                                                                0xFF111111),
-                                                          ),
-                                                        ),
-                                                        Text(
-                                                          formattedDate,
-                                                          style: GoogleFonts
-                                                              .dmSans(
-                                                            fontSize: 10,
-                                                            fontWeight:
-                                                                FontWeight.w400,
-                                                            color: const Color(
-                                                                0xFF94A2B8),
-                                                          ),
-                                                        ),
-                                                      ],
-                                                    ),
-                                                  ],
-                                                ),
-                                                if (comment['account_id'] ==
-                                                    profile?['id'])
-                                                  GestureDetector(
-                                                    onTap: () {
-                                                      showModalBottomSheet(
-                                                        context: context,
-                                                        shape:
-                                                            RoundedRectangleBorder(
+                                                  ),
+                                                  builder:
+                                                      (BuildContext context) {
+                                                    return FractionallySizedBox(
+                                                      heightFactor:
+                                                          0.45, // กำหนดความสูงเป็น 60% ของหน้าจอ
+                                                      child: Container(
+                                                        padding:
+                                                            const EdgeInsets
+                                                                .all(16.0),
+                                                        decoration:
+                                                            BoxDecoration(
+                                                          color:
+                                                              Color(0xFFEBEFFF),
                                                           borderRadius:
                                                               BorderRadius
                                                                   .vertical(
@@ -951,219 +973,200 @@ class _SubjectDetailState extends State<SubjectDetail> {
                                                                     16),
                                                           ),
                                                         ),
-                                                        builder: (BuildContext
-                                                            context) {
-                                                          return FractionallySizedBox(
-                                                            heightFactor:
-                                                                0.45, // กำหนดความสูงเป็น 60% ของหน้าจอ
-                                                            child: Container(
-                                                              padding:
-                                                                  const EdgeInsets
-                                                                      .all(
-                                                                      16.0),
+                                                        child: Column(
+                                                          mainAxisSize:
+                                                              MainAxisSize.min,
+                                                          children: [
+                                                            Container(
+                                                              width: 42,
+                                                              height: 5,
                                                               decoration:
                                                                   BoxDecoration(
                                                                 color: Color(
-                                                                    0xFFEBEFFF),
+                                                                    0xFFCBD5E0),
                                                                 borderRadius:
                                                                     BorderRadius
-                                                                        .vertical(
-                                                                  top: Radius
-                                                                      .circular(
-                                                                          16),
-                                                                ),
+                                                                        .circular(
+                                                                            25),
                                                               ),
+                                                            ),
+                                                            SizedBox(
+                                                                height: 10),
+                                                            Container(
+                                                              color: const Color
+                                                                  .fromARGB(
+                                                                  255,
+                                                                  240,
+                                                                  240,
+                                                                  240),
                                                               child: Column(
-                                                                mainAxisSize:
-                                                                    MainAxisSize
-                                                                        .min,
                                                                 children: [
+                                                                  // ListTile สำหรับ Edit
+                                                                  // Container(
+                                                                  //   decoration:
+                                                                  //       BoxDecoration(
+                                                                  //     color: Colors
+                                                                  //         .white,
+                                                                  //     borderRadius:
+                                                                  //         BorderRadius
+                                                                  //             .only(
+                                                                  //       topLeft:
+                                                                  //           Radius.circular(12),
+                                                                  //       topRight:
+                                                                  //           Radius.circular(12),
+                                                                  //     ),
+                                                                  //   ),
+                                                                  //   child:
+                                                                  //       ListTile(
+                                                                  //     leading:
+                                                                  //         SvgPicture
+                                                                  //             .asset(
+                                                                  //       'assets/images/edit_svg.svg',
+                                                                  //       fit: BoxFit
+                                                                  //           .cover,
+                                                                  //       color: const Color(
+                                                                  //           0xff355FFF),
+                                                                  //     ),
+                                                                  //     title:
+                                                                  //         Text(
+                                                                  //       'Edit Comment',
+                                                                  //       style: GoogleFonts
+                                                                  //           .dmSans(
+                                                                  //         fontSize:
+                                                                  //             14,
+                                                                  //         fontWeight:
+                                                                  //             FontWeight.w400,
+                                                                  //         color:
+                                                                  //             Color(0xFF000000),
+                                                                  //       ),
+                                                                  //     ),
+                                                                  //     onTap:
+                                                                  //         () {},
+                                                                  //   ),
+                                                                  // ),
+
+                                                                  // ListTile สำหรับ Delete
                                                                   Container(
-                                                                    width: 42,
-                                                                    height: 5,
                                                                     decoration:
                                                                         BoxDecoration(
-                                                                      color: Color(
-                                                                          0xFFCBD5E0),
+                                                                      color: Colors
+                                                                          .white,
                                                                       borderRadius:
-                                                                          BorderRadius.circular(
-                                                                              25),
+                                                                          BorderRadius
+                                                                              .only(
+                                                                        bottomLeft:
+                                                                            Radius.circular(12),
+                                                                        bottomRight:
+                                                                            Radius.circular(12),
+                                                                      ),
                                                                     ),
-                                                                  ),
-                                                                  SizedBox(
-                                                                      height:
-                                                                          10),
-                                                                  Container(
-                                                                    color: const Color
-                                                                        .fromARGB(
-                                                                        255,
-                                                                        240,
-                                                                        240,
-                                                                        240),
                                                                     child:
-                                                                        Column(
-                                                                      children: [
-                                                                        // ListTile สำหรับ Edit
-                                                                        Container(
-                                                                          decoration:
-                                                                              BoxDecoration(
-                                                                            color:
-                                                                                Colors.white,
-                                                                            borderRadius:
-                                                                                BorderRadius.only(
-                                                                              topLeft: Radius.circular(12),
-                                                                              topRight: Radius.circular(12),
-                                                                            ),
-                                                                          ),
-                                                                          child:
-                                                                              ListTile(
-                                                                            leading:
-                                                                                SvgPicture.asset(
-                                                                              'assets/images/edit_svg.svg',
-                                                                              fit: BoxFit.cover,
-                                                                              color: const Color(0xff355FFF),
-                                                                            ),
-                                                                            title:
-                                                                                Text(
-                                                                              'Edit post',
-                                                                              style: GoogleFonts.dmSans(
-                                                                                fontSize: 14,
-                                                                                fontWeight: FontWeight.w400,
-                                                                                color: Color(0xFF000000),
-                                                                              ),
-                                                                            ),
-                                                                            onTap:
-                                                                                () {
-                                                                              final existingData = {
-                                                                                'id': id,
-                                                                                'description': description,
-                                                                                'image': image,
-                                                                                'dateTime': selectedStartDate
-                                                                              };
-
-                                                                              Navigator.push(
-                                                                                context,
-                                                                                MaterialPageRoute(
-                                                                                  builder: (context) => SubjectAddEdit(
-                                                                                    isEdit: true,
-                                                                                    initialData: existingData,
-                                                                                  ),
-                                                                                ),
-                                                                              );
-                                                                            },
-                                                                          ),
+                                                                        ListTile(
+                                                                      leading:
+                                                                          SvgPicture
+                                                                              .asset(
+                                                                        'assets/images/delete_svg.svg',
+                                                                        fit: BoxFit
+                                                                            .cover,
+                                                                        color: const Color(
+                                                                            0xffED4B9E),
+                                                                      ),
+                                                                      title:
+                                                                          Text(
+                                                                        'Delete Comment',
+                                                                        style: GoogleFonts
+                                                                            .dmSans(
+                                                                          fontSize:
+                                                                              14,
+                                                                          fontWeight:
+                                                                              FontWeight.w400,
+                                                                          color:
+                                                                              Color(0xFF000000),
                                                                         ),
-
-                                                                        // ListTile สำหรับ Delete
-                                                                        Container(
-                                                                          decoration:
-                                                                              BoxDecoration(
-                                                                            color:
-                                                                                Colors.white,
-                                                                            borderRadius:
-                                                                                BorderRadius.only(
-                                                                              bottomLeft: Radius.circular(12),
-                                                                              bottomRight: Radius.circular(12),
-                                                                            ),
-                                                                          ),
-                                                                          child:
-                                                                              ListTile(
-                                                                            leading:
-                                                                                SvgPicture.asset(
-                                                                              'assets/images/delete_svg.svg',
-                                                                              fit: BoxFit.cover,
-                                                                              color: const Color(0xffED4B9E),
-                                                                            ),
-                                                                            title:
-                                                                                Text(
-                                                                              'Delete post',
-                                                                              style: GoogleFonts.dmSans(
-                                                                                fontSize: 14,
-                                                                                fontWeight: FontWeight.w400,
-                                                                                color: Color(0xFF000000),
-                                                                              ),
-                                                                            ),
-                                                                            onTap:
-                                                                                () {
-                                                                              confirmDelete(context, id);
-                                                                            },
-                                                                          ),
-                                                                        ),
-                                                                      ],
+                                                                      ),
+                                                                      onTap:
+                                                                          () {
+                                                                        confirmDelete(
+                                                                            context,
+                                                                            commentId,
+                                                                            true);
+                                                                      },
                                                                     ),
                                                                   ),
                                                                 ],
                                                               ),
                                                             ),
-                                                          );
-                                                        },
-                                                      );
-                                                    },
-                                                    child: SvgPicture.asset(
-                                                      'assets/images/dot.svg', // ไฟล์ SVG
-                                                      fit: BoxFit.cover,
-                                                      color: const Color(
-                                                          0xff94A2B8), // สีของไอคอน
-                                                    ),
-                                                  ),
-                                              ],
-                                            ),
-                                            SizedBox(
-                                              height: 15,
-                                            ),
-                                            Text(
-                                              comment['comments_text'] ??
-                                                  'No comment',
-                                              style: GoogleFonts.dmSans(
-                                                fontSize: 14,
-                                                fontWeight: FontWeight.normal,
-                                                color: Colors.grey[700],
+                                                          ],
+                                                        ),
+                                                      ),
+                                                    );
+                                                  },
+                                                );
+                                              },
+                                              child: SvgPicture.asset(
+                                                'assets/images/dot.svg', // ไฟล์ SVG
+                                                fit: BoxFit.cover,
+                                                color: const Color(
+                                                    0xff94A2B8), // สีของไอคอน
                                               ),
                                             ),
-                                            if (image!.isNotEmpty)
-                                              Padding(
-                                                padding: const EdgeInsets.only(
-                                                    top: 15),
-                                                child: ClipRRect(
-                                                  borderRadius:
-                                                      BorderRadius.circular(
-                                                          12.0),
-                                                  child: Image.network(
-                                                    image.toString(),
-                                                    fit: BoxFit.cover,
-                                                    width: double.infinity,
-                                                    errorBuilder: (context,
-                                                        error, stackTrace) {
-                                                      return Image.asset(
-                                                        'assets/images/scholarship_program.png', // รูปภาพ fallback
-                                                        fit: BoxFit.cover,
-                                                        width: double.infinity,
-                                                        height: 200,
-                                                      );
-                                                    },
-                                                  ),
-                                                ),
-                                              ),
-                                            // else
-                                            //   ClipRRect(
-                                            //     borderRadius:
-                                            //         BorderRadius.circular(8.0),
-                                            //     child: Image.asset(
-                                            //       'assets/images/scholarship_program.png', // รูปภาพ fallback
-                                            //       fit: BoxFit.cover,
-                                            //       width: double.infinity,
-                                            //       height: 200,
-                                            //     ),
-                                            //   ),
-                                            SizedBox(height: 6),
-                                          ],
+                                        ],
+                                      ),
+                                      SizedBox(
+                                        height: 15,
+                                      ),
+                                      Text(
+                                        comment['comments_text'] ??
+                                            'No comment',
+                                        style: GoogleFonts.dmSans(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.normal,
+                                          color: Colors.grey[700],
                                         ),
                                       ),
-                                    ),
+                                      if (image!.isNotEmpty)
+                                        Padding(
+                                          padding:
+                                              const EdgeInsets.only(top: 15),
+                                          child: ClipRRect(
+                                            borderRadius:
+                                                BorderRadius.circular(12.0),
+                                            child: Image.network(
+                                              image.toString(),
+                                              fit: BoxFit.cover,
+                                              width: double.infinity,
+                                              errorBuilder:
+                                                  (context, error, stackTrace) {
+                                                return Image.asset(
+                                                  'assets/images/scholarship_program.png', // รูปภาพ fallback
+                                                  fit: BoxFit.cover,
+                                                  width: double.infinity,
+                                                  height: 200,
+                                                );
+                                              },
+                                            ),
+                                          ),
+                                        ),
+                                      // else
+                                      //   ClipRRect(
+                                      //     borderRadius:
+                                      //         BorderRadius.circular(8.0),
+                                      //     child: Image.asset(
+                                      //       'assets/images/scholarship_program.png', // รูปภาพ fallback
+                                      //       fit: BoxFit.cover,
+                                      //       width: double.infinity,
+                                      //       height: 200,
+                                      //     ),
+                                      //   ),
+                                      SizedBox(height: 6),
+                                    ],
                                   ),
-                                );
-                              },
+                                ),
+                              ),
                             ),
+                          );
+                        },
+                      ),
                     ],
                   ),
                 ),

@@ -37,8 +37,7 @@ class _NotificationListState extends State<NotificationList> {
       headers['Authorization'] = 'Bearer $token';
     }
 
-    final url =
-        "${ApiConfig.notificationUrl}/acc/${widget.id}";
+    final url = "${ApiConfig.notificationUrl}/acc/${widget.id}";
 
     try {
       final response = await http.get(Uri.parse(url), headers: headers);
@@ -90,25 +89,26 @@ class _NotificationListState extends State<NotificationList> {
                   alignment: Alignment.centerRight,
                   child: GestureDetector(
                     onTap: () {
-                      Navigator.pushReplacement(
-                        context,
-                        PageRouteBuilder(
-                          pageBuilder:
-                              (context, animation, secondaryAnimation) =>
-                                  const ProviderProfile(),
-                          transitionsBuilder:
-                              (context, animation, secondaryAnimation, child) {
-                            const begin = 0.0;
-                            const end = 1.0;
-                            const curve = Curves.easeOut;
-                            var tween = Tween(begin: begin, end: end)
-                                .chain(CurveTween(curve: curve));
-                            return FadeTransition(
-                                opacity: animation.drive(tween), child: child);
-                          },
-                          transitionDuration: const Duration(milliseconds: 300),
-                        ),
-                      );
+                      Navigator.pop(context);
+                      // Navigator.pushReplacement(
+                      //   context,
+                      //   PageRouteBuilder(
+                      //     pageBuilder:
+                      //         (context, animation, secondaryAnimation) =>
+                      //             const ProviderProfile(),
+                      //     transitionsBuilder:
+                      //         (context, animation, secondaryAnimation, child) {
+                      //       const begin = 0.0;
+                      //       const end = 1.0;
+                      //       const curve = Curves.easeOut;
+                      //       var tween = Tween(begin: begin, end: end)
+                      //           .chain(CurveTween(curve: curve));
+                      //       return FadeTransition(
+                      //           opacity: animation.drive(tween), child: child);
+                      //     },
+                      //     transitionDuration: const Duration(milliseconds: 300),
+                      //   ),
+                      // );
                     },
                     child: CircleAvatar(
                       radius: 20,
