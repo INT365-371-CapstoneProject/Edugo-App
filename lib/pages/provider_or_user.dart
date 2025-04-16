@@ -106,6 +106,7 @@ class ProviderOrUser extends StatelessWidget {
                     spacingWidget: const SizedBox(
                         width: 19), // กำหนด spacing ที่แตกต่างได้
                   ),
+                  const SizedBox(height: 30), // Add space below the last button
                 ],
               ),
             ),
@@ -156,14 +157,17 @@ class ProviderOrUser extends StatelessWidget {
                         height: 1.42857, // คำนวณจาก 20px / 14px
                       ),
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 4), // Reduced height from 8 to 4
                     Text(
                       description,
                       style: TextStyleService.getDmSans(
-                        fontSize: 11.0,
+                        fontSize: 9.0, // Reduced font size from 10.0 to 9.0
                         fontWeight: FontWeight.w200,
                         color: Color(0xFF465468),
                       ),
+                      maxLines: 4, // Limit lines to prevent excessive overflow
+                      overflow: TextOverflow
+                          .ellipsis, // Add ellipsis if it still overflows
                     ),
                   ],
                 ),
