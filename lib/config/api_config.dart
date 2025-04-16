@@ -15,8 +15,10 @@ class ApiConfig {
   static const String announceUrl = "$apiUrl/announce";
   static const String announceUserUrl = "$apiUrl/announce-user";
   static String getAnnounceImageUrl(String id) => "$apiUrl/announce/$id/image";
-  static String getAnnounceUserImageUrl(String id) => "$apiUrl/announce-user/$id/image";
-  static String getAnnounceAdminImageUrl(String id) => "$apiUrl/announce-admin/$id/image";
+  static String getAnnounceUserImageUrl(String id) =>
+      "$apiUrl/announce-user/$id/image";
+  static String getAnnounceAdminImageUrl(String id) =>
+      "$apiUrl/announce-admin/$id/image";
 
   // Search endpoints
   static const String searchAnnounceUrl = "$apiUrl/search/announce-user";
@@ -38,6 +40,8 @@ class ApiConfig {
   // Profile endpoints
   static const String profileUpdateUrl = "$apiUrl/profile/update";
   static const String profileImageUrl = "$apiUrl/profile/image";
+  static const String profileChangePasswordUrl =
+      "$apiUrl/profile/change-password"; // This line exists
 
   // Question/Answer endpoints
   static const String answerUrl = "$apiUrl/answer";

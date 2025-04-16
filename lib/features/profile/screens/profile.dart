@@ -18,6 +18,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:http/http.dart' as http;
 import 'package:edugo/main.dart'; // Import main.dart เพื่อเข้าถึง navigatorKey
+import 'package:edugo/features/profile/screens/change_password.dart'; // Import the new screen
 
 class ProviderProfile extends StatefulWidget {
   const ProviderProfile({super.key});
@@ -280,7 +281,13 @@ class _ProviderProfileState extends State<ProviderProfile> {
                     icon: Icons.lock,
                     label: "Change Password",
                     onTap: () {
-                      // Perform action
+                      // Navigate to Change Password Screen
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const ChangePasswordScreen(),
+                        ),
+                      );
                     }),
                 _buildProfileOption(
                     icon: Icons.bookmark,
