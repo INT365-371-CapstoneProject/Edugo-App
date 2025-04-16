@@ -646,7 +646,8 @@ class _HomeScreenAppState extends State<HomeScreenApp> {
                                     (context, animation, secondaryAnimation) =>
                                         ProviderDetail(
                                   initialData: existingData,
-                                  isProvider: isProvider,
+                                  // Always treat navigation from home screen as non-provider view for edit/delete buttons
+                                  isProvider: false,
                                 ),
                                 transitionsBuilder: (context, animation,
                                     secondaryAnimation, child) {

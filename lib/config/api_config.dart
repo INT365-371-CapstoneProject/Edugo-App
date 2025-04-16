@@ -5,7 +5,6 @@ class ApiConfig {
   // Auth endpoints
   static const String loginUrl = "$apiUrl/login";
   static const String logoutUrl = "$apiUrl/logout";
-  static const String registerUrl = "$apiUrl/register";
   static const String profileUrl = "$apiUrl/profile";
   static const String profileAvatarUrl = "$profileUrl/avatar";
   static const String forgotPasswordUrl = "$apiUrl/auth/forgot-password";

@@ -141,9 +141,16 @@ class _ProviderAddEditState extends State<ProviderAddEdit> {
       selectedEndDate = data['close_date'] != null
           ? DateTime.tryParse(data['close_date'])
           : null;
-      cancalImage = data['image'] ?? '';
-      _imageBytes = data['image'] ?? '';
-      selectedFileName = data['attach_file'];
+
+      // --- Start Modification ---
+      // Correctly handle null for image data
+      cancalImage = data['image'] is Uint8List ? data['image'] : null;
+      _imageBytes = data['image'] is Uint8List ? data['image'] : null;
+
+      // Correctly handle null for attach_file
+      selectedFileName =
+          data['attach_file'] is String ? data['attach_file'] : null;
+      // --- End Modification ---
 
       selectedEducationLevel = data['education_level'];
       titleController.text = title ?? '';
@@ -158,7 +165,9 @@ class _ProviderAddEditState extends State<ProviderAddEdit> {
         'category': selectedCategory,
         'publish_date': selectedStartDate?.toIso8601String(),
         'close_date': selectedEndDate?.toIso8601String(),
+        // Use the correctly assigned null/Uint8List value
         'image': cancalImage,
+        // Use the correctly assigned null/String value
         'attach_file': selectedFileName,
         'education_level': selectedEducationLevel,
       };
@@ -174,7 +183,8 @@ class _ProviderAddEditState extends State<ProviderAddEdit> {
       titleController.text = '';
       urlController.text = '';
       descriptionController.text = '';
-      selectedFileName = '';
+      // Ensure selectedFileName is initialized correctly for non-edit mode
+      selectedFileName = null; // Or '' if you prefer an empty string default
     }
   }
 
@@ -1130,14 +1140,22 @@ class _ProviderAddEditState extends State<ProviderAddEdit> {
                         onPressed: () {
                           bool hasAddScholarshipUnsavedChanges = (urlController
                                   .text.isNotEmpty ||
-                              title != null && title!.isNotEmpty ||
-                              selectedCategoryId != null &&
-                                  selectedCategoryId!.isNotEmpty ||
-                              selectedCountry != null &&
-                                  selectedCountry!.isNotEmpty ||
-                              description != null && description!.isNotEmpty ||
+                              (title != null &&
+                                  title!.isNotEmpty) || // Added null check
+                              (selectedCategoryId != null &&
+                                  selectedCategoryId!
+                                      .isNotEmpty) || // Added null check
+                              (selectedCountry != null &&
+                                  selectedCountry!
+                                      .isNotEmpty) || // Added null check
+                              (description != null &&
+                                  description!
+                                      .isNotEmpty) || // Added null check
                               selectedStartDate != null ||
-                              selectedEndDate != null);
+                              selectedEndDate != null ||
+                              _imageBytes !=
+                                  null || // Check if image was picked
+                              _pdfFileBytes != null); // Check if pdf was picked
 
                           if (hasAddScholarshipUnsavedChanges) {
                             showDialog(
@@ -1236,103 +1254,12 @@ class _ProviderAddEditState extends State<ProviderAddEdit> {
                                                 height: 41,
                                                 child: ElevatedButton(
                                                   onPressed: () {
-                                                    widget.isEdit
-                                                        ? Navigator
-                                                            .pushReplacement(
-                                                            context,
-                                                            PageRouteBuilder(
-                                                              pageBuilder: (context,
-                                                                      animation,
-                                                                      secondaryAnimation) =>
-                                                                  ProviderDetail(
-                                                                // ส่ง initialData เดิมที่มีอยู่
-                                                                initialData: {
-                                                                  ...widget
-                                                                      .initialData!, // คัดลอกข้อมูลเดิมทั้งหมด
-                                                                  // อัพเดทข้อมูลใหม่ที่ต้องการ (ถ้ามี)
-
-                                                                  'cachedImage':
-                                                                      cancalImage,
-                                                                  'attach_name':
-                                                                      selectedFileName
-                                                                },
-                                                                isProvider:
-                                                                    true,
-                                                              ),
-                                                              transitionsBuilder:
-                                                                  (context,
-                                                                      animation,
-                                                                      secondaryAnimation,
-                                                                      child) {
-                                                                const begin =
-                                                                    0.0;
-                                                                const end = 1.0;
-                                                                const curve =
-                                                                    Curves
-                                                                        .easeOut;
-
-                                                                var tween = Tween(
-                                                                        begin:
-                                                                            begin,
-                                                                        end:
-                                                                            end)
-                                                                    .chain(CurveTween(
-                                                                        curve:
-                                                                            curve));
-                                                                return FadeTransition(
-                                                                  opacity: animation
-                                                                      .drive(
-                                                                          tween),
-                                                                  child: child,
-                                                                );
-                                                              },
-                                                              transitionDuration:
-                                                                  const Duration(
-                                                                      milliseconds:
-                                                                          300),
-                                                            ),
-                                                          )
-                                                        : Navigator
-                                                            .pushReplacement(
-                                                            context,
-                                                            PageRouteBuilder(
-                                                              pageBuilder: (context,
-                                                                      animation,
-                                                                      secondaryAnimation) =>
-                                                                  const ProviderManagement(),
-                                                              transitionsBuilder:
-                                                                  (context,
-                                                                      animation,
-                                                                      secondaryAnimation,
-                                                                      child) {
-                                                                const begin =
-                                                                    0.0;
-                                                                const end = 1.0;
-                                                                const curve =
-                                                                    Curves
-                                                                        .easeOut;
-
-                                                                var tween = Tween(
-                                                                        begin:
-                                                                            begin,
-                                                                        end:
-                                                                            end)
-                                                                    .chain(CurveTween(
-                                                                        curve:
-                                                                            curve));
-                                                                return FadeTransition(
-                                                                  opacity: animation
-                                                                      .drive(
-                                                                          tween),
-                                                                  child: child,
-                                                                );
-                                                              },
-                                                              transitionDuration:
-                                                                  const Duration(
-                                                                      milliseconds:
-                                                                          300),
-                                                            ),
-                                                          );
+                                                    // Close the discard confirmation dialog first
+                                                    Navigator.of(context)
+                                                        .pop(); // ปิด Dialog
+                                                    // Then pop the current screen (ProviderAdd)
+                                                    Navigator.of(context)
+                                                        .pop(); // กลับไปหน้า ProviderDetail
                                                   },
                                                   style:
                                                       ElevatedButton.styleFrom(
@@ -1367,29 +1294,34 @@ class _ProviderAddEditState extends State<ProviderAddEdit> {
                               },
                             );
                           } else {
-                            Navigator.pushReplacement(
-                              context,
-                              PageRouteBuilder(
-                                pageBuilder:
-                                    (context, animation, secondaryAnimation) =>
-                                        const ProviderManagement(),
-                                transitionsBuilder: (context, animation,
-                                    secondaryAnimation, child) {
-                                  const begin = 0.0;
-                                  const end = 1.0;
-                                  const curve = Curves.easeOut;
+                            // --- Start Modification ---
+                            // No changes, just pop back to ProviderDetail
+                            Navigator.pop(context);
+                            // --- End Modification ---
 
-                                  var tween = Tween(begin: begin, end: end)
-                                      .chain(CurveTween(curve: curve));
-                                  return FadeTransition(
-                                    opacity: animation.drive(tween),
-                                    child: child,
-                                  );
-                                },
-                                transitionDuration:
-                                    const Duration(milliseconds: 300),
-                              ),
-                            );
+                            // Previous code navigated to ProviderManagement incorrectly
+                            // Navigator.pushReplacement(
+                            //   context,
+                            //   PageRouteBuilder(
+                            //     pageBuilder:
+                            //         (context, animation, secondaryAnimation) =>
+                            //             const ProviderManagement(),
+                            //     transitionsBuilder: (context, animation,
+                            //         secondaryAnimation, child) {
+                            //       const begin = 0.0;
+                            //       const end = 1.0;
+                            //       const curve = Curves.easeOut;
+                            //       var tween = Tween(begin: begin, end: end)
+                            //           .chain(CurveTween(curve: curve));
+                            //       return FadeTransition(
+                            //         opacity: animation.drive(tween),
+                            //         child: child,
+                            //       );
+                            //     },
+                            //     transitionDuration:
+                            //         const Duration(milliseconds: 300),
+                            //   ),
+                            // );
                           }
                         },
                         style: ElevatedButton.styleFrom(

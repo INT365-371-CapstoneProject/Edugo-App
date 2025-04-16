@@ -4,6 +4,9 @@ import 'package:edugo/config/api_config.dart';
 import 'package:edugo/features/home/screens/home_screen.dart';
 import 'package:edugo/features/scholarship/screens/provider_add.dart';
 import 'package:edugo/features/scholarship/screens/provider_management.dart';
+// --- Start Modification ---
+import 'package:edugo/features/search/screens/search_screen.dart'; // Import SearchScreen
+// --- End Modification ---
 import 'package:edugo/services/auth_service.dart';
 import 'package:edugo/services/datetime_provider_add.dart';
 import 'package:flutter/foundation.dart';
@@ -18,11 +21,17 @@ import 'package:open_file/open_file.dart';
 class ProviderDetail extends StatefulWidget {
   final bool isProvider;
   final Map<String, dynamic>? initialData;
+  // --- Start Modification ---
+  final String? previousRouteName; // Add previousRouteName parameter
+  // --- End Modification ---
 
   const ProviderDetail({
     Key? key,
     required this.isProvider,
     this.initialData,
+    // --- Start Modification ---
+    this.previousRouteName, // Initialize previousRouteName
+    // --- End Modification ---
   }) : super(key: key);
 
   @override
@@ -48,6 +57,7 @@ class _ProviderDetailState extends State<ProviderDetail> {
   List<int> announceIds = []; // เก็บแค่ announce_id
   List<dynamic> bookmarks = [];
   bool isBookmarked = false;
+  String? localPreviousRouteName; // Local variable to store route name
 
   @override
   void initState() {
@@ -55,9 +65,37 @@ class _ProviderDetailState extends State<ProviderDetail> {
     // fetchScholarshipsDetail(widget.initialData?['id']);
     fetchProfile(); // เรียกใช้ฟังก์ชันนี้เพื่อดึงข้อมูลโปรไฟล์
 
+    // --- Start Modification ---
+    // Store previousRouteName locally
+    localPreviousRouteName =
+        widget.previousRouteName ?? widget.initialData?['previousRouteName'];
+    // --- End Modification ---
+
     if (widget.initialData != null) {
+      // --- Start Modification ---
+      // Print the received data
+      print("Received initialData in ProviderDetail: ${widget.initialData}");
+      // --- End Modification ---
+
       final data = widget.initialData!;
-      id = data['id'] ?? '';
+      _initializeData(data);
+    }
+  }
+
+  void _initializeData(Map<String, dynamic>? data) {
+    if (data != null) {
+      // --- Start Modification ---
+      // Check the type of 'id' and parse if it's a String
+      if (data['id'] is String) {
+        id =
+            int.tryParse(data['id']); // Use tryParse to handle potential errors
+      } else if (data['id'] is int) {
+        id = data['id'];
+      } else {
+        id = null; // Set to null if it's neither String nor int
+      }
+      // --- End Modification ---
+
       title = data['title'] ?? 'No Title';
       description = data['description'] ?? 'No Description';
       url = data['url'] ?? 'No Website';
@@ -70,21 +108,25 @@ class _ProviderDetailState extends State<ProviderDetail> {
           ? DateTime.tryParse(data['close_date'])
           : null;
       educationLevel = data['education_level'] ?? 'No Education Level';
-      if (data['attach_name'] != null) {
-        try {
-          attachFile = utf8.decode(data['attach_name'].toString().codeUnits);
-        } catch (e) {
-          attachFile = data['attach_name'] ?? 'No Attach Files';
-        }
+
+      // --- Start Modification ---
+      // Use 'attach_file' key consistently
+      if (data['attach_file'] != null && data['attach_file'] is String) {
+        attachFile = data['attach_file'];
       } else {
         attachFile = 'No Attach Files';
       }
-      // Handle cachedImage
-      if (data['cachedImage'] != null && data['cachedImage'] is Uint8List) {
+
+      // Handle image, checking both 'image' and 'cachedImage' keys
+      if (data['image'] != null && data['image'] is Uint8List) {
+        image = data['image'];
+      } else if (data['cachedImage'] != null &&
+          data['cachedImage'] is Uint8List) {
         image = data['cachedImage'];
       } else {
-        image = null; // Fallback if no cached image is provided
+        image = null; // Fallback if no valid image data is provided
       }
+      // --- End Modification ---
     }
   }
 
@@ -331,7 +373,8 @@ class _ProviderDetailState extends State<ProviderDetail> {
       final bytes = response.bodyBytes;
 
       final dir = await getTemporaryDirectory();
-      final file = File('${dir.path}/$attachFile.pdf');
+      // Use attachFile which should now hold the correct filename
+      final file = File('${dir.path}/${attachFile ?? "downloaded_file"}.pdf');
       await file.writeAsBytes(bytes);
 
       // เปิดไฟล์ PDF
@@ -443,12 +486,21 @@ class _ProviderDetailState extends State<ProviderDetail> {
 
     return WillPopScope(
       onWillPop: () async {
+        // --- Start Modification ---
+        // Navigate back based on previousRouteName
+        Widget destination;
+        if (localPreviousRouteName == 'search') {
+          destination = const SearchScreen();
+        } else if (widget.isProvider) {
+          destination = const ProviderManagement();
+        } else {
+          destination = const HomeScreenApp();
+        }
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(
-            builder: (context) => const ProviderManagement(),
-          ),
+          MaterialPageRoute(builder: (context) => destination),
         );
+        // --- End Modification ---
         return false; // ป้องกันการย้อนกลับไปหน้าก่อนหน้า
       },
       child: Scaffold(
@@ -480,14 +532,23 @@ class _ProviderDetailState extends State<ProviderDetail> {
                               children: [
                                 GestureDetector(
                                   onTap: () {
+                                    // --- Start Modification ---
+                                    // Navigate back based on previousRouteName
+                                    Widget destination;
+                                    if (localPreviousRouteName == 'search') {
+                                      destination = const SearchScreen();
+                                    } else if (widget.isProvider) {
+                                      destination = const ProviderManagement();
+                                    } else {
+                                      destination = const HomeScreenApp();
+                                    }
                                     Navigator.pushReplacement(
                                       context,
                                       PageRouteBuilder(
                                         pageBuilder: (context, animation,
                                                 secondaryAnimation) =>
-                                            widget.isProvider
-                                                ? const ProviderManagement()
-                                                : const HomeScreenApp(),
+                                            destination,
+                                        // --- End Modification ---
                                         transitionsBuilder: (context, animation,
                                             secondaryAnimation, child) {
                                           const begin = 0.0;
@@ -677,24 +738,28 @@ class _ProviderDetailState extends State<ProviderDetail> {
                         // Type of Scholarship and Country
                         Row(
                           mainAxisAlignment: MainAxisAlignment.start,
+                          crossAxisAlignment: CrossAxisAlignment
+                              .start, // Align items to the top
                           children: [
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Type of Scholarship*',
-                                  style: GoogleFonts.dmSans(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w500,
-                                    color: Colors.black,
+                            // --- Start Modification ---
+                            Expanded(
+                              // Wrap the first Column with Expanded
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Type of Scholarship*',
+                                    style: GoogleFonts.dmSans(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w500,
+                                      color: Colors.black,
+                                    ),
                                   ),
-                                ),
-                                const SizedBox(height: 16),
-                                Padding(
-                                  padding: const EdgeInsets.only(left: 11),
-                                  child: Container(
-                                    width: 150, // กำหนดความกว้างเป็น 150px
+                                  const SizedBox(height: 16),
+                                  Padding(
+                                    padding: const EdgeInsets.only(left: 11),
                                     child: Text(
+                                      // Removed the fixed-width Container
                                       selectedScholarshipType ??
                                           'Full Scholarship',
                                       maxLines: 1, // จำกัดแค่ 1 บรรทัด
@@ -707,27 +772,29 @@ class _ProviderDetailState extends State<ProviderDetail> {
                                       ),
                                     ),
                                   ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
-                            const SizedBox(width: 49),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Country*',
-                                  style: GoogleFonts.dmSans(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w500,
-                                    color: Colors.black,
+                            const SizedBox(
+                                width: 20), // Reduced spacing slightly
+                            Expanded(
+                              // Wrap the second Column with Expanded
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Country*',
+                                    style: GoogleFonts.dmSans(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w500,
+                                      color: Colors.black,
+                                    ),
                                   ),
-                                ),
-                                const SizedBox(height: 16),
-                                Padding(
-                                  padding: const EdgeInsets.only(left: 0),
-                                  child: Container(
-                                    width: 145, // กำหนดความกว้างเป็น 150px
+                                  const SizedBox(height: 16),
+                                  Padding(
+                                    padding: const EdgeInsets.only(left: 0),
                                     child: Text(
+                                      // Removed the fixed-width Container
                                       selectedCountry ?? 'Not Specified',
                                       maxLines: 1, // จำกัดแค่ 1 บรรทัด
                                       overflow: TextOverflow
@@ -739,9 +806,10 @@ class _ProviderDetailState extends State<ProviderDetail> {
                                       ),
                                     ),
                                   ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
+                            // --- End Modification ---
                           ],
                         ),
 
@@ -775,7 +843,6 @@ class _ProviderDetailState extends State<ProviderDetail> {
 
                         // Date Selector
                         Container(
-                          height: 190,
                           padding: const EdgeInsets.symmetric(
                               horizontal: 16, vertical: 11),
                           decoration: BoxDecoration(
@@ -791,7 +858,6 @@ class _ProviderDetailState extends State<ProviderDetail> {
                         const SizedBox(height: 24),
 
                         Container(
-                          height: 150, // เพิ่มความสูงเพื่อรองรับปุ่ม
                           width: double.infinity,
                           padding: const EdgeInsets.all(14),
                           decoration: BoxDecoration(
@@ -802,6 +868,8 @@ class _ProviderDetailState extends State<ProviderDetail> {
                           ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize
+                                .min, // Added to prevent excessive height
                             children: [
                               Row(
                                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -881,10 +949,15 @@ class _ProviderDetailState extends State<ProviderDetail> {
                                 height: 36,
                                 width: double.infinity,
                                 child: ElevatedButton(
-                                  onPressed: () async => await fetchAndOpenPdf(
-                                      id!), // เรียก method _pickFile
+                                  // Disable button if attachFile is null or indicates no file
+                                  onPressed: (attachFile != null &&
+                                          attachFile != 'No Attach Files')
+                                      ? () async => await fetchAndOpenPdf(id!)
+                                      : null, // เรียก method _pickFile
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: const Color(0xFF355FFF),
+                                    disabledBackgroundColor: Colors
+                                        .grey, // Optional: style for disabled state
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(4),
                                     ),
@@ -913,10 +986,9 @@ class _ProviderDetailState extends State<ProviderDetail> {
                             ],
                           ),
                         ),
-                        const SizedBox(height: 6),
+                        const SizedBox(height: 24), // Increased spacing
 
                         Container(
-                          height: 414,
                           width: double.infinity,
                           padding: const EdgeInsets.all(14),
                           decoration: BoxDecoration(
@@ -927,6 +999,8 @@ class _ProviderDetailState extends State<ProviderDetail> {
                           ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize
+                                .min, // Added to prevent excessive height
                             children: [
                               Text(
                                 'Description*',
@@ -936,9 +1010,10 @@ class _ProviderDetailState extends State<ProviderDetail> {
                                 ),
                               ),
                               const SizedBox(height: 4),
-                              // Scrollable TextField
+                              // Scrollable TextField (Keep its height for scrolling)
                               Container(
-                                height: 353,
+                                height:
+                                    353, // Keep this height for the scrollable area
                                 width: double.infinity,
                                 decoration: BoxDecoration(
                                   border: Border.all(
@@ -965,7 +1040,7 @@ class _ProviderDetailState extends State<ProviderDetail> {
                         ),
 
                         widget.isProvider
-                            ? const SizedBox(height: 200)
+                            ? const SizedBox(height: 24) // Adjusted spacing
                             : const SizedBox(height: 20),
                       ],
                     ),
@@ -974,92 +1049,86 @@ class _ProviderDetailState extends State<ProviderDetail> {
               ),
             ),
             if (widget.isProvider)
-              SizedBox(
-                height: 113,
-                // color: const Color.fromRGBO(104, 197, 123, 1),
-                child: Align(
-                  alignment: Alignment.topCenter,
-                  child: Padding(
-                    padding: const EdgeInsets.only(
-                        top: 15.0, left: 16.0, right: 16.0),
-                    child: SizedBox(
-                      height: 48,
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed: () {
-                          // Prepare data to pass
-                          final existingData = {
-                            'id': id,
-                            'title': title,
-                            if (url == null || url == 'No Website')
-                              'url':
-                                  null, // This will only add the key 'url' with null value if the condition is met
-                            if (url != null && url != 'No Website')
-                              'url':
-                                  url, // This will add 'url' with the given value if the condition is met
-                            'category': selectedScholarshipType,
-                            'country': selectedCountry,
-                            'description': description,
-                            'image': image,
-                            'attach_file': attachFile,
-                            'published_date':
-                                selectedStartDate?.toIso8601String(),
-                            'close_date': selectedEndDate?.toIso8601String(),
-                            'education_level': educationLevel,
-                          };
+              Container(
+                // Wrap the bottom button area in a Container
+                color: Colors.white, // Ensure background color
+                padding: const EdgeInsets.only(
+                    bottom: 20,
+                    top: 10,
+                    left: 16,
+                    right: 16), // Adjust padding as needed
+                child: SizedBox(
+                  height: 48,
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      // Prepare data to pass
+                      final existingData = {
+                        'id': id,
+                        'title': title,
+                        // Use null check for url before comparison
+                        'url': (url == 'No Website') ? null : url,
+                        'category': selectedScholarshipType,
+                        'country': selectedCountry,
+                        'description': description,
+                        'image': image,
+                        // Use null check for attachFile before comparison
+                        'attach_file': (attachFile == 'No Attach Files')
+                            ? null
+                            : attachFile,
+                        'published_date': selectedStartDate?.toIso8601String(),
+                        'close_date': selectedEndDate?.toIso8601String(),
+                        'education_level': educationLevel,
+                      };
 
-                          Navigator.push(
-                            context,
-                            PageRouteBuilder(
-                              pageBuilder:
-                                  (context, animation, secondaryAnimation) =>
-                                      ProviderAddEdit(
-                                          isEdit: true,
-                                          initialData: existingData),
-                              transitionsBuilder: (context, animation,
-                                  secondaryAnimation, child) {
-                                const begin = 0.0;
-                                const end = 1.0;
-                                const curve = Curves.easeOut;
+                      Navigator.push(
+                        context,
+                        PageRouteBuilder(
+                          pageBuilder:
+                              (context, animation, secondaryAnimation) =>
+                                  ProviderAddEdit(
+                                      isEdit: true, initialData: existingData),
+                          transitionsBuilder:
+                              (context, animation, secondaryAnimation, child) {
+                            const begin = 0.0;
+                            const end = 1.0;
+                            const curve = Curves.easeOut;
 
-                                var tween = Tween(begin: begin, end: end)
-                                    .chain(CurveTween(curve: curve));
-                                return FadeTransition(
-                                  opacity: animation.drive(tween),
-                                  child: child,
-                                );
-                              },
-                              transitionDuration:
-                                  const Duration(milliseconds: 300),
-                            ),
-                          );
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF355FFF),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
+                            var tween = Tween(begin: begin, end: end)
+                                .chain(CurveTween(curve: curve));
+                            return FadeTransition(
+                              opacity: animation.drive(tween),
+                              child: child,
+                            );
+                          },
+                          transitionDuration: const Duration(milliseconds: 300),
+                        ),
+                      );
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF355FFF),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          "Edit Scholarship",
+                          style: GoogleFonts.dmSans(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w500,
+                            fontSize: 16,
                           ),
                         ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              "Edit Scholarship",
-                              style: GoogleFonts.dmSans(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w500,
-                                fontSize: 16,
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            Image.asset(
-                              'assets/images/add_new_scholarship.png',
-                              width: 21.0,
-                              height: 21.0,
-                            ),
-                          ],
+                        const SizedBox(width: 8),
+                        Image.asset(
+                          'assets/images/add_new_scholarship.png',
+                          width: 21.0,
+                          height: 21.0,
                         ),
-                      ),
+                      ],
                     ),
                   ),
                 ),

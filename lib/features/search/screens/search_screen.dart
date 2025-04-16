@@ -9,6 +9,8 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:edugo/services/auth_service.dart';
 import 'package:intl/intl.dart'; // นำเข้า DateFormat
+import 'package:edugo/features/scholarship/screens/provider_detail.dart'; // เพิ่ม import
+import 'package:edugo/features/search/screens/search_screen.dart'; // เพิ่ม import SearchScreen
 
 import '../../../services/scholarship_card.dart';
 
@@ -43,7 +45,8 @@ class _SearchScreenState extends State<SearchScreen> {
         headers['Authorization'] = 'Bearer $token';
       }
 
-      final response = await http.get(Uri.parse(ApiConfig.announceUserUrl), headers: headers);
+      final response = await http.get(Uri.parse(ApiConfig.announceUserUrl),
+          headers: headers);
 
       if (response.statusCode == 200) {
         final Map<String, dynamic> data =
@@ -423,97 +426,148 @@ class _SearchScreenState extends State<SearchScreen> {
                         return Padding(
                           padding: const EdgeInsets.only(
                               right: 12.0), // เพิ่มระยะห่างระหว่างรูป
-                          child: Column(
-                            crossAxisAlignment:
-                                CrossAxisAlignment.start, // จัด text ชิดซ้าย
-                            children: [
-                              ClipRRect(
-                                borderRadius: BorderRadius.circular(12.0),
-                                child: _imageCache.containsKey(imageUrl)
-                                    ? (_imageCache[imageUrl] != null
-                                        ? Image.memory(
-                                            _imageCache[imageUrl]!,
-                                            width: 144, // กำหนดขนาดของรูป
-                                            height:
-                                                160, // ปรับความสูงให้พอดีกับ Container
-                                            fit: BoxFit.cover,
-                                          )
-                                        : Image.asset(
-                                            "assets/images/scholarship_program.png",
-                                            width: 144, // กำหนดขนาดของรูป
-                                            height:
-                                                160, // ปรับความสูงให้พอดีกับ Container
-                                            fit: BoxFit.cover,
-                                          ))
-                                    : FutureBuilder<Uint8List?>(
-                                        future: fetchImage(imageUrl),
-                                        builder: (context, snapshot) {
-                                          if (snapshot.connectionState ==
-                                              ConnectionState.waiting) {
-                                            return const SizedBox(
-                                              width: 144, // กำหนดขนาดของรูป
-                                              height:
-                                                  160, // ปรับความสูงให้พอดีกับ Container
-                                              child: Center(
-                                                  child:
-                                                      CircularProgressIndicator()),
-                                            );
-                                          }
+                          child: GestureDetector(
+                            // Wrap with GestureDetector
+                            onTap: () async {
+                              final existingData = {
+                                'id': scholarship['id'],
+                                'title': scholarship['title'],
+                                'url': scholarship['url'],
+                                'category': scholarship['category'],
+                                'country': scholarship['country'],
+                                'description': scholarship['description'],
+                                'image': scholarship['image'],
+                                'attach_file': scholarship['attach_file'],
+                                'published_date': scholarship['published_date'],
+                                'close_date': scholarship['close_date'],
+                                'education_level':
+                                    scholarship['education_level'],
+                                'attach_name': scholarship['attach_name'],
+                              };
 
-                                          if (snapshot.data == null) {
-                                            return Image.asset(
-                                              "assets/images/scholarship_program.png",
+                              // Fetch the image and update the cache if necessary
+                              final cachedImage = await fetchImage(imageUrl);
+
+                              // Add the cached image to existingData
+                              existingData['cachedImage'] = cachedImage;
+                              // --- Start Modification ---
+                              // Pass previousRouteName
+                              existingData['previousRouteName'] = 'search';
+                              // --- End Modification ---
+
+                              Navigator.push(
+                                // Use push instead of pushReplacement if you want back button functionality
+                                context,
+                                PageRouteBuilder(
+                                  pageBuilder: (context, animation,
+                                          secondaryAnimation) =>
+                                      ProviderDetail(
+                                    initialData: existingData,
+                                    isProvider: false, // User is seeking
+                                    // --- Start Modification ---
+                                    // Pass previousRouteName as a separate parameter as well
+                                    previousRouteName: 'search',
+                                    // --- End Modification ---
+                                  ),
+                                  transitionsBuilder: (context, animation,
+                                      secondaryAnimation, child) {
+                                    const begin = 0.0;
+                                    const end = 1.0;
+                                    const curve = Curves.easeOut;
+                                    var tween = Tween(begin: begin, end: end)
+                                        .chain(CurveTween(curve: curve));
+                                    return FadeTransition(
+                                      opacity: animation.drive(tween),
+                                      child: child,
+                                    );
+                                  },
+                                  transitionDuration:
+                                      const Duration(milliseconds: 300),
+                                ),
+                              );
+                            },
+                            child: Column(
+                              crossAxisAlignment:
+                                  CrossAxisAlignment.start, // จัด text ชิดซ้าย
+                              children: [
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(12.0),
+                                  child: _imageCache.containsKey(imageUrl)
+                                      ? (_imageCache[imageUrl] != null
+                                          ? Image.memory(
+                                              _imageCache[imageUrl]!,
                                               width: 144, // กำหนดขนาดของรูป
                                               height:
                                                   160, // ปรับความสูงให้พอดีกับ Container
                                               fit: BoxFit.cover,
+                                            )
+                                          : Image.asset(
+                                              "assets/images/scholarship_program.png",
+                                              width: 144,
+                                              height: 160,
+                                              fit: BoxFit.cover,
+                                            ))
+                                      : FutureBuilder<Uint8List?>(
+                                          future: fetchImage(imageUrl),
+                                          builder: (context, snapshot) {
+                                            if (snapshot.connectionState ==
+                                                ConnectionState.waiting) {
+                                              return Container(
+                                                width: 144,
+                                                height: 160,
+                                                color: Colors.grey[200],
+                                                child: const Center(
+                                                    child:
+                                                        CircularProgressIndicator()),
+                                              );
+                                            }
+                                            if (snapshot.data == null) {
+                                              return Image.asset(
+                                                "assets/images/scholarship_program.png",
+                                                width: 144,
+                                                height: 160,
+                                                fit: BoxFit.cover,
+                                              );
+                                            }
+                                            return Image.memory(
+                                              snapshot.data!,
+                                              width: 144,
+                                              height: 160,
+                                              fit: BoxFit.cover,
                                             );
-                                          }
-
-                                          return Image.memory(
-                                            snapshot.data!,
-                                            width: 101,
-                                            height: 143,
-                                            fit: BoxFit.cover,
-                                          );
-                                        },
-                                      ),
-                              ),
-                              const SizedBox(
-                                  height:
-                                      6.0), // เพิ่มช่องว่างระหว่างรูปกับข้อความ
-                              SizedBox(
-                                width: 144, // กำหนดความกว้างให้พอดีกับรูป
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      duration, // แสดงช่วงเวลาของทุนการศึกษา
-                                      style: const TextStyle(
-                                        fontSize: 12,
-                                        color: Color.fromARGB(255, 79, 77,
-                                            228), // ทำให้ตัวอักษรสีเทาเพื่อแยกกับ title
-                                      ),
-                                    ),
-                                    const SizedBox(
-                                        height:
-                                            4.0), // เว้นระยะห่างระหว่างวันที่กับ title
-                                    Text(
-                                      scholarship[
-                                          'title'], // ใช้ชื่อทุนการศึกษา
-                                      maxLines:
-                                          2, // จำกัดบรรทัดให้ไม่เกิน 2 บรรทัด
-                                      overflow: TextOverflow
-                                          .ellipsis, // ถ้าข้อความยาวเกิน ตัดเป็น ...
-                                      style: const TextStyle(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                    ),
-                                  ],
+                                          },
+                                        ),
                                 ),
-                              ),
-                            ],
+                                const SizedBox(height: 6.0),
+                                SizedBox(
+                                  width: 144,
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        duration,
+                                        style: const TextStyle(
+                                          fontSize: 12,
+                                          color:
+                                              Color.fromARGB(255, 79, 77, 228),
+                                        ),
+                                      ),
+                                      const SizedBox(height: 4.0),
+                                      Text(
+                                        scholarship['title'],
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: const TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         );
                       },

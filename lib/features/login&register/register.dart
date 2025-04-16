@@ -45,7 +45,7 @@ class _RegisterState extends State<Register> {
 
   Future<void> registerUser() async {
     String path = widget.isProvider ? "provider" : "user";
-    final url = Uri.parse('${ApiConfig.registerUrl}/$path');
+    final url = Uri.parse('${ApiConfig.apiUrl}/$path');
     if (!_validateUserStepTwo()) return;
 
     final requestBody = _buildRequestBody();
