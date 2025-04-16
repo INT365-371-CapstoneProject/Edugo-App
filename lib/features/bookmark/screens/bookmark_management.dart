@@ -18,6 +18,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:http_parser/http_parser.dart';
+import 'package:edugo/main.dart'; // Import main.dart เพื่อเข้าถึง navigatorKey
 
 class BookmarkList extends StatefulWidget {
   final int id; // เพิ่มตัวแปร id
@@ -29,7 +30,7 @@ class BookmarkList extends StatefulWidget {
 }
 
 class _BookmarkListState extends State<BookmarkList> {
-  final AuthService authService = AuthService();
+  final AuthService authService = AuthService(navigatorKey: navigatorKey);
   List<dynamic> bookmarks = [];
   bool isFetching = false; // ป้องกันการโหลดซ้ำซ้อน
 

@@ -17,6 +17,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:http/http.dart' as http;
+import 'package:edugo/main.dart'; // Import main.dart เพื่อเข้าถึง navigatorKey
 
 class ProviderProfile extends StatefulWidget {
   const ProviderProfile({super.key});
@@ -29,7 +30,8 @@ final double coverHeight = 152;
 final double profileHeight = 90;
 
 class _ProviderProfileState extends State<ProviderProfile> {
-  final AuthService authService = AuthService();
+  // แก้ไขการสร้าง AuthService instance
+  final AuthService authService = AuthService(navigatorKey: navigatorKey);
   final top = coverHeight - profileHeight / 2;
   final bottom = profileHeight / 2;
   final arrow = const Icon(Icons.arrow_forward_ios, size: 15);
@@ -38,6 +40,7 @@ class _ProviderProfileState extends State<ProviderProfile> {
   @override
   void initState() {
     super.initState();
+    authService.checkSessionValidity(); // เพิ่มการตรวจสอบ session ที่นี่
     fetchProfile(); // โหลดข้อมูลโปรไฟล์ทันทีที่เปิดหน้านี้
     fetchAvatarImage();
   }
@@ -427,7 +430,8 @@ class _ProviderProfileState extends State<ProviderProfile> {
 
   void _handleLogout() async {
     try {
-      final AuthService authService = AuthService();
+      // ไม่ต้องสร้าง AuthService ใหม่ ใช้ instance ที่มีอยู่
+      // final AuthService authService = AuthService(navigatorKey: navigatorKey);
       String? token = await authService.getToken();
 
       // เรียก API logout

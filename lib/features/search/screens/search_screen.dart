@@ -11,6 +11,7 @@ import 'package:edugo/services/auth_service.dart';
 import 'package:intl/intl.dart'; // นำเข้า DateFormat
 import 'package:edugo/features/scholarship/screens/provider_detail.dart'; // เพิ่ม import
 import 'package:edugo/features/search/screens/search_screen.dart'; // เพิ่ม import SearchScreen
+import 'package:edugo/main.dart'; // Import main.dart เพื่อเข้าถึง navigatorKey
 
 import '../../../services/scholarship_card.dart';
 
@@ -24,7 +25,8 @@ class SearchScreen extends StatefulWidget {
 class _SearchScreenState extends State<SearchScreen> {
   int _currentIndex = 0;
   List<dynamic> scholarships = [];
-  final AuthService authService = AuthService(); // Instance of AuthService
+  final AuthService authService =
+      AuthService(navigatorKey: navigatorKey); // Instance of AuthService
   final TextEditingController _searchController = TextEditingController();
   final Map<String, Uint8List?> _imageCache = {};
 
@@ -35,9 +37,6 @@ class _SearchScreenState extends State<SearchScreen> {
   }
 
   Future<void> fetchScholarships() async {
-    const baseImageUrl =
-        "https://capstone24.sit.kmutt.ac.th/un2/api/public/images/";
-
     try {
       String? token = await authService.getToken();
       Map<String, String> headers = {}; // Explicitly type the map
@@ -57,7 +56,7 @@ class _SearchScreenState extends State<SearchScreen> {
         setState(() {
           scholarships = scholarshipData.map((scholarship) {
             scholarship['image'] = scholarship['image'] != null
-                ? baseImageUrl + scholarship['image']
+                ? "${ApiConfig.announceUserUrl}/${scholarship['id']}/image"
                 : 'assets/images/scholarship_program.png';
             scholarship['title'] = scholarship['title'] ?? 'No Title';
             scholarship['description'] =
@@ -87,7 +86,6 @@ class _SearchScreenState extends State<SearchScreen> {
     }
 
     try {
-      final AuthService authService = AuthService();
       String? token = await authService.getToken();
 
       Map<String, String> headers = {};
@@ -417,7 +415,7 @@ class _SearchScreenState extends State<SearchScreen> {
                                 DateTime.now();
 
                         final String imageUrl =
-                            "https://capstone24.sit.kmutt.ac.th/un2/api/announce/${scholarship['id']}/image";
+                            "${ApiConfig.announceUserUrl}/${scholarship['id']}/image";
 
                         // แปลงวันที่เป็นรูปแบบที่ต้องการ
                         final duration =

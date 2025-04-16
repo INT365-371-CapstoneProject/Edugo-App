@@ -10,6 +10,7 @@ import 'dart:typed_data';
 import 'package:http_parser/http_parser.dart';
 import 'package:edugo/features/profile/screens/profile.dart';
 import 'package:edugo/services/auth_service.dart';
+import 'package:edugo/main.dart'; // Import main.dart เพื่อเข้าถึง navigatorKey
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
@@ -33,7 +34,8 @@ final _formKey = GlobalKey<FormState>();
 bool isFormValid = true;
 
 class _ProviderProfileEditState extends State<ProviderProfileEdit> {
-  final AuthService authService = AuthService();
+  // แก้ไขการสร้าง AuthService instance
+  final AuthService authService = AuthService(navigatorKey: navigatorKey);
   final top = coverHeight - profileHeight / 2;
   final bottom = profileHeight / 1.5;
   final arrow = const Icon(Icons.arrow_forward_ios, size: 15);

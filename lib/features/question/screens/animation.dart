@@ -7,6 +7,7 @@ import 'package:flutter_svg/svg.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:edugo/features/home/screens/home_screen.dart';
+import 'package:edugo/main.dart'; // Import main.dart เพื่อเข้าถึง navigatorKey
 
 class AnimationQuestion extends StatefulWidget {
   final List<int> selectedCountries; // ใช้ int แทน String
@@ -23,7 +24,7 @@ class AnimationQuestion extends StatefulWidget {
 }
 
 class _AnimationQuestionState extends State<AnimationQuestion> {
-  final AuthService authService = AuthService();
+  final AuthService authService = AuthService(navigatorKey: navigatorKey);
 
   Future<void> SentAnswer() async {
     final url = Uri.parse(ApiConfig.answerUrl);

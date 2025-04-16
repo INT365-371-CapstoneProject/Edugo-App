@@ -14,6 +14,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:intl/intl.dart';
 import 'package:edugo/services/auth_service.dart';
+import 'package:edugo/main.dart'; // Import main.dart เพื่อเข้าถึง navigatorKey
 
 class ProviderManagement extends StatefulWidget {
   const ProviderManagement({super.key});
@@ -31,11 +32,13 @@ class _ProviderManagementState extends State<ProviderManagement> {
   bool isLoading = true;
   final Map<String, Uint8List?> _imageCache = {};
   String selectedStatus = "All";
-  final AuthService authService = AuthService(); // Instance of AuthService
+  final AuthService authService =
+      AuthService(navigatorKey: navigatorKey); // Instance of AuthService
 
   @override
   void initState() {
     super.initState();
+    authService.checkSessionValidity(); // เพิ่มการตรวจสอบ session ที่นี่
     _delayedLoad(); // เรียกใช้งานฟังก์ชัน _delayedLoad
   }
 
@@ -45,7 +48,7 @@ class _ProviderManagementState extends State<ProviderManagement> {
     }
 
     try {
-      final AuthService authService = AuthService();
+      final AuthService authService = AuthService(navigatorKey: navigatorKey);
       String? token = await authService.getToken();
 
       Map<String, String> headers = {};

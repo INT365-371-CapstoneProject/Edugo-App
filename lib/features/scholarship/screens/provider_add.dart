@@ -15,6 +15,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:http_parser/http_parser.dart';
+import 'package:edugo/main.dart'; // Import main.dart เพื่อเข้าถึง navigatorKey
 
 class ProviderAddEdit extends StatefulWidget {
   final bool isEdit;
@@ -73,7 +74,8 @@ class _ProviderAddEditState extends State<ProviderAddEdit> {
   bool isValidUrl = false;
   Color urlBorderColor = const Color(0xFFCBD5E0);
   final ApiService apiService = ApiService(); // สร้าง Instance ของ ApiService
-  final AuthService authService = AuthService(); // Instance of AuthService
+  final AuthService authService =
+      AuthService(navigatorKey: navigatorKey); // Instance of AuthService
 
   // สร้าง controller สำหรับ TextField
   TextEditingController titleController = TextEditingController();

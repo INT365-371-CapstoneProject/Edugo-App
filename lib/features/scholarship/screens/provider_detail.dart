@@ -4,9 +4,7 @@ import 'package:edugo/config/api_config.dart';
 import 'package:edugo/features/home/screens/home_screen.dart';
 import 'package:edugo/features/scholarship/screens/provider_add.dart';
 import 'package:edugo/features/scholarship/screens/provider_management.dart';
-// --- Start Modification ---
 import 'package:edugo/features/search/screens/search_screen.dart'; // Import SearchScreen
-// --- End Modification ---
 import 'package:edugo/services/auth_service.dart';
 import 'package:edugo/services/datetime_provider_add.dart';
 import 'package:flutter/foundation.dart';
@@ -17,21 +15,18 @@ import 'package:path_provider/path_provider.dart';
 import 'dart:convert';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:open_file/open_file.dart';
+import 'package:edugo/main.dart'; // Import main.dart เพื่อเข้าถึง navigatorKey
 
 class ProviderDetail extends StatefulWidget {
   final bool isProvider;
   final Map<String, dynamic>? initialData;
-  // --- Start Modification ---
   final String? previousRouteName; // Add previousRouteName parameter
-  // --- End Modification ---
 
   const ProviderDetail({
     Key? key,
     required this.isProvider,
     this.initialData,
-    // --- Start Modification ---
     this.previousRouteName, // Initialize previousRouteName
-    // --- End Modification ---
   }) : super(key: key);
 
   @override
@@ -39,7 +34,8 @@ class ProviderDetail extends StatefulWidget {
 }
 
 class _ProviderDetailState extends State<ProviderDetail> {
-  final AuthService authService = AuthService();
+  // แก้ไขการสร้าง AuthService instance
+  final AuthService authService = AuthService(navigatorKey: navigatorKey);
   int? id;
   String? title; // Scholarship Name
   String? description; // Description
@@ -65,17 +61,13 @@ class _ProviderDetailState extends State<ProviderDetail> {
     // fetchScholarshipsDetail(widget.initialData?['id']);
     fetchProfile(); // เรียกใช้ฟังก์ชันนี้เพื่อดึงข้อมูลโปรไฟล์
 
-    // --- Start Modification ---
     // Store previousRouteName locally
     localPreviousRouteName =
         widget.previousRouteName ?? widget.initialData?['previousRouteName'];
-    // --- End Modification ---
 
     if (widget.initialData != null) {
-      // --- Start Modification ---
       // Print the received data
       print("Received initialData in ProviderDetail: ${widget.initialData}");
-      // --- End Modification ---
 
       final data = widget.initialData!;
       _initializeData(data);
@@ -84,7 +76,6 @@ class _ProviderDetailState extends State<ProviderDetail> {
 
   void _initializeData(Map<String, dynamic>? data) {
     if (data != null) {
-      // --- Start Modification ---
       // Check the type of 'id' and parse if it's a String
       if (data['id'] is String) {
         id =
@@ -94,7 +85,6 @@ class _ProviderDetailState extends State<ProviderDetail> {
       } else {
         id = null; // Set to null if it's neither String nor int
       }
-      // --- End Modification ---
 
       title = data['title'] ?? 'No Title';
       description = data['description'] ?? 'No Description';
@@ -109,7 +99,6 @@ class _ProviderDetailState extends State<ProviderDetail> {
           : null;
       educationLevel = data['education_level'] ?? 'No Education Level';
 
-      // --- Start Modification ---
       // Use 'attach_file' key consistently
       if (data['attach_file'] != null && data['attach_file'] is String) {
         attachFile = data['attach_file'];
@@ -126,7 +115,6 @@ class _ProviderDetailState extends State<ProviderDetail> {
       } else {
         image = null; // Fallback if no valid image data is provided
       }
-      // --- End Modification ---
     }
   }
 
@@ -486,7 +474,6 @@ class _ProviderDetailState extends State<ProviderDetail> {
 
     return WillPopScope(
       onWillPop: () async {
-        // --- Start Modification ---
         // Navigate back based on previousRouteName
         Widget destination;
         if (localPreviousRouteName == 'search') {
@@ -500,7 +487,6 @@ class _ProviderDetailState extends State<ProviderDetail> {
           context,
           MaterialPageRoute(builder: (context) => destination),
         );
-        // --- End Modification ---
         return false; // ป้องกันการย้อนกลับไปหน้าก่อนหน้า
       },
       child: Scaffold(
@@ -532,7 +518,6 @@ class _ProviderDetailState extends State<ProviderDetail> {
                               children: [
                                 GestureDetector(
                                   onTap: () {
-                                    // --- Start Modification ---
                                     // Navigate back based on previousRouteName
                                     Widget destination;
                                     if (localPreviousRouteName == 'search') {
@@ -548,7 +533,6 @@ class _ProviderDetailState extends State<ProviderDetail> {
                                         pageBuilder: (context, animation,
                                                 secondaryAnimation) =>
                                             destination,
-                                        // --- End Modification ---
                                         transitionsBuilder: (context, animation,
                                             secondaryAnimation, child) {
                                           const begin = 0.0;
@@ -741,7 +725,6 @@ class _ProviderDetailState extends State<ProviderDetail> {
                           crossAxisAlignment: CrossAxisAlignment
                               .start, // Align items to the top
                           children: [
-                            // --- Start Modification ---
                             Expanded(
                               // Wrap the first Column with Expanded
                               child: Column(
@@ -809,7 +792,6 @@ class _ProviderDetailState extends State<ProviderDetail> {
                                 ],
                               ),
                             ),
-                            // --- End Modification ---
                           ],
                         ),
 

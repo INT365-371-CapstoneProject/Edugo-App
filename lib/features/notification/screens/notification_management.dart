@@ -6,6 +6,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:edugo/services/auth_service.dart';
+import 'package:edugo/main.dart'; // Import main.dart เพื่อเข้าถึง navigatorKey
 
 class NotificationList extends StatefulWidget {
   final int id; // รับค่า id ของ user
@@ -17,7 +18,8 @@ class NotificationList extends StatefulWidget {
 }
 
 class _NotificationListState extends State<NotificationList> {
-  final AuthService authService = AuthService();
+  final AuthService authService =
+      AuthService(navigatorKey: navigatorKey); // Instance of AuthService
   List<dynamic> notifications = []; // เก็บข้อมูลแจ้งเตือน
   bool isFetching = false; // ป้องกันโหลดซ้ำ
 
