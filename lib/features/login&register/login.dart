@@ -4,9 +4,11 @@ import 'package:edugo/features/login&register/forgetPassword.dart';
 import 'package:edugo/features/question/screens/question.dart';
 import 'package:edugo/pages/welcome_user_page.dart';
 import 'package:edugo/shared/utils/customBackButton.dart';
+import 'package:edugo/shared/utils/textStyle.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:edugo/features/login&register/register.dart';
 import 'package:edugo/config/api_config.dart';
+import 'package:flutter_svg/svg.dart';
 
 import '../../services/auth_service.dart';
 import 'package:flutter/material.dart';
@@ -283,164 +285,209 @@ class _LoginState extends State<Login> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Color(0xFFFFFFFF),
       body: Stack(
         children: [
           SingleChildScrollView(
-            child: Padding(
-              padding: const EdgeInsets.all(23.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  // Logo
-                  Center(
-                    child: Padding(
-                      padding: const EdgeInsets.only(top: 64.0),
-                      child: SizedBox(
-                        width: 175,
-                        height: 37.656,
-                        child: Image.asset(
-                          "assets/images/logoColor.png",
-                          fit: BoxFit.contain,
-                        ),
-                      ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                SizedBox(height: 111),
+                // Logo
+                Center(
+                  child: SizedBox(
+                    width: 175,
+                    height: 37.656,
+                    child: Image.asset(
+                      "assets/images/logoColor.png",
+                      fit: BoxFit.contain,
                     ),
                   ),
-                  const SizedBox(height: 51.34),
-                  // detail
-                  FractionallySizedBox(
-                    widthFactor: 1, // ให้เต็มความกว้างของหน้าจอ
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          "Login",
-                          style: TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        SizedBox(height: 6.49),
-                        Text(
-                          'Login to continue using the app',
-                          textAlign: TextAlign.left,
-                          style: TextStyle(
-                            fontFamily: 'DM Sans',
-                            fontSize: 16,
-                            fontWeight: FontWeight.w200,
-                            color: Color(0xFF465468),
-                          ),
-                        ),
-                        SizedBox(height: 63.51),
-                        Text(
-                          "Email / Username",
-                          style: TextStyle(
-                              fontSize: 20, fontWeight: FontWeight.bold),
-                        ),
-                        const SizedBox(height: 8),
-                        TextField(
-                          controller: _emailController,
-                          decoration: InputDecoration(
-                            hintText: "Enter your email address or username",
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(9.51),
-                              borderSide: BorderSide(
-                                color: _emailError
-                                    ? Colors.red
-                                    : Colors.transparent, // ขอบสีแดงถ้า error
-                                width: 2,
+                ),
+                const SizedBox(height: 24),
+                // detail
+                FractionallySizedBox(
+                  widthFactor: 1, // ให้เต็มความกว้างของหน้าจอ
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 23.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              "Login",
+                              style: TextStyleService.getDmSans(
+                                fontSize: 24,
+                                fontWeight: FontWeight.w600,
+                                height: 1.33333,
                               ),
                             ),
-                            filled: true,
-                            fillColor: Color(0xFFECF0F6),
-                            errorText: _emailError
-                                ? "This field is required"
-                                : null, // แสดงข้อความ error
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-
-                        // Password Field
-                        Text(
-                          "Password",
-                          style: TextStyle(
-                              fontSize: 16, fontWeight: FontWeight.bold),
-                        ),
-                        const SizedBox(height: 8),
-                        TextField(
-                          controller: _passwordController,
-                          obscureText: !_isPasswordVisible,
-                          decoration: InputDecoration(
-                            hintText: "Enter your password",
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(9.51),
-                              borderSide: BorderSide(
-                                color: _passwordError
-                                    ? Colors.red
-                                    : Colors.transparent, // ขอบสีแดงถ้า error
-                                width: 2,
+                            SizedBox(height: 6.49),
+                            Text(
+                              'Login to continue using the app',
+                              textAlign: TextAlign.left,
+                              style: TextStyleService.getDmSans(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w200,
+                                color: Color(0xFF465468),
                               ),
                             ),
-                            filled: true,
-                            fillColor: Color(0xFFECF0F6),
-                            suffixIcon: IconButton(
-                              icon: Icon(
-                                _isPasswordVisible
-                                    ? Icons.visibility
-                                    : Icons.visibility_off,
-                                color: Color(0xFFCBD5E0),
-                              ),
-                              onPressed: () {
-                                setState(() {
-                                  _isPasswordVisible = !_isPasswordVisible;
-                                });
-                              },
-                            ),
-                            errorText: _passwordError
-                                ? "This field is required"
-                                : null, // แสดงข้อความ error
-                          ),
+                          ],
                         ),
-                        const SizedBox(height: 8),
+                      ),
 
-                        // Forgot Password
-                        Align(
-                          alignment: Alignment.centerRight,
-                          child: TextButton(
-                            onPressed: () {
-                              Navigator.push(
-                                context,
-                                PageRouteBuilder(
-                                  pageBuilder: (context, animation,
-                                          secondaryAnimation) =>
-                                      const ForgetPassword(),
-                                  transitionsBuilder: (context, animation,
-                                      secondaryAnimation, child) {
-                                    const begin = 0.0;
-                                    const end = 1.0;
-                                    const curve = Curves.easeOut;
+                      SizedBox(height: 63.51),
 
-                                    var tween = Tween(begin: begin, end: end)
-                                        .chain(CurveTween(curve: curve));
-                                    return FadeTransition(
-                                      opacity: animation.drive(tween),
-                                      child: child,
-                                    );
-                                  },
-                                  transitionDuration:
-                                      const Duration(milliseconds: 300),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              "Email / Username",
+                              style: TextStyleService.getDmSans(
+                                fontSize: 20,
+                                fontWeight: FontWeight.w500,
+                                height: 1.4,
+                                color: Color(0xFF000000),
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            TextField(
+                              controller: _emailController,
+                              style: TextStyleService.getDmSans(
+                                fontSize: 14,
+                                color: Colors.black,
+                                fontWeight: FontWeight.w400,
+                              ),
+                              decoration: InputDecoration(
+                                hintText:
+                                    "Enter your email address or username",
+                                hintStyle: TextStyle(
+                                  color: Colors.black.withOpacity(0.5),
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w400,
                                 ),
-                              );
-                            },
-                            child: Text(
-                              "Forgot password?",
-                              style: TextStyle(color: Color(0xFF64738B)),
+                                filled: true,
+                                fillColor: Color(0xFFECF0F6),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: BorderSide.none,
+                                ),
+                                contentPadding: EdgeInsets.symmetric(
+                                    horizontal: 20, vertical: 16),
+                                errorText: _emailError
+                                    ? "This field is required"
+                                    : null,
+                              ),
                             ),
-                          ),
-                        ),
-                        const SizedBox(height: 24),
+                            const SizedBox(height: 16),
 
-                        // Login Button
-                        SizedBox(
+                            // Password Field
+                            Text(
+                              "Password",
+                              style: TextStyleService.getDmSans(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.w500,
+                                  height: 1.4,
+                                  color: Color(0xFF000000)),
+                            ),
+                            const SizedBox(height: 8),
+                            TextField(
+                              controller: _passwordController,
+                              obscureText: !_isPasswordVisible,
+                              style: TextStyleService.getDmSans(
+                                fontSize: 14, // ให้ใหญ่ขึ้นนิดเพื่อความชัด
+                                color: Colors.black,
+                                fontWeight: FontWeight.w400,
+                              ),
+                              decoration: InputDecoration(
+                                hintText: "Enter your password",
+                                hintStyle: TextStyle(
+                                  color: Colors.black.withOpacity(0.5),
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w400,
+                                ),
+                                filled: true,
+                                fillColor: Color(0xFFECF0F6),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(
+                                      12), // ปรับให้กลมขึ้นนิด
+                                  borderSide: BorderSide.none, // ไม่มีขอบ
+                                ),
+                                contentPadding: EdgeInsets.symmetric(
+                                    horizontal: 20, vertical: 16),
+                                suffixIcon: IconButton(
+                                  icon: Icon(
+                                    _isPasswordVisible
+                                        ? Icons.visibility
+                                        : Icons.visibility_off,
+                                    color: Color(0xFFCBD5E0),
+                                  ),
+                                  onPressed: () {
+                                    setState(() {
+                                      _isPasswordVisible = !_isPasswordVisible;
+                                    });
+                                  },
+                                ),
+                                errorText: _passwordError
+                                    ? "This field is required"
+                                    : null,
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+
+                            Align(
+                              alignment: Alignment.centerRight,
+                              child: GestureDetector(
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    PageRouteBuilder(
+                                      pageBuilder: (context, animation,
+                                              secondaryAnimation) =>
+                                          const ForgetPassword(),
+                                      transitionsBuilder: (context, animation,
+                                          secondaryAnimation, child) {
+                                        const begin = 0.0;
+                                        const end = 1.0;
+                                        const curve = Curves.easeOut;
+
+                                        var tween = Tween(
+                                                begin: begin, end: end)
+                                            .chain(CurveTween(curve: curve));
+                                        return FadeTransition(
+                                          opacity: animation.drive(tween),
+                                          child: child,
+                                        );
+                                      },
+                                      transitionDuration:
+                                          const Duration(milliseconds: 300),
+                                    ),
+                                  );
+                                },
+                                child: Text(
+                                  "Forget Password?",
+                                  style: TextStyleService.getDmSans(
+                                    fontWeight: FontWeight.w400,
+                                    color: Color(0xFF64738B),
+                                    fontSize: 16,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      const SizedBox(height: 111),
+
+                      // Login Button
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                        child: SizedBox(
                           width: double.infinity,
                           height: 50,
                           child: ElevatedButton(
@@ -453,85 +500,105 @@ class _LoginState extends State<Login> {
                             ),
                             child: Text(
                               "Login",
-                              style:
-                                  TextStyle(fontSize: 16, color: Colors.white),
+                              style: TextStyleService.getDmSans(
+                                  fontSize: 14,
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w600),
                             ),
                           ),
                         ),
-                        const SizedBox(height: 16),
-
-                        // Register Section แบ่งเป็น 2 ส่วน
-                        Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 8.0),
-                          child: Column(
-                            children: [
-                              // User Register
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Text(
-                                    "Don't have an account? ",
-                                    style: TextStyle(color: Colors.grey[600]),
-                                  ),
-                                  GestureDetector(
-                                    onTap: () {
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (context) =>
-                                              const Register(isUser: true),
-                                        ),
-                                      );
-                                    },
-                                    child: const Text(
-                                      "Register",
-                                      style: TextStyle(
-                                        color: Color(0xFF355FFF),
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-
-                              const SizedBox(height: 8),
-
-                              // Provider Register
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Text(
-                                    "Want to become a provider? ",
-                                    style: TextStyle(color: Colors.grey[600]),
-                                  ),
-                                  GestureDetector(
-                                    onTap: () {
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (context) =>
-                                              const Register(isProvider: true),
-                                        ),
-                                      );
-                                    },
-                                    child: const Text(
-                                      "Register as Provider",
-                                      style: TextStyle(
-                                        color: Color(0xFF355FFF),
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
+                      ),
+                      const SizedBox(height: 27),
+                      Center(
+                        child: SvgPicture.asset(
+                          "assets/images/line_login.svg",
+                          width: 320,
                         ),
-                      ],
-                    ),
+                      ),
+
+                      // Register Section แบ่งเป็น 2 ส่วน
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 20.0),
+                        child: Column(
+                          children: [
+                            // User Register
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  "Don't have an account? ",
+                                  style: TextStyleService.getDmSans(
+                                    color: Color(0xFF64738B),
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w400,
+                                  ),
+                                ),
+                                GestureDetector(
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            const Register(isUser: true),
+                                      ),
+                                    );
+                                  },
+                                  child: Text(
+                                    "Register",
+                                    style: TextStyleService.getDmSans(
+                                      color: Color(0xFF355FFF),
+                                      fontWeight: FontWeight.w500,
+                                      fontSize: 16,
+                                      height: 1.25,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+
+                            const SizedBox(height: 8),
+
+                            // Provider Register
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  "Want to become a provider? ",
+                                  style: TextStyleService.getDmSans(
+                                    color: Color(0xFF64738B),
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w400,
+                                  ),
+                                ),
+                                GestureDetector(
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            const Register(isProvider: true),
+                                      ),
+                                    );
+                                  },
+                                  child: Text(
+                                    "Register as Provider",
+                                    style: TextStyleService.getDmSans(
+                                      color: Color(0xFF355FFF),
+                                      fontWeight: FontWeight.w500,
+                                      fontSize: 16,
+                                      height: 1.25,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
           CustomBackButton(pageToNavigate: const WelcomeUserPage()),

@@ -1,5 +1,7 @@
 import 'dart:convert';
 import 'package:edugo/features/login&register/login.dart';
+import 'package:edugo/shared/utils/customBackButton.dart';
+import 'package:edugo/shared/utils/textStyle.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import '../../services/auth_service.dart';
@@ -348,95 +350,39 @@ class _RegisterState extends State<Register> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFFFFFFFF),
       body: SingleChildScrollView(
         child: Stack(
           children: [
             // เนื้อหาหลัก
             Column(
               children: [
+                SizedBox(height: 111), // Space at the top
                 // โลโก้ Edugo
                 Center(
-                  child: Padding(
-                    padding: const EdgeInsets.only(top: 64.0),
-                    child: SizedBox(
-                      width: 175,
-                      height: 37.656,
-                      child: Image.asset(
-                        "assets/images/logoColor.png",
-                        fit: BoxFit.contain,
-                      ),
+                  child: SizedBox(
+                    width: 175,
+                    height: 37.656,
+                    child: Image.asset(
+                      "assets/images/logoColor.png",
+                      fit: BoxFit.contain,
                     ),
                   ),
                 ),
+                SizedBox(height: 24),
                 // เนื้อหาเดิมของหน้า Register
-                Padding(
-                  padding: const EdgeInsets.all(23.0),
-                  child: Form(
-                    child: Column(
-                      children: [
-                        const SizedBox(height: 30),
-                        ..._buildStepContent(),
-                      ],
-                    ),
+                Form(
+                  child: Column(
+                    children: [
+                      ..._buildStepContent(),
+                    ],
                   ),
                 ),
               ],
             ),
 
             // ปุ่มย้อนกลับ (ปรับสไตล์และตำแหน่ง)
-            Positioned(
-              top: 64.0, // ตำแหน่งเดียวกับโลโก้
-              left: 20.0,
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(8),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
-                      spreadRadius: 1,
-                      blurRadius: 3,
-                      offset: const Offset(0, 1),
-                    ),
-                  ],
-                ),
-                child: Material(
-                  color: Colors.transparent,
-                  child: InkWell(
-                    onTap: () {
-                      Navigator.pushReplacement(
-                        context,
-                        PageRouteBuilder(
-                          pageBuilder:
-                              (context, animation, secondaryAnimation) =>
-                                  const Login(),
-                          transitionsBuilder:
-                              (context, animation, secondaryAnimation, child) {
-                            const begin = 0.0;
-                            const end = 1.0;
-                            const curve = Curves.easeOut;
-                            var tween = Tween(begin: begin, end: end)
-                                .chain(CurveTween(curve: curve));
-                            return FadeTransition(
-                                opacity: animation.drive(tween), child: child);
-                          },
-                          transitionDuration: const Duration(milliseconds: 300),
-                        ),
-                      );
-                    },
-                    child: Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Image.asset(
-                        'assets/images/back_button.png',
-                        width: 24.0,
-                        height: 24.0,
-                        color: const Color(0xFF355FFF),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
+            CustomBackButton(pageToNavigate: const Login()),
           ],
         ),
       ),
@@ -466,10 +412,15 @@ class _RegisterState extends State<Register> {
     return [
       _buildSectionTitle("Register",
           "We’ll use your email to sign you in or to create an account if you don’t have one yet."),
-      _buildLabeledTextField("Email", _controllers['email']!),
-      _buildLabeledTextField("Username", _controllers['username']!),
+      SizedBox(height: 23.85),
+      _buildLabeledTextField("Email*", _controllers['email']!),
+      SizedBox(height: 8),
+      _buildLabeledTextField("Username*", _controllers['username']!),
+      SizedBox(height: 8),
       _buildLabeledTextField("First Name*", _controllers['firstName']!),
+      SizedBox(height: 8),
       _buildLabeledTextField("Last Name*", _controllers['lastName']!),
+      SizedBox(height: 52),
       _buildNextButton(),
     ];
   }
@@ -506,9 +457,13 @@ class _RegisterState extends State<Register> {
     return [
       _buildSectionTitle("Register",
           "We’ll use your email to sign you in or to create an account."),
+      SizedBox(height: 23.85),
       _buildLabeledTextField("Email", _controllers['email']!),
+      SizedBox(height: 8),
       _buildLabeledTextField("User Name*", _controllers['username']!),
+      SizedBox(height: 8),
       _buildLabeledTextField("First Name*", _controllers['firstName']!),
+      SizedBox(height: 18),
       _buildLabeledTextField("Last Name*", _controllers['lastName']!),
       _buildNextButton(),
     ];
@@ -530,36 +485,47 @@ class _RegisterState extends State<Register> {
   Widget _buildSectionTitle(String title, String subtitle) {
     return Container(
       width: double.infinity, // บังคับให้ชิดซ้าย
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title,
-            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            subtitle,
-            style: const TextStyle(fontSize: 16),
-          ),
-          const SizedBox(height: 27.34),
-        ],
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 23.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              title,
+              style: TextStyleService.getDmSans(
+                  fontSize: 24, fontWeight: FontWeight.w600),
+            ),
+            SizedBox(height: 6.49),
+            Text(
+              subtitle,
+              style: TextStyleService.getDmSans(
+                  fontSize: 16, fontWeight: FontWeight.w200),
+            ),
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildNextButton() {
-    return SizedBox(
-      width: double.infinity,
-      height: 50,
-      child: ElevatedButton(
-        onPressed: _goToNextStep,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFF355FFF),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+      child: SizedBox(
+        width: double.infinity,
+        height: 50,
+        child: ElevatedButton(
+          onPressed: _goToNextStep,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFF355FFF),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          ),
+          child: Text("Continue",
+              style: TextStyleService.getDmSans(
+                  fontSize: 14,
+                  color: Color(0xFFFFFFFF),
+                  fontWeight: FontWeight.w600)),
         ),
-        child: const Text("Continue",
-            style: TextStyle(fontSize: 16, color: Colors.white)),
       ),
     );
   }
@@ -574,8 +540,11 @@ class _RegisterState extends State<Register> {
           backgroundColor: const Color(0xFF355FFF),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         ),
-        child: const Text("Create Account",
-            style: TextStyle(fontSize: 16, color: Colors.white)),
+        child: Text("Create Account",
+            style: TextStyleService.getDmSans(
+                fontSize: 16,
+                color: Color(0xFFFFFFFF),
+                fontWeight: FontWeight.w600)),
       ),
     );
   }
@@ -590,18 +559,37 @@ class _RegisterState extends State<Register> {
         _errors.containsKey(key); // ตรวจสอบว่ามี error หรือไม่
 
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      padding: const EdgeInsets.symmetric(horizontal: 16.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label,
-              style:
-                  const TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
-          const SizedBox(height: 5),
+          RichText(
+            text: TextSpan(
+              text: label.contains('*') ? label.split('*')[0] : label,
+              style: TextStyleService.getDmSans(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.black),
+              children: label.contains('*')
+                  ? [
+                      TextSpan(
+                        text: '*',
+                        style: TextStyle(
+                            color: Colors.red,
+                            fontSize: 20,
+                            fontWeight: FontWeight.w500),
+                      ),
+                    ]
+                  : [],
+            ),
+          ),
+          SizedBox(height: 8),
           TextField(
             controller: controller,
             obscureText: (isPassword && !_isPasswordVisible) ||
                 (isConfirmPassword && !_isConfirmPasswordVisible),
+            style: TextStyleService.getDmSans(
+                fontSize: 16, fontWeight: FontWeight.w200),
             decoration: InputDecoration(
               hintText: "Enter your ${label.split('*')[0].toLowerCase()}",
               border: OutlineInputBorder(

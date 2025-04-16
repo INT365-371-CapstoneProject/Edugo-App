@@ -153,19 +153,22 @@ class _WelcomeUserPageState extends State<WelcomeUserPage> {
                                       builder: (context) => Register(
                                             isProvider: true,
                                           )));
-                            } else if (widget.isUser) {
-                              Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                      builder: (context) => Register(
-                                            isUser: true,
-                                          )));
                             } else {
                               Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                      builder: (context) => Register()));
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => Register(
+                                    isUser: true,
+                                  ),
+                                ),
+                              );
                             }
+                            // else {
+                            //   Navigator.push(
+                            //       context,
+                            //       MaterialPageRoute(
+                            //           builder: (context) => Register()));
+                            // }
                           },
                           style: OutlinedButton.styleFrom(
                             backgroundColor: const Color(0xFFFFFFFF),
