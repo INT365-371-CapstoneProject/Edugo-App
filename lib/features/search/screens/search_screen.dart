@@ -37,9 +37,6 @@ class _SearchScreenState extends State<SearchScreen> {
   }
 
   Future<void> fetchScholarships() async {
-    const baseImageUrl =
-        "https://capstone24.sit.kmutt.ac.th/un2/api/public/images/";
-
     try {
       String? token = await authService.getToken();
       Map<String, String> headers = {}; // Explicitly type the map
@@ -59,7 +56,7 @@ class _SearchScreenState extends State<SearchScreen> {
         setState(() {
           scholarships = scholarshipData.map((scholarship) {
             scholarship['image'] = scholarship['image'] != null
-                ? baseImageUrl + scholarship['image']
+                ? "${ApiConfig.announceUserUrl}/${scholarship['id']}/image"
                 : 'assets/images/scholarship_program.png';
             scholarship['title'] = scholarship['title'] ?? 'No Title';
             scholarship['description'] =
@@ -418,7 +415,7 @@ class _SearchScreenState extends State<SearchScreen> {
                                 DateTime.now();
 
                         final String imageUrl =
-                            "https://capstone24.sit.kmutt.ac.th/un2/api/announce/${scholarship['id']}/image";
+                            "${ApiConfig.announceUserUrl}/${scholarship['id']}/image";
 
                         // แปลงวันที่เป็นรูปแบบที่ต้องการ
                         final duration =

@@ -315,12 +315,24 @@ class _LoginState extends State<Login> {
     final role = profileData['role'];
     if (role == 'provider') {
       final verify = profileData['verify'];
-      if (verify == 'No' || verify == 'Waiting') {
+      if (verify == 'No') {
+        print("Provider verification is 'No'. Logging out.");
         await _handleLogoutOnError();
-        _showLoginErrorDialog("Verification Required",
-            "Your provider account requires verification or is awaiting approval.");
-        return;
+        _showLoginErrorDialog(
+          "Verification Required",
+          "Your provider account has not been verified. Please contact support.",
+        );
+        return; // ออกจากการทำงานหลัง logout
+      } else if (verify == 'Waiting') {
+        print("Provider verification is 'Waiting'. Logging out.");
+        await _handleLogoutOnError();
+        _showLoginErrorDialog(
+          "Verification Pending",
+          "Your provider account is awaiting verification. Please wait for approval.",
+        );
+        return; // ออกจากการทำงานหลัง logout
       }
+      // ถ้า verify เป็น 'Yes' ก็ผ่าน
     }
 
     // --- ถ้าผ่านการตรวจสอบ Profile ---
