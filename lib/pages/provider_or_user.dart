@@ -53,7 +53,7 @@ class ProviderOrUser extends StatelessWidget {
                       color: Color(0xFF465468),
                     ),
                   ),
-                  const SizedBox(height: 40),
+                  const SizedBox(height: 36),
                 ],
               ),
             ),
@@ -133,7 +133,7 @@ class ProviderOrUser extends StatelessWidget {
         height: 128,
         decoration: BoxDecoration(
           border: Border.all(color: borderColor),
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(14),
         ),
         child: Padding(
           padding: rowPadding ??

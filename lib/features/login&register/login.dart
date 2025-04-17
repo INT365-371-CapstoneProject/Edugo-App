@@ -502,7 +502,7 @@ class _LoginState extends State<Login> {
                       SizedBox(height: 63.51),
 
                       Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                        padding: const EdgeInsets.symmetric(horizontal: 22.0),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -515,7 +515,7 @@ class _LoginState extends State<Login> {
                                 color: Color(0xFF000000),
                               ),
                             ),
-                            const SizedBox(height: 8),
+                            const SizedBox(height: 12),
                             TextField(
                               controller: _emailController,
                               style: TextStyleService.getDmSans(
@@ -555,7 +555,7 @@ class _LoginState extends State<Login> {
                                   height: 1.4,
                                   color: Color(0xFF000000)),
                             ),
-                            const SizedBox(height: 8),
+                            const SizedBox(height: 12),
                             TextField(
                               controller: _passwordController,
                               obscureText: !_isPasswordVisible,
@@ -630,11 +630,11 @@ class _LoginState extends State<Login> {
                                   );
                                 },
                                 child: Text(
-                                  "Forget Password?",
+                                  "Forgot Password?",
                                   style: TextStyleService.getDmSans(
                                     fontWeight: FontWeight.w400,
                                     color: Color(0xFF64738B),
-                                    fontSize: 16,
+                                    fontSize: 14,
                                   ),
                                 ),
                               ),
@@ -647,7 +647,7 @@ class _LoginState extends State<Login> {
 
                       // Login Button
                       Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                        padding: const EdgeInsets.symmetric(horizontal: 22.0),
                         child: SizedBox(
                           width: double.infinity,
                           height: 50,
@@ -679,7 +679,7 @@ class _LoginState extends State<Login> {
 
                       // Register Section แบ่งเป็น 2 ส่วน
                       Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 20.0),
+                        padding: const EdgeInsets.symmetric(vertical: 24.0),
                         child: Column(
                           children: [
                             // User Register
@@ -727,7 +727,7 @@ class _LoginState extends State<Login> {
                                   "Want to become a provider? ",
                                   style: TextStyleService.getDmSans(
                                     color: Color(0xFF64738B),
-                                    fontSize: 16,
+                                    fontSize: 14,
                                     fontWeight: FontWeight.w400,
                                   ),
                                 ),
@@ -746,7 +746,7 @@ class _LoginState extends State<Login> {
                                     style: TextStyleService.getDmSans(
                                       color: Color(0xFF355FFF),
                                       fontWeight: FontWeight.w500,
-                                      fontSize: 16,
+                                      fontSize: 14,
                                       height: 1.25,
                                     ),
                                   ),

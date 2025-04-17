@@ -89,7 +89,7 @@ class _WelcomeUserPageState extends State<WelcomeUserPage> {
                 // Buttons
                 Center(
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    padding: const EdgeInsets.symmetric(horizontal: 22),
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [

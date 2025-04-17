@@ -22,7 +22,8 @@ class _RegisterState extends State<Register> {
   bool _isPasswordVisible = false;
   bool _isConfirmPasswordVisible = false;
   bool stepOne = true, stepTwo = false, stepThree = false;
-
+  bool isLengthValidPassword = false;
+  bool isComplexityValid = false;
   Map<String, String?> _errors = {};
 
   @override
@@ -42,6 +43,15 @@ class _RegisterState extends State<Register> {
       'postalCode': TextEditingController(),
       'phone': TextEditingController(),
       'username': TextEditingController(),
+    });
+
+    _controllers['password']?.addListener(() {
+      final text = _controllers['password']!.text;
+      setState(() {
+        isLengthValidPassword = text.length >= 8 && text.length <= 20;
+        isComplexityValid =
+            RegExp(r'^(?=.*[a-zA-Z])(?=.*\d)(?=.*[^A-Za-z0-9])').hasMatch(text);
+      });
     });
   }
 
@@ -97,7 +107,14 @@ class _RegisterState extends State<Register> {
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8)),
                 ),
-                child: const Text("OK", style: TextStyle(color: Colors.white)),
+                child: Text(
+                  "OK",
+                  style: TextStyleService.getDmSans(
+                    color: Color(0xFFFFFFFF),
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
               ),
             ),
           ],
@@ -194,8 +211,18 @@ class _RegisterState extends State<Register> {
 
     bool isValid = true;
 
-    if (password.length < 6) {
-      _errors['password'] = "Password must be at least 6 characters";
+    // if (password.length < 8 || password.length > 20) {
+    //   _errors['password'] = "Password must be between 8 and 20 characters";
+    //   isValid = false;
+    // }
+
+    if (!isLengthValidPassword) {
+      _errors['password'] = "Password must be between 8 and 20 characters";
+      isValid = false;
+    }
+    if (!isComplexityValid) {
+      _errors['password'] =
+          "Password must contain letters, numbers, and special characters";
       isValid = false;
     }
 
@@ -351,40 +378,41 @@ class _RegisterState extends State<Register> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFFFFFFF),
-      body: SingleChildScrollView(
-        child: Stack(
-          children: [
-            // เนื้อหาหลัก
-            Column(
-              children: [
-                SizedBox(height: 111), // Space at the top
-                // โลโก้ Edugo
-                Center(
-                  child: SizedBox(
-                    width: 175,
-                    height: 37.656,
-                    child: Image.asset(
-                      "assets/images/logoColor.png",
-                      fit: BoxFit.contain,
+      body: Stack(
+        children: [
+          Positioned.fill(
+            child: SingleChildScrollView(
+              padding: EdgeInsets.only(bottom: 100), // กันพื้นที่ให้ปุ่ม
+              child: Column(
+                children: [
+                  SizedBox(height: 111),
+                  Center(
+                    child: SizedBox(
+                      width: 175,
+                      height: 37.656,
+                      child: Image.asset("assets/images/logoColor.png",
+                          fit: BoxFit.contain),
                     ),
                   ),
-                ),
-                SizedBox(height: 24),
-                // เนื้อหาเดิมของหน้า Register
-                Form(
-                  child: Column(
-                    children: [
-                      ..._buildStepContent(),
-                    ],
+                  SizedBox(height: 24),
+                  Form(
+                    child: Column(children: _buildStepContent()),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
+          ),
+          // ปุ่มย้อนกลับ
+          CustomBackButton(pageToNavigate: const Login()),
 
-            // ปุ่มย้อนกลับ (ปรับสไตล์และตำแหน่ง)
-            CustomBackButton(pageToNavigate: const Login()),
-          ],
-        ),
+          // ปุ่มด้านล่าง
+          Positioned(
+            left: 22,
+            right: 22,
+            bottom: 30,
+            child: _buildBottomButton(),
+          ),
+        ],
       ),
     );
   }
@@ -414,27 +442,36 @@ class _RegisterState extends State<Register> {
           "We’ll use your email to sign you in or to create an account if you don’t have one yet."),
       SizedBox(height: 23.85),
       _buildLabeledTextField("Email*", _controllers['email']!),
-      SizedBox(height: 8),
+      SizedBox(height: 12),
       _buildLabeledTextField("Username*", _controllers['username']!),
-      SizedBox(height: 8),
+      SizedBox(height: 12),
       _buildLabeledTextField("First Name*", _controllers['firstName']!),
-      SizedBox(height: 8),
+      SizedBox(height: 12),
       _buildLabeledTextField("Last Name*", _controllers['lastName']!),
       SizedBox(height: 52),
-      _buildNextButton(),
+      // _buildNextButton(),
     ];
   }
 
   List<Widget> _buildUserStepTwo() {
     return [
       _buildSectionTitle("Create a password",
-          "Create a password at least 8 characters long or a number."),
+          "Create a password at least 8 characters long or\nnumber."),
+      SizedBox(height: 15.51),
       _buildLabeledTextField("Password", _controllers['password']!,
           isPassword: true),
+      SizedBox(height: 8),
+      _buildRequirement(isLengthValidPassword, '8 - 20 characters'),
+      SizedBox(height: 4),
+      _buildRequirement(
+          isComplexityValid, 'Letters, numbers, and special character'),
+      const SizedBox(height: 8),
+      SizedBox(height: 16),
       _buildLabeledTextField(
           "Confirm Password", _controllers['confirmPassword']!,
           isConfirmPassword: true),
-      _buildCreateAccountButton(),
+      SizedBox(height: 128),
+      // _buildCreateAccountButton(),
     ];
   }
 
@@ -449,7 +486,7 @@ class _RegisterState extends State<Register> {
       _buildLabeledTextField("Country*", _controllers['country']!),
       _buildLabeledTextField("Postal Code*", _controllers['postalCode']!),
       _buildLabeledTextField("Phone*", _controllers['phone']!),
-      _buildNextButton(),
+      // _buildNextButton(),
     ];
   }
 
@@ -459,13 +496,13 @@ class _RegisterState extends State<Register> {
           "We’ll use your email to sign you in or to create an account."),
       SizedBox(height: 23.85),
       _buildLabeledTextField("Email", _controllers['email']!),
-      SizedBox(height: 8),
+      SizedBox(height: 12),
       _buildLabeledTextField("User Name*", _controllers['username']!),
-      SizedBox(height: 8),
+      SizedBox(height: 12),
       _buildLabeledTextField("First Name*", _controllers['firstName']!),
       SizedBox(height: 18),
       _buildLabeledTextField("Last Name*", _controllers['lastName']!),
-      _buildNextButton(),
+      // _buildNextButton(),
     ];
   }
 
@@ -473,13 +510,31 @@ class _RegisterState extends State<Register> {
     return [
       _buildSectionTitle(
           "Create a password", "Create a password at least 8 characters long."),
+      SizedBox(height: 23.85),
       _buildLabeledTextField("Password", _controllers['password']!,
           isPassword: true),
       _buildLabeledTextField(
           "Confirm Password", _controllers['confirmPassword']!,
           isConfirmPassword: true),
-      _buildCreateAccountButton(),
+      //_buildCreateAccountButton(),
     ];
+  }
+
+  Widget _buildBottomButton() {
+    // เช็คว่าต้องแสดงปุ่มอะไร
+    if (widget.isUser) {
+      if (stepOne || stepTwo) {
+        return stepOne ? _buildNextButton() : _buildCreateAccountButton();
+      }
+    } else if (widget.isProvider) {
+      if (stepOne ||
+          stepTwo ||
+          stepThree && _controllers['confirmPassword']!.text.isNotEmpty) {
+        if (stepOne || stepTwo) return _buildNextButton();
+        return _buildCreateAccountButton();
+      }
+    }
+    return const SizedBox.shrink();
   }
 
   Widget _buildSectionTitle(String title, String subtitle) {
@@ -508,24 +563,20 @@ class _RegisterState extends State<Register> {
   }
 
   Widget _buildNextButton() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0),
-      child: SizedBox(
-        width: double.infinity,
-        height: 50,
-        child: ElevatedButton(
-          onPressed: _goToNextStep,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF355FFF),
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-          ),
-          child: Text("Continue",
-              style: TextStyleService.getDmSans(
-                  fontSize: 14,
-                  color: Color(0xFFFFFFFF),
-                  fontWeight: FontWeight.w600)),
+    return SizedBox(
+      width: double.infinity,
+      height: 50,
+      child: ElevatedButton(
+        onPressed: _goToNextStep,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: const Color(0xFF355FFF),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         ),
+        child: Text("Continue",
+            style: TextStyleService.getDmSans(
+                fontSize: 14,
+                color: Color(0xFFFFFFFF),
+                fontWeight: FontWeight.w600)),
       ),
     );
   }
@@ -559,7 +610,7 @@ class _RegisterState extends State<Register> {
         _errors.containsKey(key); // ตรวจสอบว่ามี error หรือไม่
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+      padding: const EdgeInsets.symmetric(horizontal: 22.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -567,48 +618,54 @@ class _RegisterState extends State<Register> {
             text: TextSpan(
               text: label.contains('*') ? label.split('*')[0] : label,
               style: TextStyleService.getDmSans(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w500,
-                  color: Colors.black),
+                fontSize: 20,
+                fontWeight: FontWeight.w500,
+                color: Color(0xFF000000),
+              ),
               children: label.contains('*')
                   ? [
                       TextSpan(
                         text: '*',
-                        style: TextStyle(
-                            color: Colors.red,
-                            fontSize: 20,
-                            fontWeight: FontWeight.w500),
+                        style: TextStyleService.getDmSans(
+                          color: Colors.red,
+                          fontSize: 20,
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
                     ]
                   : [],
             ),
           ),
-          SizedBox(height: 8),
+          SizedBox(height: 12),
           TextField(
             controller: controller,
             obscureText: (isPassword && !_isPasswordVisible) ||
                 (isConfirmPassword && !_isConfirmPasswordVisible),
             style: TextStyleService.getDmSans(
-                fontSize: 16, fontWeight: FontWeight.w200),
+              fontSize: 16,
+              fontWeight: FontWeight.w200,
+              color: Color(0xFF000000),
+            ),
             decoration: InputDecoration(
               hintText: "Enter your ${label.split('*')[0].toLowerCase()}",
+              contentPadding: const EdgeInsets.all(16), // เพิ่ม padding ตรงนี้
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(9.51),
                 borderSide: hasError
                     ? const BorderSide(color: Colors.red, width: 2.0)
-                    : BorderSide.none, // ใช้สีแดงตอนไม่ได้โฟกัส
+                    : BorderSide.none,
               ),
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(9.51),
                 borderSide: hasError
                     ? const BorderSide(color: Colors.red, width: 2.0)
-                    : BorderSide.none, // ใช้สีแดงตอนไม่ได้โฟกัส
+                    : BorderSide.none,
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(9.51),
                 borderSide: hasError
                     ? const BorderSide(color: Colors.red, width: 2.0)
-                    : BorderSide(color: Color(0xFFC0CDFF)), // ใช้สี
+                    : const BorderSide(color: Color(0xFFECF0F6)),
               ),
               filled: true,
               fillColor: const Color(0xFFECF0F6),
@@ -634,14 +691,41 @@ class _RegisterState extends State<Register> {
           ),
           if (hasError)
             Padding(
-              padding: const EdgeInsets.only(top: 5, left: 5),
+              padding: const EdgeInsets.only(top: 5),
               child: Text(
                 _errors[key]!,
-                style: const TextStyle(color: Colors.red, fontSize: 14),
+                style: TextStyleService.getDmSans(
+                    color: Colors.red,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w400),
               ),
             ),
         ],
       ),
     );
   }
+}
+
+Widget _buildRequirement(bool isValid, String text) {
+  return Padding(
+    padding: const EdgeInsets.symmetric(horizontal: 22.0),
+    child: Row(
+      children: [
+        Icon(
+          isValid ? Icons.check_circle : Icons.radio_button_unchecked,
+          color: isValid ? Colors.green : Color(0xFF94A2B8),
+          size: 12,
+        ),
+        const SizedBox(width: 8),
+        Text(
+          text,
+          style: TextStyleService.getDmSans(
+            fontWeight: FontWeight.w200,
+            color: isValid ? Colors.green : Color(0xFF94A2B8),
+            fontSize: 11,
+          ),
+        ),
+      ],
+    ),
+  );
 }

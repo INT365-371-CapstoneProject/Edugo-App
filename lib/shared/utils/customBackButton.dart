@@ -13,7 +13,7 @@ class CustomBackButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return Positioned(
       top: 63.0,
-      left: 16.0,
+      left: 22.0,
       child: Container(
         width: 32.0,
         height: 32.0,
