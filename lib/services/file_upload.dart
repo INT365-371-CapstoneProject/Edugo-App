@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 import 'dart:io'; // สำหรับ File I/O
+import 'package:edugo/shared/utils/textStyle.dart';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -143,8 +144,7 @@ class _AttachFileState extends State<AttachFile> {
                   children: [
                     Text(
                       'Attach File',
-                      style: TextStyle(
-                        fontFamily: 'DM Sans',
+                      style: TextStyleService.getDmSans(
                         fontSize: 14,
                         fontStyle: FontStyle.normal,
                         fontWeight: FontWeight.w600,
@@ -155,8 +155,7 @@ class _AttachFileState extends State<AttachFile> {
                     SizedBox(height: 2),
                     Text(
                       '*upload PDF file with maximum size 50 MB',
-                      style: TextStyle(
-                        fontFamily: 'DM Sans',
+                      style: TextStyleService.getDmSans(
                         fontSize: 12,
                         fontWeight: FontWeight.normal,
                         color: Color(0xFF94A2B8),

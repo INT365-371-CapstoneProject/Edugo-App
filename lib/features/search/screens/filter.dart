@@ -1,4 +1,5 @@
 import 'package:edugo/services/auth_service.dart';
+import 'package:edugo/shared/utils/textStyle.dart';
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
@@ -82,14 +83,16 @@ class _FilterDrawerState extends State<FilterDrawer> {
             padding: const EdgeInsets.all(16.0),
             child: Text(
               "Search Details",
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              style: TextStyleService.getDmSans(
+                  fontSize: 20, fontWeight: FontWeight.bold),
             ),
           ),
           Divider(),
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: Text("Type of Scholarship",
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                style: TextStyleService.getDmSans(
+                    fontSize: 16, fontWeight: FontWeight.bold)),
           ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -116,7 +119,8 @@ class _FilterDrawerState extends State<FilterDrawer> {
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: Text("Educational Level",
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                style: TextStyleService.getDmSans(
+                    fontSize: 16, fontWeight: FontWeight.bold)),
           ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0),

@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:edugo/features/notification/screens/notification_management.dart';
 import 'package:edugo/features/scholarship/screens/provider_detail.dart';
 import 'package:edugo/features/search/screens/search_list.dart';
+import 'package:edugo/shared/utils/textStyle.dart';
 import 'package:flutter/material.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:edugo/services/footer.dart';
@@ -77,7 +78,7 @@ class CountryFilter extends StatelessWidget {
                   return Center(
                     child: Text(
                       name.substring(0, 1),
-                      style: const TextStyle(
+                      style: TextStyleService.getDmSans(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
                         fontSize: 18,
@@ -91,7 +92,10 @@ class CountryFilter extends StatelessWidget {
           const SizedBox(height: 6.0),
           Text(
             name,
-            style: const TextStyle(fontSize: 12),
+            style: TextStyleService.getDmSans(
+                fontSize: 11,
+                color: Color(0xFF64738B),
+                fontWeight: FontWeight.w400),
             overflow: TextOverflow.ellipsis,
           ),
         ],
@@ -363,24 +367,22 @@ class _HomeScreenAppState extends State<HomeScreenApp> {
                         ),
                         const SizedBox(height: 16),
                         // Welcome Text
-                        const Text(
+                        Text(
                           "Hello, there",
-                          style: TextStyle(
-                            fontFamily: "DM Sans",
-                            color: Colors.white,
-                            fontSize: 20,
-                            fontWeight: FontWeight.normal,
-                          ),
+                          style: TextStyleService.getDmSans(
+                              color: Color(0xFFFFFFFF),
+                              fontSize: 20,
+                              fontWeight: FontWeight.w500,
+                              height: 1.4),
                         ),
                         const SizedBox(height: 4.0),
-                        const Text(
+                        Text(
                           "Discover community and experiences",
-                          style: TextStyle(
-                            fontFamily: "DM Sans",
-                            color: Colors.white70,
+                          style: TextStyleService.getDmSans(
+                            color: Color(0xFFFFFFFF),
                             fontSize: 14,
                             height: 1.0,
-                            fontWeight: FontWeight.normal,
+                            fontWeight: FontWeight.w200,
                           ),
                         ),
                         const SizedBox(height: 16.0),
@@ -407,11 +409,10 @@ class _HomeScreenAppState extends State<HomeScreenApp> {
                                   child: TextField(
                                     decoration: InputDecoration(
                                       hintText: "Search Experiences",
-                                      hintStyle: TextStyle(
-                                        fontFamily: "DM Sans",
+                                      hintStyle: TextStyleService.getDmSans(
                                         fontSize: 16,
                                         fontWeight: FontWeight.w400,
-                                        color: Colors.grey[400],
+                                        color: const Color(0xFF94A2B8),
                                       ),
                                       border: InputBorder.none,
                                     ),
@@ -520,11 +521,12 @@ class _HomeScreenAppState extends State<HomeScreenApp> {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
-                            const Text(
+                            Text(
                               "Discover Many Countries",
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
+                              style: TextStyleService.getDmSans(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w400,
+                                color: Color(0xFF000000),
                               ),
                             ),
                             TextButton(
@@ -552,12 +554,11 @@ class _HomeScreenAppState extends State<HomeScreenApp> {
                                 );
                               },
                               child: Text(
-                                _showAllCountries ? "See Less" : "See More",
-                                style: const TextStyle(
-                                  color: Color(0xFF355FFF),
-                                  fontWeight: FontWeight.w500,
-                                  decoration: TextDecoration.underline,
-                                ),
+                                _showAllCountries ? "See Less" : "See more >>",
+                                style: TextStyleService.getDmSans(
+                                    color: Color(0xFF355FFF),
+                                    fontWeight: FontWeight.w500,
+                                    fontSize: 11),
                               ),
                             ),
                           ],
@@ -593,8 +594,10 @@ class _HomeScreenAppState extends State<HomeScreenApp> {
                       alignment: Alignment.centerLeft,
                       child: Text(
                         "Features & New Scholarships",
-                        style: TextStyle(
-                            fontSize: 18, fontWeight: FontWeight.bold),
+                        style: TextStyleService.getDmSans(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w400,
+                            color: const Color(0xFF000000)),
                       ),
                     ),
                   ),
@@ -728,20 +731,20 @@ class _HomeScreenAppState extends State<HomeScreenApp> {
                                     children: [
                                       Text(
                                         duration,
-                                        style: const TextStyle(
-                                          fontSize: 12,
-                                          color:
-                                              Color.fromARGB(255, 79, 77, 228),
-                                        ),
+                                        style: TextStyleService.getDmSans(
+                                            fontSize: 8,
+                                            color: Color(0xFF2A4CCC),
+                                            fontWeight: FontWeight.w400),
                                       ),
                                       const SizedBox(height: 4.0),
                                       Text(
                                         scholarship['title'],
                                         maxLines: 2,
                                         overflow: TextOverflow.ellipsis,
-                                        style: const TextStyle(
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.w500,
+                                        style: TextStyleService.getDmSans(
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.w600,
+                                          color: Color(0xFF000000),
                                         ),
                                       ),
                                     ],

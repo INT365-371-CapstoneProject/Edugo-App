@@ -6,6 +6,7 @@ import 'package:edugo/features/subject/subject_add_edit.dart';
 import 'package:edugo/features/subject/subject_manage.dart';
 import 'package:edugo/services/auth_service.dart';
 import 'package:edugo/services/datetime_provider_add.dart';
+import 'package:edugo/shared/utils/textStyle.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -1212,8 +1213,8 @@ class _SubjectDetailState extends State<SubjectDetail> {
                             controller: _commentController,
                             decoration: InputDecoration(
                               hintText: 'What about your opinion?',
-                              hintStyle: TextStyle(
-                                fontSize: 13,
+                              hintStyle: TextStyleService.getDmSans(
+                                fontSize: 11,
                                 color: Color(0xFF747474),
                                 fontWeight: FontWeight.w200,
                               ),
@@ -1221,9 +1222,10 @@ class _SubjectDetailState extends State<SubjectDetail> {
                               contentPadding:
                                   EdgeInsets.symmetric(vertical: 12),
                             ),
-                            style: TextStyle(
+                            style: TextStyleService.getDmSans(
                               fontSize: 13,
                               color: Colors.black,
+                              fontWeight: FontWeight.w400,
                             ),
                             maxLines: 1,
                             keyboardType: TextInputType.text,

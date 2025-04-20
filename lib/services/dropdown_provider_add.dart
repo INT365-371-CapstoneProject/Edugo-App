@@ -1,3 +1,4 @@
+import 'package:edugo/shared/utils/textStyle.dart';
 import 'package:flutter/material.dart';
 
 class CustomDropdownExample extends StatefulWidget {
@@ -167,13 +168,15 @@ class _CustomDropdownExampleState extends State<CustomDropdownExample> {
                           : widget.type == 'country'
                               ? 'Select country of scholarship'
                               : 'Select education level of scholarship'),
-                  style: TextStyle(
+                  style: TextStyleService.getDmSans(
                     color: (selectedValue == 'Select type of scholarship' ||
                             selectedValue == 'Select country of scholarship' ||
                             selectedValue ==
                                 'Select education level of scholarship')
                         ? const Color(0xFFCBD5E0)
                         : const Color(0xFF000000),
+                    fontSize: 16,
+                    fontWeight: FontWeight.w400,
                   ),
                 ),
                 Transform.rotate(

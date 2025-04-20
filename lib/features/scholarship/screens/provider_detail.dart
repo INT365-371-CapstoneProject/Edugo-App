@@ -7,6 +7,7 @@ import 'package:edugo/features/scholarship/screens/provider_management.dart';
 import 'package:edugo/features/search/screens/search_screen.dart'; // Import SearchScreen
 import 'package:edugo/services/auth_service.dart';
 import 'package:edugo/services/datetime_provider_add.dart';
+import 'package:edugo/shared/utils/textStyle.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -875,8 +876,7 @@ class _ProviderDetailState extends State<ProviderDetail> {
                                       children: [
                                         Text(
                                           'Attach File',
-                                          style: TextStyle(
-                                            fontFamily: 'DM Sans',
+                                          style: TextStyleService.getDmSans(
                                             fontSize: 14,
                                             fontStyle: FontStyle.normal,
                                             fontWeight: FontWeight.w600,
@@ -887,8 +887,7 @@ class _ProviderDetailState extends State<ProviderDetail> {
                                         SizedBox(height: 2),
                                         Text(
                                           '*upload PDF file with maximum size 50 MB',
-                                          style: TextStyle(
-                                            fontFamily: 'DM Sans',
+                                          style: TextStyleService.getDmSans(
                                             fontSize: 12,
                                             fontWeight: FontWeight.normal,
                                             color: Color(0xFF94A2B8),

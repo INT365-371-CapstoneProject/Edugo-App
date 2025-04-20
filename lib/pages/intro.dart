@@ -153,10 +153,9 @@ class _IntroScreenState extends State<IntroScreen> {
                       ),
                       minimumSize: const Size.fromHeight(48),
                     ),
-                    child: const Text(
+                    child: Text(
                       'Next',
-                      style: TextStyle(
-                        fontFamily: "DM Sans",
+                      style: TextStyleService.getDmSans(
                         color: Color(0xFFFFFFFF),
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
@@ -183,8 +182,7 @@ class _IntroScreenState extends State<IntroScreen> {
                     ),
                     child: Text(
                       isIntro1 ? 'Skip' : 'Back',
-                      style: const TextStyle(
-                        fontFamily: "DM Sans",
+                      style: TextStyleService.getDmSans(
                         color: Color(0xFF0E1729),
                         fontSize: 14,
                         fontWeight: FontWeight.w600,

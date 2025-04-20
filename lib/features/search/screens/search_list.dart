@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:edugo/features/search/screens/filter.dart';
 import 'package:edugo/services/auth_service.dart';
 import 'package:edugo/services/scholarship_card.dart';
+import 'package:edugo/shared/utils/textStyle.dart';
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
@@ -143,11 +144,10 @@ class _SearchListState extends State<SearchList> {
                               controller: _searchController,
                               decoration: InputDecoration(
                                 hintText: "Search Experiences",
-                                hintStyle: TextStyle(
-                                  fontFamily: "DM Sans",
+                                hintStyle: TextStyleService.getDmSans(
                                   fontSize: 16,
                                   fontWeight: FontWeight.w400,
-                                  color: Colors.grey[400],
+                                  color: Color.fromARGB(255, 130, 130, 132),
                                 ),
                                 border: InputBorder.none,
                               ),
@@ -208,7 +208,10 @@ class _SearchListState extends State<SearchList> {
             Center(
               child: Text(
                 "Showing results for: ${widget.searchQuery}",
-                style: const TextStyle(fontSize: 18),
+                style: TextStyleService.getDmSans(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w400,
+                ),
               ),
             ),
             scholarships.isNotEmpty

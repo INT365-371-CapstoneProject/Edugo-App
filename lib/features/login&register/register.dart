@@ -1,8 +1,13 @@
 import 'dart:convert';
+import 'dart:math';
 import 'package:edugo/features/login&register/login.dart';
 import 'package:edugo/shared/utils/customBackButton.dart';
+import 'package:edugo/shared/utils/loading.dart';
 import 'package:edugo/shared/utils/textStyle.dart';
+import 'package:email_validator/email_validator.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:http/http.dart' as http;
 import '../../services/auth_service.dart';
 import 'package:edugo/features/home/screens/home_screen.dart';
@@ -23,12 +28,22 @@ class _RegisterState extends State<Register> {
   bool _isConfirmPasswordVisible = false;
   bool stepOne = true, stepTwo = false, stepThree = false;
   bool isLengthValidPassword = false;
-  bool isComplexityValid = false;
+  bool isLowerPassword = false;
+  bool isUpperPassword = false;
+  bool isSpecialPassword = false;
+  // bool isComplexityValid = false;
   Map<String, String?> _errors = {};
+  // List<String> _countries = [];
+  // String? _selectedCountry;
+  // bool _isLoading = true;
+  // List<String> _cities = [];
+
+  // String? _selectedCity;
 
   @override
   void initState() {
     super.initState();
+    // fetchCountries();
     _controllers.addAll({
       'email': TextEditingController(),
       'password': TextEditingController(),
@@ -48,11 +63,112 @@ class _RegisterState extends State<Register> {
     _controllers['password']?.addListener(() {
       final text = _controllers['password']!.text;
       setState(() {
-        isLengthValidPassword = text.length >= 8 && text.length <= 20;
-        isComplexityValid =
-            RegExp(r'^(?=.*[a-zA-Z])(?=.*\d)(?=.*[^A-Za-z0-9])').hasMatch(text);
+        isLengthValidPassword = text.length >= 8;
+        // isComplexityValid =
+        //     RegExp(r'^(?=.*[a-zA-Z])(?=.*\d)(?=.*[^A-Za-z0-9])').hasMatch(text);
+        isLowerPassword = RegExp(r'[a-z]').hasMatch(text);
+        isUpperPassword = RegExp(r'[A-Z]').hasMatch(text);
+        isSpecialPassword = RegExp(r'[^A-Za-z0-9]').hasMatch(text);
       });
     });
+  }
+
+  // Future<void> fetchCountries() async {
+  //   final url =
+  //       Uri.parse('https://countriesnow.space/api/v0.1/countries/positions');
+
+  //   try {
+  //     final response = await http.get(url);
+  //     if (response.statusCode == 200) {
+  //       final data = json.decode(response.body);
+  //       final List countriesData = data['data'];
+  //       setState(() {
+  //         _countries = countriesData
+  //             .map<String>((item) => item['name'] as String)
+  //             .toList();
+  //         _isLoading = false;
+  //       });
+  //     } else {
+  //       throw Exception("Failed to load countries");
+  //     }
+  //   } catch (e) {
+  //     setState(() {
+  //       _isLoading = false;
+  //     });
+  //     print("Error fetching countries: $e");
+  //   }
+  // }
+
+  // Future<void> fetchCities(String country) async {
+  //   final url = Uri.parse(
+  //     'https://countriesnow.space/api/v0.1/countries/cities/q?country=${Uri.encodeQueryComponent(country)}',
+  //   );
+
+  //   try {
+  //     final response = await http.get(url);
+
+  //     if (response.statusCode == 200) {
+  //       final data = json.decode(response.body);
+  //       final List<dynamic> citiesData = data['data'];
+  //       setState(() {
+  //         _cities = citiesData.cast<String>();
+  //         _selectedCity = null;
+  //       });
+  //     } else {
+  //       print(response.body);
+  //       throw Exception("Failed to load cities");
+  //     }
+  //   } catch (e) {
+  //     print("Error fetching cities: $e");
+  //   }
+  // }
+
+  void _showCustomLoadingDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) {
+        return Dialog(
+          backgroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(30),
+          ),
+          child: SizedBox(
+            width: 300, // ปรับขนาดให้เหมาะสมกับเนื้อหา
+            height: 360,
+            child: Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  GradientFadeSpinner(),
+                  const SizedBox(height: 24),
+                  Text(
+                    "Please wait...",
+                    style: TextStyleService.getDmSans(
+                      fontSize: 22,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.black87,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    "We're logging you in",
+                    style: TextStyleService.getDmSans(
+                      fontSize: 16,
+                      color: Colors.grey,
+                      fontWeight: FontWeight.w300,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
   }
 
   Future<void> registerUser() async {
@@ -61,8 +177,9 @@ class _RegisterState extends State<Register> {
     if (!_validateUserStepTwo()) return;
 
     final requestBody = _buildRequestBody();
-
     if (requestBody == null) return;
+
+    _showCustomLoadingDialog(context);
 
     try {
       final response = await http.post(
@@ -75,44 +192,96 @@ class _RegisterState extends State<Register> {
       );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        _showSuccessDialog(); // แสดง PopUp เมื่อสมัครสำเร็จ
+        if (mounted) {
+          Navigator.pop(context); // ปิด Loading Dialog
+        }
+        widget.isProvider
+            ? _showSuccessProviderDialog()
+            : _showSuccessUserDialog(Login());
       } else {
-        _showErrorDialog("Registration Failed", response.body);
+        String errorMessage = "Registration failed. Please try again.";
+
+        try {
+          final decoded = json.decode(response.body);
+          if (decoded is Map) {
+            if (decoded.containsKey('error')) {
+              errorMessage = decoded['error'];
+            } else if (decoded.containsKey('message')) {
+              errorMessage = decoded['message'];
+            }
+          }
+        } catch (e) {
+          // Handle JSON decoding error if needed
+          print("Error decoding response: $e");
+        }
+
+        _showErrorDialog("Registration Failed", errorMessage);
       }
     } catch (e) {
       _showErrorDialog("Error", "Something went wrong. Please try again.");
     }
   }
 
-  void _showSuccessDialog() {
+  void _showSuccessProviderDialog() {
     showDialog(
       context: context,
-      barrierDismissible: false, // กดข้างนอกแล้วไม่ปิด
+      barrierDismissible: false,
       builder: (BuildContext context) {
         return AlertDialog(
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          title: const Text("Success", textAlign: TextAlign.center),
-          content: const Text("Your account has been successfully created!",
-              textAlign: TextAlign.center),
+          backgroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          titlePadding: const EdgeInsets.only(top: 40),
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 19, vertical: 24),
+          actionsPadding: const EdgeInsets.only(bottom: 25),
+          title: Column(
+            children: [
+              SizedBox(
+                  height: 131,
+                  width: 132,
+                  child: SvgPicture.asset("assets/images/waiting.svg")),
+              const SizedBox(height: 0),
+            ],
+          ),
+          content: Text(
+            "Your account is under review.\nOur team will approve it within\n1-2 business days, and we’ll\nnotify you as soon as it's ready.",
+            textAlign: TextAlign.center,
+            style: TextStyleService.getDmSans(
+                fontSize: 14,
+                color: Color(0xFF000000),
+                fontWeight: FontWeight.w400,
+                height: 1.7),
+          ),
           actions: [
             Center(
-              child: ElevatedButton(
-                onPressed: () {
-                  Navigator.of(context).pop(); // ปิด Popup
-                  _navigateToHome(); // ไปหน้า Home
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF355FFF),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8)),
-                ),
-                child: Text(
-                  "OK",
-                  style: TextStyleService.getDmSans(
-                    color: Color(0xFFFFFFFF),
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 19.0),
+                child: SizedBox(
+                  width: double.infinity, // ความกว้างที่ต้องการ
+                  height: 56, // ความสูงที่ต้องการ
+                  child: ElevatedButton(
+                    onPressed: () {
+                      Navigator.of(context).pop(); // ปิด Popup
+                      _navigateToHome(); // ไปที่หน้า Home
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Color(0xFF355FFF),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 32, vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      elevation: 0,
+                    ),
+                    child: Text(
+                      "Let’s Discover",
+                      style: TextStyleService.getDmSans(
+                          fontSize: 14,
+                          color: Color(0xFFFFFFFF),
+                          fontWeight: FontWeight.w600),
+                    ),
                   ),
                 ),
               ),
@@ -123,33 +292,215 @@ class _RegisterState extends State<Register> {
     );
   }
 
+  void _showSuccessUserDialog(Widget page) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return Dialog(
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          child: SizedBox(
+            width: 300,
+            height: 360, // ปรับความสูงเพิ่มนิดเพื่อใส่ปุ่ม
+            child: Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Image.asset(
+                    "assets/images/success_check.png",
+                    width: 120,
+                    height: 120,
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    "Registration Successful",
+                    textAlign: TextAlign.center,
+                    style: TextStyleService.getDmSans(
+                      color: Colors.green,
+                      fontSize: 20,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    "You can now log in to your account.",
+                    textAlign: TextAlign.center,
+                    style: TextStyleService.getDmSans(
+                      color: Colors.black87,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w400,
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  Center(
+                    child: ElevatedButton(
+                      onPressed: () {
+                        Navigator.pop(context); // ปิด Loading Dialog
+                        _navigateToHome(); // ไปที่หน้า Home
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.green,
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 32, vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        elevation: 0,
+                      ),
+                      child: Text(
+                        "Go to login",
+                        style: TextStyleService.getDmSans(
+                            fontSize: 16,
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  // void _showSuccessUserDialog() {
+  //   showDialog(
+  //     context: context,
+  //     barrierDismissible: false,
+  //     builder: (BuildContext context) {
+  //       return AlertDialog(
+  //         backgroundColor: Colors.white,
+  //         shape: RoundedRectangleBorder(
+  //           borderRadius: BorderRadius.circular(20),
+  //         ),
+  //         titlePadding: const EdgeInsets.only(top: 24),
+  //         contentPadding:
+  //             const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+  //         actionsPadding: const EdgeInsets.only(bottom: 16),
+  //         title: Column(
+  //           children: [
+  //             Icon(Icons.check_circle_outline, color: Colors.green, size: 150),
+  //             const SizedBox(height: 12),
+  //             Text(
+  //               "Registration Successful",
+  //               textAlign: TextAlign.center,
+  //               style: TextStyleService.getDmSans(
+  //                 color: Colors.green,
+  //                 fontSize: 20,
+  //                 fontWeight: FontWeight.bold,
+  //               ),
+  //             ),
+  //           ],
+  //         ),
+  //         content: Text(
+  //           "Your account has been created.\nYou can now log in to your account.",
+  //           textAlign: TextAlign.center,
+  //           style: TextStyleService.getDmSans(
+  //               fontSize: 16,
+  //               color: Colors.black87,
+  //               fontWeight: FontWeight.w400),
+  //         ),
+  //         actions: [
+  //           Center(
+  //             child: ElevatedButton(
+  //               onPressed: () {
+  //                 _navigateToHome(); // ไปที่หน้า Home
+  //               },
+  //               style: ElevatedButton.styleFrom(
+  //                 backgroundColor: Colors.green,
+  //                 padding:
+  //                     const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+  //                 shape: RoundedRectangleBorder(
+  //                   borderRadius: BorderRadius.circular(12),
+  //                 ),
+  //                 elevation: 0,
+  //               ),
+  //               child: Text(
+  //                 "Go to login",
+  //                 style: TextStyleService.getDmSans(
+  //                     fontSize: 16,
+  //                     color: Colors.white,
+  //                     fontWeight: FontWeight.w600),
+  //               ),
+  //             ),
+  //           ),
+  //         ],
+  //       );
+  //     },
+  //   );
+  // }
+
   void _showErrorDialog(String title, String message) {
     showDialog(
       context: context,
-      barrierDismissible: false, // กดข้างนอกแล้วไม่ปิด
       builder: (BuildContext context) {
-        return AlertDialog(
+        return Dialog(
           shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          title: Text(title,
-              textAlign: TextAlign.center,
-              style: const TextStyle(color: Colors.red)),
-          content: Text(message, textAlign: TextAlign.center),
-          actions: [
-            Center(
-              child: ElevatedButton(
-                onPressed: () {
-                  Navigator.of(context).pop(); // ปิด Popup
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.red,
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8)),
-                ),
-                child: const Text("OK", style: TextStyle(color: Colors.white)),
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+          child: SizedBox(
+            width: 300,
+            height: 360,
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Image.asset(
+                    'assets/images/failmark.png',
+                    height: 120,
+                    width: 120,
+                  ),
+                  const SizedBox(height: 20),
+                  Text(
+                    title,
+                    textAlign: TextAlign.center,
+                    style: TextStyleService.getDmSans(
+                      color: Colors.red,
+                      fontSize: 24,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    message,
+                    textAlign: TextAlign.center,
+                    style: TextStyleService.getDmSans(
+                      color: Colors.black,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w400,
+                    ),
+                  ),
+                  const SizedBox(height: 30),
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.redAccent,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 32, vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      elevation: 0,
+                    ),
+                    child: Text(
+                      "Try Again",
+                      style: TextStyleService.getDmSans(
+                        fontSize: 16,
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
-          ],
+          ),
         );
       },
     );
@@ -167,14 +518,11 @@ class _RegisterState extends State<Register> {
 
     bool isValid = true;
 
-    // ตรวจสอบอีเมล
-    final emailRegex = RegExp(r'^[^@]+@[^@]+\.[^@]+');
-
     if (email.length == 0) {
       _errors['email'] = "Please enter your email address";
       isValid = false;
-    } else if (!emailRegex.hasMatch(email)) {
-      _errors['email'] = "Invalid email format. Please enter a valid email";
+    } else if (!EmailValidator.validate(email)) {
+      _errors['email'] = "Invalid email format. Ex: example@gmail.com";
       isValid = false;
     }
 
@@ -211,16 +559,19 @@ class _RegisterState extends State<Register> {
 
     bool isValid = true;
 
-    // if (password.length < 8 || password.length > 20) {
-    //   _errors['password'] = "Password must be between 8 and 20 characters";
-    //   isValid = false;
-    // }
-
     if (!isLengthValidPassword) {
       _errors['password'] = "Password must be between 8 and 20 characters";
       isValid = false;
     }
-    if (!isComplexityValid) {
+    if (!isUpperPassword) {
+      _errors['password'] =
+          "Password must contain letters, numbers, and special characters";
+      isValid = false;
+    } else if (!isLowerPassword) {
+      _errors['password'] =
+          "Password must contain letters, numbers, and special characters";
+      isValid = false;
+    } else if (!isSpecialPassword) {
       _errors['password'] =
           "Password must contain letters, numbers, and special characters";
       isValid = false;
@@ -244,34 +595,85 @@ class _RegisterState extends State<Register> {
       _errors.clear(); // เคลียร์ error ก่อนตรวจสอบ
     });
 
-    final email = _controllers['email']!.text.trim();
-    final username = _controllers['username']!.text.trim();
-    final firstName = _controllers['firstName']!.text.trim();
-    final lastName = _controllers['lastName']!.text.trim();
+    final companyName = _controllers['companyName']!.text.trim();
+    final address = _controllers['address']!.text.trim();
+    final city = _controllers['city']!.text.trim();
+    final country = _controllers['country']!.text.trim();
+    final postalCode = _controllers['postalCode']!.text.trim();
+    final phone = _controllers['phone']!.text.trim();
+    final website = _controllers['website']!.text.trim();
 
     bool isValid = true;
 
-    // ตรวจสอบอีเมล
-    final emailRegex = RegExp(r'^[^@]+@[^@]+\.[^@]+');
-    if (!emailRegex.hasMatch(email)) {
-      _errors['email'] = "Invalid email format";
-      isValid = false;
-    }
-
     // ตรวจสอบ Username, First Name และ Last Name
-    if (username.length < 5) {
-      _errors['username'] = "Must be at least 5 characters";
+    if (companyName.isEmpty) {
+      _errors['companyName'] = "Company Name is required";
+      isValid = false;
+    } else if (companyName.length < 5) {
+      _errors['companyName'] =
+          "Company name must be at least 5 characters long";
       isValid = false;
     }
 
-    if (firstName.length < 2 || firstName.length > 25) {
-      _errors['firstName'] = "Must be between 2 and 25 characters";
+    if (address.isEmpty) {
+      _errors['address'] = "Address is required";
+      isValid = false;
+    } else if (address.length < 5) {
+      _errors['address'] = "Address must be at least 5 characters long";
+      isValid = false;
+    } else if (address.length > 100) {
+      _errors['address'] = "Address must be less than 100 characters long";
       isValid = false;
     }
 
-    if (lastName.length < 2 || lastName.length > 25) {
-      _errors['lastName'] = "Must be between 2 and 25 characters";
+    if (city.isEmpty) {
+      _errors['city'] = "City is required";
       isValid = false;
+    } else if (city.length < 5) {
+      _errors['city'] = "City must be at least 5 characters long";
+      isValid = false;
+    } else if (city.length > 100) {
+      _errors['city'] = "City must be less than 100 characters long";
+      isValid = false;
+    }
+
+    if (country.isEmpty) {
+      _errors['country'] = "Country is required";
+      isValid = false;
+    } else if (country.length < 5) {
+      _errors['country'] = "Country must be at least 5 characters long";
+      isValid = false;
+    } else if (country.length > 100) {
+      _errors['country'] = "Country must be less than 100 characters long";
+      isValid = false;
+    }
+    if (postalCode.isEmpty) {
+      _errors['postalCode'] = "Postal Code is required";
+      isValid = false;
+    } else if (postalCode.length < 5) {
+      _errors['postalCode'] = "Postal Code must be at least 5 characters long";
+      isValid = false;
+    } else if (postalCode.length > 20) {
+      _errors['postalCode'] =
+          "Postal Code must be less than 20 characters long";
+      isValid = false;
+    }
+    if (phone.isEmpty) {
+      _errors['phone'] = "Phone is required";
+      isValid = false;
+    } else if (phone.length < 8) {
+      _errors['phone'] = "Phone must be at least 8 digit";
+      isValid = false;
+    }
+
+    if (website.isNotEmpty) {
+      final websitePattern =
+          RegExp(r'^https:\/\/[a-zA-Z0-9\-\.]+\.[a-zA-Z]{2,}(\/.*)?$');
+      if (!websitePattern.hasMatch(website)) {
+        _errors['website'] =
+            "Website must start with https:// and contain a valid domain (e.g. .com, .org)";
+        isValid = false;
+      }
     }
 
     setState(() {}); // อัปเดต UI
@@ -351,9 +753,11 @@ class _RegisterState extends State<Register> {
         if (!_validateUserStepTwo()) return;
         stepTwo = false;
       } else if (stepOne && widget.isProvider) {
+        if (!_validateProviderStepOne()) return;
         stepOne = false;
         stepTwo = true;
       } else if (stepTwo && widget.isProvider) {
+        if (!_validateUserStepOne()) return;
         stepTwo = false;
         stepThree = true;
       }
@@ -378,14 +782,17 @@ class _RegisterState extends State<Register> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFFFFFFF),
+      // ปิด auto resize ตอนคีย์บอร์ดขึ้น
+      resizeToAvoidBottomInset: false,
       body: Stack(
         children: [
+          // ใช้ SingleChildScrollView และเลื่อนได้แม้ resize ถูกปิด
           Positioned.fill(
             child: SingleChildScrollView(
-              padding: EdgeInsets.only(bottom: 100), // กันพื้นที่ให้ปุ่ม
+              padding: const EdgeInsets.only(bottom: 100),
               child: Column(
                 children: [
-                  SizedBox(height: 111),
+                  const SizedBox(height: 111),
                   Center(
                     child: SizedBox(
                       width: 175,
@@ -394,7 +801,7 @@ class _RegisterState extends State<Register> {
                           fit: BoxFit.contain),
                     ),
                   ),
-                  SizedBox(height: 24),
+                  const SizedBox(height: 24),
                   Form(
                     child: Column(children: _buildStepContent()),
                   ),
@@ -402,15 +809,88 @@ class _RegisterState extends State<Register> {
               ),
             ),
           ),
-          // ปุ่มย้อนกลับ
-          CustomBackButton(pageToNavigate: const Login()),
 
-          // ปุ่มด้านล่าง
+          // ปุ่มย้อนกลับ
+          // CustomBackButton(pageToNavigate: const Login()),
+
+          Positioned(
+            top: 63.0,
+            left: 22.0,
+            child: Container(
+              width: 32.0,
+              height: 32.0,
+              decoration: BoxDecoration(
+                color: const Color(0xFFFFFFFF),
+                borderRadius: BorderRadius.circular(4.0),
+                border: Border.all(
+                  color: const Color(0xFFCBD5E0),
+                  width: 1,
+                ),
+              ),
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(4.0),
+                  onTap: () {
+                    setState(() {
+                      if (stepThree) {
+                        stepThree = false;
+                        stepTwo = true;
+                      } else if (stepTwo) {
+                        stepTwo = false;
+                        stepOne = true;
+                      } else if (stepOne) {
+                        Navigator.pushReplacement(
+                          context,
+                          PageRouteBuilder(
+                            pageBuilder:
+                                (context, animation, secondaryAnimation) =>
+                                    Login(),
+                            transitionsBuilder: (context, animation,
+                                secondaryAnimation, child) {
+                              const begin = 0.0;
+                              const end = 1.0;
+                              const curve = Curves.easeOut;
+                              var tween = Tween(begin: begin, end: end)
+                                  .chain(CurveTween(curve: curve));
+                              return FadeTransition(
+                                  opacity: animation.drive(tween),
+                                  child: child);
+                            },
+                            transitionDuration:
+                                const Duration(milliseconds: 300),
+                          ),
+                        );
+                      }
+                    });
+                  },
+                  child: Align(
+                    alignment: Alignment.center,
+                    child: SizedBox(
+                      width: 9.0,
+                      height: 15.0,
+                      child: SvgPicture.asset(
+                        'assets/images/back.svg',
+                        fit: BoxFit.cover,
+                        color: const Color(0xFF000000),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+
+          // ปุ่มด้านล่าง — แยกไว้แบบไม่ให้คีย์บอร์ดดัน
           Positioned(
             left: 22,
             right: 22,
             bottom: 30,
-            child: _buildBottomButton(),
+            child: MediaQuery.removeViewInsets(
+              context: context,
+              removeBottom: true,
+              child: _buildBottomButton(),
+            ),
           ),
         ],
       ),
@@ -428,9 +908,9 @@ class _RegisterState extends State<Register> {
       if (stepOne) {
         return _buildProviderStepOne();
       } else if (stepTwo) {
-        return _buildProviderStepTwo();
+        return _buildUserStepOne();
       } else if (stepThree) {
-        return _buildProviderStepThree();
+        return _buildUserStepTwo();
       }
     }
     return [];
@@ -461,10 +941,14 @@ class _RegisterState extends State<Register> {
       _buildLabeledTextField("Password", _controllers['password']!,
           isPassword: true),
       SizedBox(height: 8),
-      _buildRequirement(isLengthValidPassword, '8 - 20 characters'),
+      _buildRequirement(isLengthValidPassword, 'Must be least 8 characters'),
       SizedBox(height: 4),
-      _buildRequirement(
-          isComplexityValid, 'Letters, numbers, and special character'),
+      _buildRequirement(isLowerPassword, '1 Lowercase character (a-z)'),
+      SizedBox(height: 4),
+      _buildRequirement(isUpperPassword, "1 uppercase character (a-z)"),
+      SizedBox(height: 4),
+      _buildRequirement(isSpecialPassword,
+          "At least 1 special character (e.g. ! @ # \$ % .)"),
       const SizedBox(height: 8),
       SizedBox(height: 16),
       _buildLabeledTextField(
@@ -479,12 +963,20 @@ class _RegisterState extends State<Register> {
     return [
       _buildSectionTitle(
           "Become our Scholarship Provider", "Fill in the details to proceed."),
+      SizedBox(height: 23.85),
       _buildLabeledTextField("Company Name*", _controllers['companyName']!),
+      SizedBox(height: 12),
       _buildLabeledTextField("Website", _controllers['website']!),
+      SizedBox(height: 12),
       _buildLabeledTextField("Address*", _controllers['address']!),
-      _buildLabeledTextField("City*", _controllers['city']!),
+      SizedBox(height: 12),
       _buildLabeledTextField("Country*", _controllers['country']!),
+      SizedBox(height: 12),
+      _buildLabeledTextField("City*", _controllers['city']!),
+      SizedBox(height: 12),
+
       _buildLabeledTextField("Postal Code*", _controllers['postalCode']!),
+      SizedBox(height: 12),
       _buildLabeledTextField("Phone*", _controllers['phone']!),
       // _buildNextButton(),
     ];
@@ -606,8 +1098,7 @@ class _RegisterState extends State<Register> {
         .firstWhere((entry) => entry.value == controller,
             orElse: () => MapEntry("", TextEditingController()))
         .key;
-    final bool hasError =
-        _errors.containsKey(key); // ตรวจสอบว่ามี error หรือไม่
+    final bool hasError = _errors.containsKey(key);
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 22.0),
@@ -637,58 +1128,243 @@ class _RegisterState extends State<Register> {
             ),
           ),
           SizedBox(height: 12),
-          TextField(
-            controller: controller,
-            obscureText: (isPassword && !_isPasswordVisible) ||
-                (isConfirmPassword && !_isConfirmPasswordVisible),
-            style: TextStyleService.getDmSans(
-              fontSize: 16,
-              fontWeight: FontWeight.w200,
-              color: Color(0xFF000000),
+
+          // ✅ เงื่อนไขพิเศษสำหรับ Country ให้ใช้ Dropdown
+          // if (key == 'country')
+          //   DropdownButtonFormField<String>(
+          //     isExpanded: true,
+          //     value:
+          //         _countries.contains(controller.text) ? controller.text : null,
+          //     items: _countries.map((String country) {
+          //       return DropdownMenuItem<String>(
+          //         value: country,
+          //         child: Text(
+          //           country,
+          //           overflow: TextOverflow.ellipsis,
+          //           style: TextStyleService.getDmSans(
+          //             fontSize: 16,
+          //             fontWeight: FontWeight.w200,
+          //           ),
+          //         ),
+          //       );
+          //     }).toList(),
+          //     onChanged: (value) {
+          //       if (value != null) {
+          //         setState(() {
+          //           _selectedCountry = value;
+          //           _controllers['country']?.text = value;
+
+          //           // Reset city when country changes
+          //           _selectedCity = null;
+          //           _controllers['city']?.text = ''; // or null as required
+          //         });
+          //         fetchCities(value); // Fetch cities again
+          //       }
+          //     },
+          //     decoration: InputDecoration(
+          //       isDense: true,
+          //       contentPadding:
+          //           const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+          //       border: OutlineInputBorder(
+          //         borderRadius: BorderRadius.circular(9.51),
+          //         borderSide: hasError
+          //             ? const BorderSide(color: Colors.red, width: 2.0)
+          //             : BorderSide.none,
+          //       ),
+          //       enabledBorder: OutlineInputBorder(
+          //         borderRadius: BorderRadius.circular(9.51),
+          //         borderSide: hasError
+          //             ? const BorderSide(color: Colors.red, width: 2.0)
+          //             : BorderSide.none,
+          //       ),
+          //       focusedBorder: OutlineInputBorder(
+          //         borderRadius: BorderRadius.circular(9.51),
+          //         borderSide: hasError
+          //             ? const BorderSide(color: Colors.red, width: 2.0)
+          //             : const BorderSide(color: Color(0xFFECF0F6)),
+          //       ),
+          //       filled: true,
+          //       fillColor: const Color(0xFFECF0F6),
+          //     ),
+          //     hint: Text(
+          //       "Please select your country",
+          //       style: TextStyleService.getDmSans(
+          //         fontSize: 16,
+          //         fontWeight: FontWeight.w200,
+          //         color: Color(0xFF000000),
+          //       ),
+          //     ),
+          //   )
+          // else if (key == 'city')
+          //   DropdownButtonFormField<String>(
+          //     isExpanded: true,
+          //     value: _cities.contains(controller.text)
+          //         ? controller.text
+          //         : null, // ตรวจสอบว่า controller.text มีใน _cities
+          //     items: _cities.map((String city) {
+          //       return DropdownMenuItem<String>(
+          //         value: city,
+          //         child: Text(
+          //           city,
+          //           overflow: TextOverflow.ellipsis,
+          //           style: TextStyleService.getDmSans(
+          //             fontSize: 16,
+          //             fontWeight: FontWeight.w200,
+          //           ),
+          //         ),
+          //       );
+          //     }).toList(),
+          //     onChanged: (value) {
+          //       if (value != null) {
+          //         setState(() {
+          //           _selectedCity = value;
+          //           controller.text = value;
+          //         });
+          //       }
+          //     },
+          //     decoration: InputDecoration(
+          //       isDense: true,
+          //       contentPadding: const EdgeInsets.symmetric(
+          //         vertical: 16,
+          //         horizontal: 16,
+          //       ),
+          //       border: OutlineInputBorder(
+          //         borderRadius: BorderRadius.circular(9.51),
+          //         borderSide: hasError
+          //             ? const BorderSide(color: Colors.red, width: 2.0)
+          //             : BorderSide.none,
+          //       ),
+          //       enabledBorder: OutlineInputBorder(
+          //         borderRadius: BorderRadius.circular(9.51),
+          //         borderSide: hasError
+          //             ? const BorderSide(color: Colors.red, width: 2.0)
+          //             : BorderSide.none,
+          //       ),
+          //       focusedBorder: OutlineInputBorder(
+          //         borderRadius: BorderRadius.circular(9.51),
+          //         borderSide: hasError
+          //             ? const BorderSide(color: Colors.red, width: 2.0)
+          //             : const BorderSide(color: Color(0xFFECF0F6)),
+          //       ),
+          //       filled: true,
+          //       fillColor: const Color(0xFFECF0F6),
+          //     ),
+          //     hint: Text(
+          //       "Please select your city",
+          //       style: TextStyleService.getDmSans(
+          //         fontSize: 16,
+          //         fontWeight: FontWeight.w200,
+          //         color: Color(0xFF000000),
+          //       ),
+          //     ),
+          //   )
+          if (key == 'phone')
+            TextField(
+              controller: controller,
+              keyboardType: TextInputType.number,
+              inputFormatters: [
+                FilteringTextInputFormatter.digitsOnly, // เฉพาะตัวเลข
+                LengthLimitingTextInputFormatter(
+                    15), // จำกัดจำนวนตัวเลขที่กรอกได้ 15 ตัว
+              ],
+              obscureText: (isPassword && !_isPasswordVisible) ||
+                  (isConfirmPassword && !_isConfirmPasswordVisible),
+              style: TextStyleService.getDmSans(
+                fontSize: 16,
+                fontWeight: FontWeight.w200,
+                color: Color(0xFF000000),
+              ),
+              decoration: InputDecoration(
+                hintText: "Enter your phone number",
+                hintStyle: TextStyleService.getDmSans(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w200,
+                  color: Color(0xFF000000),
+                ),
+                contentPadding: const EdgeInsets.all(16),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(9.51),
+                  borderSide: hasError
+                      ? const BorderSide(color: Colors.red, width: 2.0)
+                      : BorderSide.none,
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(9.51),
+                  borderSide: hasError
+                      ? const BorderSide(color: Colors.red, width: 2.0)
+                      : BorderSide.none,
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(9.51),
+                  borderSide: hasError
+                      ? const BorderSide(color: Colors.red, width: 2.0)
+                      : const BorderSide(color: Color(0xFFECF0F6)),
+                ),
+                filled: true,
+                fillColor: const Color(0xFFECF0F6),
+              ),
+            )
+          else
+            TextField(
+              controller: controller,
+              obscureText: (isPassword && !_isPasswordVisible) ||
+                  (isConfirmPassword && !_isConfirmPasswordVisible),
+              style: TextStyleService.getDmSans(
+                fontSize: 16,
+                fontWeight: FontWeight.w200,
+                color: Color(0xFF000000),
+              ),
+              decoration: InputDecoration(
+                hintText: label.toLowerCase().contains('email')
+                    ? "Enter your email (Ex. example@gmail.com)"
+                    : "Enter your ${label.split('*')[0].toLowerCase()}",
+                hintStyle: TextStyleService.getDmSans(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w200,
+                  color: Color(0xFF000000),
+                ),
+                contentPadding: const EdgeInsets.all(16),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(9.51),
+                  borderSide: hasError
+                      ? const BorderSide(color: Colors.red, width: 2.0)
+                      : BorderSide.none,
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(9.51),
+                  borderSide: hasError
+                      ? const BorderSide(color: Colors.red, width: 2.0)
+                      : BorderSide.none,
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(9.51),
+                  borderSide: hasError
+                      ? const BorderSide(color: Colors.red, width: 2.0)
+                      : const BorderSide(color: Color(0xFFECF0F6)),
+                ),
+                filled: true,
+                fillColor: const Color(0xFFECF0F6),
+                suffixIcon: isPassword
+                    ? IconButton(
+                        icon: Icon(_isPasswordVisible
+                            ? Icons.visibility
+                            : Icons.visibility_off),
+                        onPressed: () => setState(
+                            () => _isPasswordVisible = !_isPasswordVisible),
+                      )
+                    : isConfirmPassword
+                        ? IconButton(
+                            icon: Icon(_isConfirmPasswordVisible
+                                ? Icons.visibility
+                                : Icons.visibility_off),
+                            onPressed: () => setState(() =>
+                                _isConfirmPasswordVisible =
+                                    !_isConfirmPasswordVisible),
+                          )
+                        : null,
+              ),
             ),
-            decoration: InputDecoration(
-              hintText: "Enter your ${label.split('*')[0].toLowerCase()}",
-              contentPadding: const EdgeInsets.all(16), // เพิ่ม padding ตรงนี้
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(9.51),
-                borderSide: hasError
-                    ? const BorderSide(color: Colors.red, width: 2.0)
-                    : BorderSide.none,
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(9.51),
-                borderSide: hasError
-                    ? const BorderSide(color: Colors.red, width: 2.0)
-                    : BorderSide.none,
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(9.51),
-                borderSide: hasError
-                    ? const BorderSide(color: Colors.red, width: 2.0)
-                    : const BorderSide(color: Color(0xFFECF0F6)),
-              ),
-              filled: true,
-              fillColor: const Color(0xFFECF0F6),
-              suffixIcon: isPassword
-                  ? IconButton(
-                      icon: Icon(_isPasswordVisible
-                          ? Icons.visibility
-                          : Icons.visibility_off),
-                      onPressed: () => setState(
-                          () => _isPasswordVisible = !_isPasswordVisible),
-                    )
-                  : isConfirmPassword
-                      ? IconButton(
-                          icon: Icon(_isConfirmPasswordVisible
-                              ? Icons.visibility
-                              : Icons.visibility_off),
-                          onPressed: () => setState(() =>
-                              _isConfirmPasswordVisible =
-                                  !_isConfirmPasswordVisible),
-                        )
-                      : null,
-            ),
-          ),
+
           if (hasError)
             Padding(
               padding: const EdgeInsets.only(top: 5),
@@ -704,28 +1380,28 @@ class _RegisterState extends State<Register> {
       ),
     );
   }
-}
 
-Widget _buildRequirement(bool isValid, String text) {
-  return Padding(
-    padding: const EdgeInsets.symmetric(horizontal: 22.0),
-    child: Row(
-      children: [
-        Icon(
-          isValid ? Icons.check_circle : Icons.radio_button_unchecked,
-          color: isValid ? Colors.green : Color(0xFF94A2B8),
-          size: 12,
-        ),
-        const SizedBox(width: 8),
-        Text(
-          text,
-          style: TextStyleService.getDmSans(
-            fontWeight: FontWeight.w200,
+  Widget _buildRequirement(bool isValid, String text) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 22.0),
+      child: Row(
+        children: [
+          Icon(
+            isValid ? Icons.check_circle : Icons.radio_button_unchecked,
             color: isValid ? Colors.green : Color(0xFF94A2B8),
-            fontSize: 11,
+            size: 12,
           ),
-        ),
-      ],
-    ),
-  );
+          const SizedBox(width: 8),
+          Text(
+            text,
+            style: TextStyleService.getDmSans(
+              fontWeight: FontWeight.w200,
+              color: isValid ? Colors.green : Color(0xFF94A2B8),
+              fontSize: 11,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }

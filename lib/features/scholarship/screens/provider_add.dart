@@ -8,6 +8,7 @@ import 'package:edugo/services/datetime_provider_add.dart';
 import 'package:edugo/services/dropdown_provider_add.dart';
 import 'package:edugo/services/file_upload.dart';
 import 'package:edugo/services/top_provider_add.dart';
+import 'package:edugo/shared/utils/textStyle.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -601,10 +602,12 @@ class _ProviderAddEditState extends State<ProviderAddEdit> {
                         borderRadius: BorderRadius.circular(8),
                       ),
                     ),
-                    child: const Text(
+                    child: Text(
                       "Back to Home",
-                      style: TextStyle(
+                      style: TextStyleService.getDmSans(
                         color: Colors.white, // กำหนดสีข้อความเป็นสีขาว
+                        fontWeight: FontWeight.w400,
+                        fontSize: 16, // ปรับขนาดฟอนต์ที่นี่
                       ),
                     ),
                   ),
@@ -721,9 +724,10 @@ class _ProviderAddEditState extends State<ProviderAddEdit> {
                           padding: const EdgeInsets.only(top: 4.0),
                           child: Text(
                             titleError!,
-                            style: TextStyle(
+                            style: TextStyleService.getDmSans(
                               color: Colors.red,
                               fontSize: 12,
+                              fontWeight: FontWeight.w400,
                             ),
                           ),
                         ),
@@ -785,9 +789,10 @@ class _ProviderAddEditState extends State<ProviderAddEdit> {
                           padding: const EdgeInsets.only(top: 4.0),
                           child: Text(
                             urlError!,
-                            style: const TextStyle(
+                            style: TextStyleService.getDmSans(
                               color: Colors.red,
                               fontSize: 12,
+                              fontWeight: FontWeight.w400,
                             ),
                           ),
                         ),
@@ -835,9 +840,10 @@ class _ProviderAddEditState extends State<ProviderAddEdit> {
                           padding: const EdgeInsets.only(top: 4.0),
                           child: Text(
                             categoryError!,
-                            style: TextStyle(
+                            style: TextStyleService.getDmSans(
                               color: Colors.red,
                               fontSize: 12,
+                              fontWeight: FontWeight.w400,
                             ),
                           ),
                         ),
@@ -885,9 +891,10 @@ class _ProviderAddEditState extends State<ProviderAddEdit> {
                           padding: const EdgeInsets.only(top: 4.0),
                           child: Text(
                             educationLevelError!,
-                            style: TextStyle(
+                            style: TextStyleService.getDmSans(
                               color: Colors.red,
                               fontSize: 12,
+                              fontWeight: FontWeight.w400,
                             ),
                           ),
                         ),
@@ -933,9 +940,10 @@ class _ProviderAddEditState extends State<ProviderAddEdit> {
                           padding: const EdgeInsets.only(top: 4.0),
                           child: Text(
                             countryError!,
-                            style: TextStyle(
+                            style: TextStyleService.getDmSans(
                               color: Colors.red,
                               fontSize: 12,
+                              fontWeight: FontWeight.w400,
                             ),
                           ),
                         ),
@@ -1003,9 +1011,10 @@ class _ProviderAddEditState extends State<ProviderAddEdit> {
                           padding: const EdgeInsets.only(top: 4.0),
                           child: Text(
                             dateTimeError!,
-                            style: TextStyle(
+                            style: TextStyleService.getDmSans(
                               color: Colors.red,
                               fontSize: 12,
+                              fontWeight: FontWeight.w400,
                             ),
                           ),
                         ),
@@ -1107,9 +1116,10 @@ class _ProviderAddEditState extends State<ProviderAddEdit> {
                                 padding: const EdgeInsets.only(top: 4.0),
                                 child: Text(
                                   descriptionError!,
-                                  style: TextStyle(
+                                  style: TextStyleService.getDmSans(
                                     color: Colors.red,
                                     fontSize: 12,
+                                    fontWeight: FontWeight.w400,
                                   ),
                                 ),
                               ),

@@ -1,6 +1,8 @@
 import 'package:edugo/features/question/screens/animation.dart';
+import 'package:edugo/shared/utils/textStyle.dart';
 import 'package:flutter/material.dart';
 import 'package:edugo/features/home/screens/home_screen.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 class Question extends StatefulWidget {
   const Question({super.key});
@@ -62,10 +64,11 @@ class _QuestionState extends State<Question> {
                                 ? "Which countries are\nyou interested in?"
                                 : "Which education level\nare you seeking\na scholarship for?",
                             textAlign: TextAlign.center,
-                            style: TextStyle(
+                            style: TextStyleService.getDmSans(
                               color: Colors.white,
                               fontSize: currentPage == 0 ? 32 : 24,
-                              fontWeight: FontWeight.bold,
+                              fontWeight: FontWeight.w600,
+                              height: currentPage == 0 ? 1.5 : 1.2,
                             ),
                           ),
                           SizedBox(height: currentPage == 0 ? 16 : 8),
@@ -74,9 +77,10 @@ class _QuestionState extends State<Question> {
                                 ? "Pick 3 countries you'd like us to feature for you!"
                                 : "Select the one you are most interested in",
                             textAlign: TextAlign.center,
-                            style: const TextStyle(
+                            style: TextStyleService.getDmSans(
                               color: Colors.white70,
                               fontSize: 14,
+                              fontWeight: FontWeight.w400,
                             ),
                           ),
                         ],
@@ -98,7 +102,8 @@ class _QuestionState extends State<Question> {
               child: Center(
                 child: ElevatedButton(
                   onPressed: currentPage == 0
-                      ? selectedCountries.length == 3
+                      ? selectedCountries.length >= 1 &&
+                              selectedCountries.length <= 3
                           ? () {
                               setState(() {
                                 currentPage = 1;
@@ -120,7 +125,8 @@ class _QuestionState extends State<Question> {
                             }
                           : null,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: selectedCountries.length == 3
+                    backgroundColor: selectedCountries.length >= 1 &&
+                            selectedCountries.length <= 3
                         ? const Color.fromARGB(255, 44, 33, 243)
                         : Colors.grey,
                     minimumSize: const Size(double.infinity, 40),
@@ -128,11 +134,11 @@ class _QuestionState extends State<Question> {
                       borderRadius: BorderRadius.circular(40),
                     ),
                   ),
-                  child: const Text(
+                  child: Text(
                     "Next",
-                    style: TextStyle(
+                    style: TextStyleService.getDmSans(
                       fontSize: 16,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w500,
                       color: Colors.white,
                     ),
                   ),
@@ -159,7 +165,7 @@ class _QuestionState extends State<Question> {
       itemCount: countries.length,
       itemBuilder: (context, index) {
         int countryId = countries.keys.elementAt(index);
-        String countryName = countries[countryId]!;
+        String countryName = countries[countryId]!; // ชื่อประเทศ
         bool isSelected = selectedCountries.contains(countryId);
 
         return GestureDetector(
@@ -174,20 +180,44 @@ class _QuestionState extends State<Question> {
           },
           child: Container(
             decoration: BoxDecoration(
-              color: isSelected
-                  ? const Color.fromARGB(255, 112, 223, 176)
-                  : const Color(0xFF355FFF),
               borderRadius: BorderRadius.circular(6),
             ),
-            child: Center(
-              child: Text(
-                countryName,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: isSelected ? Colors.black : Colors.white,
-                ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(6),
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  // ภาพพื้นหลัง
+                  Positioned.fill(
+                      child: Image.asset(
+                    'assets/images/${countryName.toLowerCase()}.png',
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) => Container(
+                      color: Colors.grey,
+                      child: Icon(Icons.flag, color: Colors.white),
+                    ),
+                  )),
+                  // สีพื้นหลังแบบทับ
+                  Positioned.fill(
+                    child: Container(
+                      color: isSelected
+                          ? Color.fromARGB(115, 191, 225, 54)
+                          : Color.fromARGB(128, 19, 33, 89),
+                    ),
+                  ),
+                  // ข้อความบนพื้นหลัง
+                  Center(
+                    child: Text(
+                      countryName,
+                      textAlign: TextAlign.center,
+                      style: TextStyleService.getDmSans(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
@@ -198,51 +228,60 @@ class _QuestionState extends State<Question> {
 
   Widget buildEducationList() {
     List<Map<String, dynamic>> educationOptions = [
-      {"title": "Undergraduate", "icon": Icons.school},
-      {"title": "Master", "icon": Icons.workspace_premium},
-      {"title": "Doctorate", "icon": Icons.military_tech},
+      {
+        "title": "Undergraduate",
+        "selectedImage": "assets/images/undergraduate_selected.png",
+        "unselectedImage": "assets/images/undergraduate_unselected.png",
+      },
+      {
+        "title": "Master",
+        "selectedImage": "assets/images/master_selected.png",
+        "unselectedImage": "assets/images/master_unselected.png",
+      },
+      {
+        "title": "Doctorate",
+        "selectedImage": "assets/images/doctorate_selected.png",
+        "unselectedImage": "assets/images/doctorate_unselected.png",
+      },
     ];
 
     return Column(
       children: List.generate(educationOptions.length, (index) {
-        bool isSelected = selectedEducation == educationOptions[index]['title'];
+        final option = educationOptions[index];
+        final isSelected = selectedEducation == option['title'];
 
         return Container(
           height: 172,
           margin: EdgeInsets.only(
             left: 16,
             right: 16,
-            bottom:
-                index == educationOptions.length - 1 ? 0 : 16, // เช็คอันสุดท้าย
+            bottom: index == educationOptions.length - 1 ? 0 : 16,
           ),
           decoration: BoxDecoration(
-            color: isSelected
-                ? const Color.fromARGB(255, 112, 223, 176)
-                : const Color(0xFF355FFF),
             borderRadius: BorderRadius.circular(8),
           ),
-          child: ListTile(
-            leading: Icon(educationOptions[index]['icon'],
-                color: Colors.white, size: 30),
-            title: Text(
-              educationOptions[index]['title'],
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
+          child: Stack(
+            children: [
+              Positioned.fill(
+                child: Image.asset(
+                  isSelected
+                      ? option['selectedImage']!
+                      : option['unselectedImage']!,
+                  fit: BoxFit.cover,
+                ),
               ),
-            ),
-            onTap: () {
-              setState(() {
-                if (selectedEducation == educationOptions[index]['title']) {
-                  // ถ้ากดที่ตัวเลือกเดิมให้ลบออก
-                  selectedEducation = null;
-                } else {
-                  // ถ้ากดเลือกใหม่, ให้เอาอันเก่าออกก่อน
-                  selectedEducation = educationOptions[index]['title'];
-                }
-              });
-            },
+              Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(8),
+                  onTap: () {
+                    setState(() {
+                      selectedEducation = isSelected ? null : option['title'];
+                    });
+                  },
+                ),
+              ),
+            ],
           ),
         );
       }),

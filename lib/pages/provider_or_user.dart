@@ -93,7 +93,7 @@ class ProviderOrUser extends StatelessWidget {
                     imagePath: "assets/images/user.svg",
                     borderColor: Color(0xFF355FFF),
                     onTap: () {
-                      Navigator.pushReplacement(
+                      Navigator.push(
                         context,
                         MaterialPageRoute(
                           builder: (context) =>

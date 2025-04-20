@@ -1,3 +1,4 @@
+import 'package:edugo/shared/utils/textStyle.dart';
 import 'package:flutter/material.dart';
 
 class StatusBox extends StatelessWidget {
@@ -49,8 +50,7 @@ class StatusBox extends StatelessWidget {
                 children: [
                   Text(
                     title,
-                    style: const TextStyle(
-                      fontFamily: "DM Sans",
+                    style: TextStyleService.getDmSans(
                       fontSize: 12,
                       fontWeight: FontWeight.w400,
                       color: Colors.black,
@@ -60,8 +60,7 @@ class StatusBox extends StatelessWidget {
                   const SizedBox(height: 2),
                   Text(
                     count,
-                    style: const TextStyle(
-                      fontFamily: "DM Sans",
+                    style: TextStyleService.getDmSans(
                       fontSize: 14,
                       fontWeight: FontWeight.w500,
                       color: Colors.black,

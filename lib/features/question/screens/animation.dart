@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:edugo/config/api_config.dart';
 import 'package:edugo/services/auth_service.dart';
+import 'package:edugo/shared/utils/textStyle.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:http/http.dart' as http;
@@ -23,18 +24,29 @@ class AnimationQuestion extends StatefulWidget {
   State<AnimationQuestion> createState() => _AnimationQuestionState();
 }
 
-class _AnimationQuestionState extends State<AnimationQuestion> {
+class _AnimationQuestionState extends State<AnimationQuestion>
+    with SingleTickerProviderStateMixin {
   final AuthService authService = AuthService(navigatorKey: navigatorKey);
+  double _opacity = 0.0;
+  Offset _offset = const Offset(0, 0.5); // เริ่มต้นเลื่อนจากด้านล่างขึ้น
+
+  @override
+  void initState() {
+    super.initState();
+
+    Future.delayed(const Duration(milliseconds: 700), () {
+      setState(() {
+        _opacity = 1.0;
+        _offset = Offset.zero; // กลับไปที่ตำแหน่งปกติ
+      });
+    });
+  }
 
   Future<void> SentAnswer() async {
     final url = Uri.parse(ApiConfig.answerUrl);
-
     String? token = await authService.getToken();
-
-    // Create headers map
     Map<String, String> headers = {'Content-Type': 'application/json'};
 
-    // Add Authorization header if token is available
     if (token != null) {
       headers['Authorization'] = 'Bearer $token';
     }
@@ -42,7 +54,7 @@ class _AnimationQuestionState extends State<AnimationQuestion> {
     try {
       final response = await http.post(
         url,
-        headers: headers, // Use the headers with the token
+        headers: headers,
         body: json.encode({
           'education_Level': widget.selectedEducation,
           'countries': widget.selectedCountries,
@@ -60,55 +72,76 @@ class _AnimationQuestionState extends State<AnimationQuestion> {
     }
   }
 
-  void _navigateToHomeScreen() {
-    Navigator.pushAndRemoveUntil(
-      context,
-      MaterialPageRoute(builder: (context) => const HomeScreenApp()),
-      (route) => false,
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color.fromARGB(255, 47, 40, 255),
       body: Column(
         children: [
-          // โลโก้และชื่อแอป
+          // Logo with slide-in and fade-in animation
           Padding(
             padding: const EdgeInsets.only(top: 67),
-            child: SvgPicture.asset(
-              'assets/images/logoQuestion.svg',
-              fit: BoxFit.cover,
-            ),
-          ),
-
-          // คำอธิบาย
-          const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-            child: Text(
-              "Discover valuable educational information \nand opportunities. "
-              "Register for access to\n reliable scholarships and resources. "
-              "Join \nour community to uncover new knowledge \nand opportunities!",
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.white,
+            child: AnimatedSlide(
+              offset: _offset,
+              duration: const Duration(milliseconds: 800),
+              curve: Curves.easeOutBack, // เพิ่มความเด้งแบบ bounce เล็กน้อย
+              child: AnimatedOpacity(
+                opacity: _opacity,
+                duration: const Duration(milliseconds: 800),
+                // curve: Curves.easeOut,
+                child: SvgPicture.asset(
+                  'assets/images/logoQuestion.svg',
+                  fit: BoxFit.cover,
+                ),
               ),
             ),
           ),
 
-          // รูป Earth เต็มจอ
-          Expanded(
-            child: SvgPicture.asset(
-              'assets/images/earth.svg',
-              width: double.infinity,
-              height: double.infinity,
-              fit: BoxFit.cover, // ปรับให้เต็มพื้นที่
+          // Animated Text with fade-in
+          AnimatedSlide(
+            offset: _offset,
+            duration: const Duration(milliseconds: 800),
+            // curve: Curves.easeOutBack, // เพิ่มความเด้งแบบ bounce เล็กน้อย
+            child: AnimatedOpacity(
+              opacity: _opacity,
+              duration: const Duration(milliseconds: 800),
+              // curve: Curves.easeOut,
+              child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                child: Text(
+                  "Discover valuable educational information \nand opportunities. "
+                  "Register for access to\n reliable scholarships and resources. "
+                  "Join \nour community to uncover new knowledge \nand opportunities!",
+                  textAlign: TextAlign.center,
+                  style: TextStyleService.getDmSans(
+                    fontSize: 16,
+                    color: Colors.white,
+                    fontWeight: FontWeight.w400,
+                  ),
+                ),
+              ),
             ),
           ),
 
-          // ปุ่ม Next
+          Expanded(
+            // Earth with slide-in and fade-in animation
+            child: AnimatedSlide(
+              offset: _offset,
+              duration: const Duration(milliseconds: 800),
+              child: AnimatedOpacity(
+                opacity: _opacity,
+                duration: const Duration(milliseconds: 800),
+                curve: Curves.easeOut,
+                child: SvgPicture.asset(
+                  'assets/images/earth_with_people.svg',
+                  width: double.infinity,
+                  height: double.infinity,
+                  fit: BoxFit.cover,
+                ),
+              ),
+            ),
+          ),
+
           Container(
             width: double.infinity,
             height: 78,
@@ -134,9 +167,9 @@ class _AnimationQuestionState extends State<AnimationQuestion> {
                     borderRadius: BorderRadius.circular(40),
                   ),
                 ),
-                child: const Text(
+                child: Text(
                   "Let’s Started!",
-                  style: TextStyle(
+                  style: TextStyleService.getDmSans(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
                     color: Colors.white,

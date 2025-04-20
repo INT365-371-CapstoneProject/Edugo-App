@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:edugo/config/api_config.dart';
+import 'package:edugo/shared/utils/textStyle.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -516,8 +517,10 @@ class _ProviderProfileEditState extends State<ProviderProfileEdit> {
                               width:
                                   4), // ปรับระยะห่างไอคอนกับข้อความตามต้องการ
                           Text("Cancel",
-                              style: TextStyle(
-                                  color: Colors.black54, fontSize: 14)),
+                              style: TextStyleService.getDmSans(
+                                  color: Colors.black54,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w400)),
                         ],
                       ),
                     ),
@@ -539,8 +542,10 @@ class _ProviderProfileEditState extends State<ProviderProfileEdit> {
                             color: Colors.black54, size: 16),
                         SizedBox(width: 4),
                         Text(isEditing ? "Save" : "Edit",
-                            style:
-                                TextStyle(color: Colors.black54, fontSize: 14)),
+                            style: TextStyleService.getDmSans(
+                                color: Colors.black54,
+                                fontSize: 14,
+                                fontWeight: FontWeight.w400)),
                       ],
                     ),
                   ),

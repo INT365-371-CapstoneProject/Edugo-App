@@ -1,6 +1,7 @@
 import 'package:edugo/config/api_config.dart';
 import 'package:edugo/features/subject/subject_manage.dart';
 import 'package:edugo/services/auth_service.dart';
+import 'package:edugo/shared/utils/textStyle.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -278,7 +279,7 @@ class _SubjectAddEditState extends State<SubjectAddEdit> {
                   SizedBox(height: 40),
                   Text(
                     "Waiting for Posting",
-                    style: GoogleFonts.dmSans(
+                    style: TextStyleService.getDmSans(
                       fontSize: 24,
                       fontWeight: FontWeight.w600,
                       color: const Color(0xFF000000),
@@ -395,7 +396,7 @@ class _SubjectAddEditState extends State<SubjectAddEdit> {
                   SizedBox(height: 40),
                   Text(
                     "Waiting for Updating",
-                    style: GoogleFonts.dmSans(
+                    style: TextStyleService.getDmSans(
                       fontSize: 24,
                       fontWeight: FontWeight.w600,
                       color: const Color(0xFF000000),
@@ -486,7 +487,7 @@ class _SubjectAddEditState extends State<SubjectAddEdit> {
                   const SizedBox(height: 20),
                   Text(
                     isEdit ? "Update Successful" : "Post Successful!",
-                    style: GoogleFonts.dmSans(
+                    style: TextStyleService.getDmSans(
                       fontSize: 24, // ปรับขนาดฟอนต์ที่นี่
                       fontWeight: FontWeight.w600,
                     ),
@@ -507,10 +508,12 @@ class _SubjectAddEditState extends State<SubjectAddEdit> {
                         borderRadius: BorderRadius.circular(8),
                       ),
                     ),
-                    child: const Text(
+                    child: Text(
                       "Back to Home",
-                      style: TextStyle(
+                      style: TextStyleService.getDmSans(
                         color: Colors.white, // กำหนดสีข้อความเป็นสีขาว
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
                   ),
@@ -639,7 +642,7 @@ class _SubjectAddEditState extends State<SubjectAddEdit> {
                         },
                         child: Text(
                           widget.isEdit ? "Update" : "Post",
-                          style: GoogleFonts.dmSans(
+                          style: TextStyleService.getDmSans(
                             fontSize: 16,
                             fontWeight: FontWeight.w500,
                             color: Color(0xFF355FFF),
@@ -651,9 +654,9 @@ class _SubjectAddEditState extends State<SubjectAddEdit> {
                   // Text อยู่ตรงกลาง
                   Text(
                     widget.isEdit ? "Edit Post" : "Create Post",
-                    style: GoogleFonts.dmSans(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
+                    style: TextStyleService.getDmSans(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w500,
                       color: Colors.white,
                     ),
                   ),
@@ -711,7 +714,7 @@ class _SubjectAddEditState extends State<SubjectAddEdit> {
                                 profile?['role'] == 'provider'
                                     ? "${profile?['company_name']}"
                                     : "${profile?['first_name']} ${profile?['last_name']}",
-                                style: GoogleFonts.dmSans(
+                                style: TextStyleService.getDmSans(
                                     color: Color(0xFF111111),
                                     fontSize: 14,
                                     fontWeight: FontWeight.w400),
@@ -756,7 +759,7 @@ class _SubjectAddEditState extends State<SubjectAddEdit> {
                                 }, // Allow multipl // Bind the controller here
                                 decoration: InputDecoration(
                                   hintText: "What's on your mind?",
-                                  hintStyle: GoogleFonts.dmSans(
+                                  hintStyle: TextStyleService.getDmSans(
                                     fontSize: 11,
                                     color: Color(0xFF94A2B8),
                                     fontWeight: FontWeight.w200,
@@ -774,9 +777,10 @@ class _SubjectAddEditState extends State<SubjectAddEdit> {
                               padding: const EdgeInsets.only(top: 4.0),
                               child: Text(
                                 descriptionError!,
-                                style: TextStyle(
+                                style: TextStyleService.getDmSans(
                                   color: Colors.red,
                                   fontSize: 12,
+                                  fontWeight: FontWeight.w400,
                                 ),
                               ),
                             ),
@@ -808,7 +812,10 @@ class _SubjectAddEditState extends State<SubjectAddEdit> {
                                   errorBuilder: (context, error, stackTrace) =>
                                       Text(
                                     'Error loading image',
-                                    style: TextStyle(color: Colors.red),
+                                    style: TextStyleService.getDmSans(
+                                        color: Colors.red,
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w400),
                                   ),
                                 ),
                               ),
@@ -853,7 +860,7 @@ class _SubjectAddEditState extends State<SubjectAddEdit> {
                       SizedBox(width: 10),
                       Text(
                         "Share Your Photo Here",
-                        style: GoogleFonts.dmSans(
+                        style: TextStyleService.getDmSans(
                           fontSize: 16,
                           fontWeight: FontWeight.w500,
                           color: Color(0xFF64738B),

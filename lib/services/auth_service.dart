@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:edugo/config/api_config.dart';
 import 'package:edugo/features/login&register/login.dart'; // Import Login screen
+import 'package:edugo/shared/utils/textStyle.dart';
 import 'package:flutter/material.dart'; // Import Material
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -127,8 +128,11 @@ class AuthService {
             title: Text(
               title,
               textAlign: TextAlign.center,
-              style:
-                  const TextStyle(color: Colors.orange), // สีส้มสำหรับ Warning
+              style: TextStyleService.getDmSans(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: Colors.orange,
+              ), // สีส้มสำหรับ Warning
             ),
             content: Text(message, textAlign: TextAlign.center),
             actions: <Widget>[

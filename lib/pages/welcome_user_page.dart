@@ -105,19 +105,23 @@ class _WelcomeUserPageState extends State<WelcomeUserPage> {
                                       const Login(),
                                   transitionsBuilder: (context, animation,
                                       secondaryAnimation, child) {
-                                    const begin = 0.0;
-                                    const end = 1.0;
-                                    const curve = Curves.easeOut;
+                                    final spring = CurvedAnimation(
+                                      parent: animation,
+                                      curve: Curves
+                                          .easeOutBack, // ให้ฟีล spring-like
+                                    );
 
-                                    var tween = Tween(begin: begin, end: end)
-                                        .chain(CurveTween(curve: curve));
-                                    return FadeTransition(
-                                      opacity: animation.drive(tween),
+                                    return SlideTransition(
+                                      position: Tween<Offset>(
+                                        begin: const Offset(
+                                            1.0, 0.0), // เริ่มจากขวา
+                                        end: Offset.zero,
+                                      ).animate(spring),
                                       child: child,
                                     );
                                   },
                                   transitionDuration:
-                                      const Duration(milliseconds: 300),
+                                      const Duration(milliseconds: 500),
                                 ),
                               );
                             },

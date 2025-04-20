@@ -4,6 +4,7 @@ import 'package:edugo/features/login&register/forgetPassword.dart';
 import 'package:edugo/features/question/screens/question.dart';
 import 'package:edugo/pages/welcome_user_page.dart';
 import 'package:edugo/shared/utils/customBackButton.dart';
+import 'package:edugo/shared/utils/loading.dart';
 import 'package:edugo/shared/utils/textStyle.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:edugo/features/login&register/register.dart';
@@ -27,11 +28,30 @@ class _LoginState extends State<Login> {
   final TextEditingController _passwordController = TextEditingController();
   bool _isPasswordVisible = false;
   bool _isLoading = false;
+  final FocusNode _emailFocusNode = FocusNode();
+  final FocusNode _passwordFocusNode = FocusNode();
+  bool _isPasswordFocused = false;
+  bool _isEmailFocused = false;
   final AuthService _authService =
       AuthService(navigatorKey: navigatorKey); // เพิ่ม navigatorKey
 
   bool _emailError = false;
   bool _passwordError = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _passwordFocusNode.addListener(() {
+      setState(() {
+        _isPasswordFocused = _passwordFocusNode.hasFocus;
+      });
+    });
+    _emailFocusNode.addListener(() {
+      setState(() {
+        _isEmailFocused = _emailFocusNode.hasFocus;
+      });
+    });
+  }
 
   void _validateAndLogin() {
     setState(() {
@@ -49,7 +69,7 @@ class _LoginState extends State<Login> {
       _isLoading = true;
     });
 
-    _showLoadingDialog();
+    _showCustomLoadingDialog(context);
 
     try {
       // ตรวจสอบว่าเป็น email หรือ username
@@ -90,8 +110,8 @@ class _LoginState extends State<Login> {
         }
       } else {
         if (mounted) {
-          _showErrorDialog("Login Failed",
-              "Invalid email/username or password. Please try again.");
+          _showErrorDialog(
+              "Login Failed", "Invalid email/username\nor password.");
         }
       }
     } catch (e) {
@@ -101,8 +121,8 @@ class _LoginState extends State<Login> {
         if (_isLoading) {
           Navigator.pop(context); // ปิด Loading Dialog กรณีเกิด Exception
         }
-        _showErrorDialog("Connection Error",
-            "Please check your internet connection and try again.");
+        _showErrorDialog(
+            "Connection Error", "Please check your internet connection.");
       }
     } finally {
       if (mounted) {
@@ -146,23 +166,47 @@ class _LoginState extends State<Login> {
     }
   }
 
-  void _showLoadingDialog() {
+  void _showCustomLoadingDialog(BuildContext context) {
     showDialog(
       context: context,
-      barrierDismissible: false, // ป้องกันผู้ใช้ปิด Popup เอง
-      builder: (BuildContext context) {
+      barrierDismissible: false,
+      builder: (_) {
         return Dialog(
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          child: Padding(
-            padding: const EdgeInsets.all(20.0),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: const [
-                CircularProgressIndicator(), // วงกลมโหลด
-                SizedBox(height: 16),
-                Text("Logging in...", style: TextStyle(fontSize: 16)),
-              ],
+          backgroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(30),
+          ),
+          child: SizedBox(
+            width: 300, // ปรับขนาดให้เหมาะสมกับเนื้อหา
+            height: 360,
+            child: Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  GradientFadeSpinner(),
+                  const SizedBox(height: 24),
+                  Text(
+                    "Please wait...",
+                    style: TextStyleService.getDmSans(
+                      fontSize: 22,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.black87,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    "We're logging you in",
+                    style: TextStyleService.getDmSans(
+                      fontSize: 16,
+                      color: Colors.grey,
+                      fontWeight: FontWeight.w300,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
             ),
           ),
         );
@@ -194,23 +238,69 @@ class _LoginState extends State<Login> {
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        return AlertDialog(
+        return Dialog(
           shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          title: Text(
-            title,
-            textAlign: TextAlign.center,
-            style: const TextStyle(color: Colors.red),
-          ),
-          content: Text(message, textAlign: TextAlign.center),
-          actions: <Widget>[
-            TextButton(
-              child: const Text("OK"),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+          child: SizedBox(
+            width: 300,
+            height: 360,
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Image.asset(
+                    'assets/images/failmark.png',
+                    height: 120,
+                    width: 120,
+                  ),
+                  const SizedBox(height: 20),
+                  Text(
+                    title,
+                    textAlign: TextAlign.center,
+                    style: TextStyleService.getDmSans(
+                      color: Colors.red,
+                      fontSize: 24,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    message,
+                    textAlign: TextAlign.center,
+                    style: TextStyleService.getDmSans(
+                      color: Colors.black,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w400,
+                    ),
+                  ),
+                  const SizedBox(height: 30),
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.redAccent,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 32, vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      elevation: 0,
+                    ),
+                    child: Text(
+                      "Try Again",
+                      style: TextStyleService.getDmSans(
+                        fontSize: 16,
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ],
+          ),
         );
       },
     );
@@ -220,25 +310,76 @@ class _LoginState extends State<Login> {
   void _showLoginErrorDialog(String title, String message) {
     showDialog(
       context: context,
-      barrierDismissible: false, // ไม่ให้ปิด dialog โดยการแตะนอกพื้นที่
+      barrierDismissible: false, // ห้ามปิดด้วยการแตะนอกพื้นที่
       builder: (BuildContext context) {
-        return AlertDialog(
+        return Dialog(
           shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          title: Text(
-            title,
-            textAlign: TextAlign.center,
-            style: const TextStyle(color: Colors.orange), // สีส้มสำหรับ Warning
-          ),
-          content: Text(message, textAlign: TextAlign.center),
-          actions: <Widget>[
-            TextButton(
-              child: const Text("OK"),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          child: SizedBox(
+            width: 300,
+            height: 360,
+            child: Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  // Image.asset(
+                  //   'assets/images/warning_icon.png', // เปลี่ยนเป็นไอคอนที่ใช้ได้ เช่น warning, alert
+                  //   height: 100,
+                  //   width: 100,
+                  // ),
+                  const Icon(
+                    Icons.warning,
+                    color: Colors.orange,
+                    size: 120,
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    title,
+                    textAlign: TextAlign.center,
+                    style: TextStyleService.getDmSans(
+                      color: Colors.orange,
+                      fontSize: 22,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    message,
+                    textAlign: TextAlign.center,
+                    style: TextStyleService.getDmSans(
+                      color: Colors.black87,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w400,
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.orange,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 32, vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      elevation: 0,
+                    ),
+                    child: Text(
+                      "Try Again",
+                      style: TextStyleService.getDmSans(
+                        fontSize: 16,
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ],
+          ),
         );
       },
     );
@@ -299,8 +440,8 @@ class _LoginState extends State<Login> {
 
     if (profileData == null) {
       await _handleLogoutOnError();
-      _showLoginErrorDialog("Error",
-          "Failed to retrieve profile information. Please log out and try again.");
+      _showLoginErrorDialog(
+          "Error", "Failed to retrieve profile information. Please log out.");
       return;
     }
 
@@ -393,30 +534,59 @@ class _LoginState extends State<Login> {
     }
   }
 
-  // แก้ไข: แสดง Success Dialog และนำทางหลังจาก Delay
   void _showSuccessDialogAndNavigate(Widget page) {
     showDialog(
       context: context,
       barrierDismissible: false,
       builder: (BuildContext context) {
-        return AlertDialog(
+        return Dialog(
           shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          title: const Text(
-            "Login Successful",
-            textAlign: TextAlign.center,
-            style: TextStyle(color: Colors.green),
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          child: SizedBox(
+            width: 300,
+            height: 360,
+            child: Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Image.asset(
+                    "assets/images/success_check.png",
+                    width: 120,
+                    height: 120,
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    "Login Successful",
+                    textAlign: TextAlign.center,
+                    style: TextStyleService.getDmSans(
+                      color: Colors.green,
+                      fontSize: 24,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    "Welcome to Edugo!",
+                    textAlign: TextAlign.center,
+                    style: TextStyleService.getDmSans(
+                      color: Colors.black87,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w400,
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
-          content: const Text("Welcome back!", textAlign: TextAlign.center),
         );
       },
     );
 
-    // รอ 1 วินาทีก่อนปิด Popup และนำทาง
     Future.delayed(const Duration(seconds: 1), () {
-      if (mounted) {
-        Navigator.of(context).pop(); // ปิด Popup สำเร็จ
-        _navigateToPage(page); // นำทางไปยังหน้าที่กำหนด
+      if (context.mounted) {
+        Navigator.of(context).pop(); // ปิด dialog
+        _navigateToPage(page); // นำทางไปหน้าใหม่
       }
     });
   }
@@ -516,90 +686,182 @@ class _LoginState extends State<Login> {
                               ),
                             ),
                             const SizedBox(height: 12),
-                            TextField(
-                              controller: _emailController,
-                              style: TextStyleService.getDmSans(
-                                fontSize: 14,
-                                color: Colors.black,
-                                fontWeight: FontWeight.w400,
+                            Container(
+                              decoration: BoxDecoration(
+                                color: Color(0xFFECF0F6),
+                                borderRadius: BorderRadius.circular(15),
+                                boxShadow: _isEmailFocused
+                                    ? [
+                                        BoxShadow(
+                                          color: _emailError
+                                              ? Color.fromRGBO(
+                                                  237, 75, 158, 0.15)
+                                              : Color.fromRGBO(
+                                                  108, 99, 255, 0.15),
+                                          blurRadius: 0,
+                                          spreadRadius: 6,
+                                          offset: Offset(0, 0),
+                                        ),
+                                      ]
+                                    : [],
                               ),
-                              decoration: InputDecoration(
-                                hintText:
-                                    "Enter your email address or username",
-                                hintStyle: TextStyle(
-                                  color: Colors.black.withOpacity(0.5),
+                              child: TextField(
+                                controller: _emailController,
+                                focusNode: _emailFocusNode,
+                                style: TextStyleService.getDmSans(
                                   fontSize: 14,
+                                  color: Colors.black,
                                   fontWeight: FontWeight.w400,
                                 ),
-                                filled: true,
-                                fillColor: Color(0xFFECF0F6),
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                  borderSide: BorderSide.none,
+                                decoration: InputDecoration(
+                                  hintText:
+                                      "Enter your email address or username",
+                                  hintStyle: TextStyleService.getDmSans(
+                                    color: Colors.black.withOpacity(0.5),
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w400,
+                                  ),
+                                  filled: true,
+                                  fillColor: Color(0xFFECF0F6),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(9.51),
+                                    borderSide: _emailError
+                                        ? const BorderSide(
+                                            color: Colors.red, width: 2.0)
+                                        : BorderSide.none,
+                                  ),
+                                  enabledBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(9.51),
+                                    borderSide: _emailError
+                                        ? const BorderSide(
+                                            color: Colors.red, width: 2.0)
+                                        : BorderSide.none,
+                                  ),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(9.51),
+                                    borderSide: _emailError
+                                        ? const BorderSide(
+                                            color: Colors.red, width: 2.0)
+                                        : const BorderSide(
+                                            color: Color(0xFFC0CDFF)),
+                                  ),
+                                  contentPadding: EdgeInsets.symmetric(
+                                      horizontal: 20, vertical: 16),
                                 ),
-                                contentPadding: EdgeInsets.symmetric(
-                                    horizontal: 20, vertical: 16),
-                                errorText: _emailError
-                                    ? "This field is required"
-                                    : null,
                               ),
                             ),
-                            const SizedBox(height: 16),
+                            const SizedBox(height: 8),
+                            if (_emailError)
+                              Text(
+                                "Please enter your email or username",
+                                style: TextStyleService.getDmSans(
+                                  color: Colors.red,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w400,
+                                ),
+                              ),
+                            SizedBox(height: 16),
 
                             // Password Field
                             Text(
                               "Password",
                               style: TextStyleService.getDmSans(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.w500,
-                                  height: 1.4,
-                                  color: Color(0xFF000000)),
+                                fontSize: 20,
+                                fontWeight: FontWeight.w500,
+                                height: 1.4,
+                                color: Color(0xFF000000),
+                              ),
                             ),
                             const SizedBox(height: 12),
-                            TextField(
-                              controller: _passwordController,
-                              obscureText: !_isPasswordVisible,
-                              style: TextStyleService.getDmSans(
-                                fontSize: 14, // ให้ใหญ่ขึ้นนิดเพื่อความชัด
-                                color: Colors.black,
-                                fontWeight: FontWeight.w400,
+                            Container(
+                              decoration: BoxDecoration(
+                                color: Color(0xFFECF0F6),
+                                borderRadius: BorderRadius.circular(15),
+                                boxShadow: _isPasswordFocused
+                                    ? [
+                                        BoxShadow(
+                                          color: _passwordError
+                                              ? Color.fromRGBO(
+                                                  237, 75, 158, 0.15)
+                                              : Color.fromRGBO(
+                                                  108, 99, 255, 0.15),
+                                          blurRadius: 0,
+                                          spreadRadius: 6,
+                                          offset: Offset(0, 0),
+                                        ),
+                                      ]
+                                    : [],
                               ),
-                              decoration: InputDecoration(
-                                hintText: "Enter your password",
-                                hintStyle: TextStyle(
-                                  color: Colors.black.withOpacity(0.5),
+                              child: TextField(
+                                controller: _passwordController,
+                                focusNode: _passwordFocusNode,
+                                obscureText: !_isPasswordVisible,
+                                style: TextStyleService.getDmSans(
                                   fontSize: 14,
+                                  color: Colors.black,
                                   fontWeight: FontWeight.w400,
                                 ),
-                                filled: true,
-                                fillColor: Color(0xFFECF0F6),
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(
-                                      12), // ปรับให้กลมขึ้นนิด
-                                  borderSide: BorderSide.none, // ไม่มีขอบ
-                                ),
-                                contentPadding: EdgeInsets.symmetric(
-                                    horizontal: 20, vertical: 16),
-                                suffixIcon: IconButton(
-                                  icon: Icon(
-                                    _isPasswordVisible
-                                        ? Icons.visibility
-                                        : Icons.visibility_off,
-                                    color: Color(0xFFCBD5E0),
+                                decoration: InputDecoration(
+                                  hintText: "Enter your password",
+                                  hintStyle: TextStyleService.getDmSans(
+                                    color: Colors.black.withOpacity(0.5),
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w400,
                                   ),
-                                  onPressed: () {
-                                    setState(() {
-                                      _isPasswordVisible = !_isPasswordVisible;
-                                    });
-                                  },
+                                  filled: true,
+                                  fillColor: Colors.transparent,
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(9.51),
+                                    borderSide: _passwordError
+                                        ? const BorderSide(
+                                            color: Colors.red, width: 2.0)
+                                        : BorderSide.none,
+                                  ),
+                                  enabledBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(9.51),
+                                    borderSide: _passwordError
+                                        ? const BorderSide(
+                                            color: Colors.red, width: 2.0)
+                                        : BorderSide.none,
+                                  ),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(9.51),
+                                    borderSide: _passwordError
+                                        ? const BorderSide(
+                                            color: Colors.red, width: 2.0)
+                                        : const BorderSide(
+                                            color: Color(0xFFC0CDFF)),
+                                  ),
+                                  contentPadding: EdgeInsets.symmetric(
+                                      horizontal: 20, vertical: 16),
+                                  suffixIcon: IconButton(
+                                    icon: Icon(
+                                      _isPasswordVisible
+                                          ? Icons.visibility
+                                          : Icons.visibility_off,
+                                      color: Color(0xFFCBD5E0),
+                                    ),
+                                    onPressed: () {
+                                      setState(() {
+                                        _isPasswordVisible =
+                                            !_isPasswordVisible;
+                                      });
+                                    },
+                                  ),
                                 ),
-                                errorText: _passwordError
-                                    ? "This field is required"
-                                    : null,
                               ),
                             ),
+                            const SizedBox(height: 8),
+                            if (_passwordError)
+                              Text(
+                                "Please enter your password",
+                                style: TextStyleService.getDmSans(
+                                  color: Colors.red,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w400,
+                                ),
+                              ),
                             const SizedBox(height: 16),
-
                             Align(
                               alignment: Alignment.centerRight,
                               child: GestureDetector(
@@ -652,7 +914,9 @@ class _LoginState extends State<Login> {
                           width: double.infinity,
                           height: 50,
                           child: ElevatedButton(
-                            onPressed: _validateAndLogin,
+                            onPressed: () {
+                              _validateAndLogin();
+                            },
                             style: ElevatedButton.styleFrom(
                               backgroundColor: const Color(0xFF355FFF),
                               shape: RoundedRectangleBorder(

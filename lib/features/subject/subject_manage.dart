@@ -8,6 +8,7 @@ import 'package:edugo/features/subject/subject_detail.dart';
 import 'package:edugo/services/auth_service.dart';
 import 'package:edugo/main.dart'; // Import main.dart เพื่อเข้าถึง navigatorKey
 import 'package:edugo/services/footer.dart';
+import 'package:edugo/shared/utils/textStyle.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -1103,12 +1104,14 @@ class _SubjectManagementState extends State<SubjectManagement> {
                                                     SizedBox(width: 0),
                                                     Text(
                                                       'What about your opinion ?',
-                                                      style: TextStyle(
-                                                          fontSize: 11,
-                                                          color:
-                                                              Color(0xFF747474),
-                                                          fontWeight:
-                                                              FontWeight.w200),
+                                                      style: TextStyleService
+                                                          .getDmSans(
+                                                              fontSize: 11,
+                                                              color: Color(
+                                                                  0xFF747474),
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .w200),
                                                     ),
                                                   ],
                                                 ),
