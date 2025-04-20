@@ -51,4 +51,6 @@ class ApiConfig {
 
   //comment endpoints
   static const String commentUrl = "$apiUrl/comment";
+
+  static const String userUrl = "$apiUrl/user";
 }

@@ -185,17 +185,15 @@ class _BookmarkListState extends State<BookmarkList> {
                   ),
                 ),
                 GestureDetector(
-                  onTap: () {
-                    print(announceDetails);
-                  },
+                  onTap: () {},
                   child: CircleAvatar(
                     radius: 20,
-                    backgroundColor: const Color(0xFFDAFB59),
-                    child: Image.asset(
-                      'assets/images/notification.png',
-                      width: 40.0,
-                      height: 40.0,
-                    ),
+                    backgroundColor: const Color(0xFF355FFF),
+                    // child: Image.asset(
+                    //   'assets/images/notification.png',
+                    //   width: 40.0,
+                    //   height: 40.0,
+                    // ),
                   ),
                 ),
               ],

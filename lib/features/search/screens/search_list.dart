@@ -205,15 +205,15 @@ class _SearchListState extends State<SearchList> {
               ),
             ),
             const SizedBox(height: 16.0),
-            Center(
-              child: Text(
-                "Showing results for: ${widget.searchQuery}",
-                style: TextStyleService.getDmSans(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w400,
-                ),
-              ),
-            ),
+            // Center(
+            //   child: Text(
+            //     "Showing results for: ${widget.searchQuery}",
+            //     style: TextStyleService.getDmSans(
+            //       fontSize: 18,
+            //       fontWeight: FontWeight.w400,
+            //     ),
+            //   ),
+            // ),
             scholarships.isNotEmpty
                 ? ListView.builder(
                     shrinkWrap: true,

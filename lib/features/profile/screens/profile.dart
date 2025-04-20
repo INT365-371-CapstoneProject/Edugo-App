@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:edugo/config/api_config.dart';
+import 'package:edugo/features/account/screens/manage_account.dart';
 import 'package:edugo/features/bookmark/screens/bookmark_management.dart';
 import 'package:edugo/features/login&register/login.dart';
 import 'package:edugo/features/notification/screens/notification_management.dart';
@@ -271,12 +272,14 @@ class _ProviderProfileState extends State<ProviderProfile> {
                     }
                   },
                 ),
-                _buildProfileOption(
-                    icon: Icons.verified,
-                    label: "Get Verified Status",
-                    onTap: () {
-                      // Perform action
-                    }),
+                // if (profile != null && profile!['role'] == "provider") ...[
+                //   _buildProfileOption(
+                //       icon: Icons.verified,
+                //       label: "Get Verified Status",
+                //       onTap: () {
+                //         // Perform action
+                //       }),
+                // ],
                 _buildProfileOption(
                     icon: Icons.lock,
                     label: "Change Password",
@@ -347,7 +350,28 @@ class _ProviderProfileState extends State<ProviderProfile> {
                     icon: Icons.settings,
                     label: "Manage Account",
                     onTap: () {
-                      // Perform action
+                      Navigator.pushReplacement(
+                        context,
+                        PageRouteBuilder(
+                          pageBuilder:
+                              (context, animation, secondaryAnimation) =>
+                                  ManageAccount(id: profile!['id']),
+                          transitionsBuilder:
+                              (context, animation, secondaryAnimation, child) {
+                            const begin = 0.0;
+                            const end = 1.0;
+                            const curve = Curves.easeOut;
+
+                            var tween = Tween(begin: begin, end: end)
+                                .chain(CurveTween(curve: curve));
+                            return FadeTransition(
+                              opacity: animation.drive(tween),
+                              child: child,
+                            );
+                          },
+                          transitionDuration: const Duration(milliseconds: 300),
+                        ),
+                      );
                     }),
                 Padding(
                   padding: const EdgeInsets.symmetric(
@@ -367,40 +391,40 @@ class _ProviderProfileState extends State<ProviderProfile> {
                   ),
                 ),
                 // Conditional rendering of verification button only for providers
-                isProvider
-                    ? Padding(
-                        padding: const EdgeInsets.only(top: 16.0),
-                        child: SizedBox(
-                          width: double.infinity,
-                          height: 50.0,
-                          child: ElevatedButton(
-                            onPressed: () {
-                              // Navigate to appropriate verification screen
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (context) =>
-                                        const ProviderManagement()),
-                              );
-                            },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF355FFF),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                            ),
-                            child: Text(
-                              "Get Verification",
-                              style: GoogleFonts.dmSans(
-                                fontSize: 16.0,
-                                fontWeight: FontWeight.w500,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ),
-                        ),
-                      )
-                    : Container(),
+                // isProvider
+                //     ? Padding(
+                //         padding: const EdgeInsets.only(top: 16.0),
+                //         child: SizedBox(
+                //           width: double.infinity,
+                //           height: 50.0,
+                //           child: ElevatedButton(
+                //             onPressed: () {
+                //               // Navigate to appropriate verification screen
+                //               Navigator.push(
+                //                 context,
+                //                 MaterialPageRoute(
+                //                     builder: (context) =>
+                //                         const ProviderManagement()),
+                //               );
+                //             },
+                //             style: ElevatedButton.styleFrom(
+                //               backgroundColor: const Color(0xFF355FFF),
+                //               shape: RoundedRectangleBorder(
+                //                 borderRadius: BorderRadius.circular(8),
+                //               ),
+                //             ),
+                //             child: Text(
+                //               "Get Verification",
+                //               style: GoogleFonts.dmSans(
+                //                 fontSize: 16.0,
+                //                 fontWeight: FontWeight.w500,
+                //                 color: Colors.white,
+                //               ),
+                //             ),
+                //           ),
+                //         ),
+                //       )
+                //     : Container(),
               ],
             ),
           ),
