@@ -16,8 +16,8 @@ class StatusBox extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 82,
-      height: 64,
+      width: 78, // Reduced width from 82 to 78
+      height: 60,
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(5.0),
@@ -36,13 +36,13 @@ class StatusBox extends StatelessWidget {
               ),
             ),
           ),
-          Flexible(
+          Expanded(
             child: Padding(
               padding: const EdgeInsets.only(
-                left: 9,
-                right: 14,
-                top: 10,
-                bottom: 10,
+                left: 8,
+                right: 8,
+                top: 8,
+                bottom: 8,
               ),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -51,20 +51,24 @@ class StatusBox extends StatelessWidget {
                   Text(
                     title,
                     style: TextStyleService.getDmSans(
-                      fontSize: 12,
+                      fontSize: 11,
                       fontWeight: FontWeight.w400,
                       color: Colors.black,
-                      height: 1,
+                      height: 1.1,
                     ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                  const SizedBox(height: 2),
+                  const SizedBox(height: 1),
                   Text(
                     count,
                     style: TextStyleService.getDmSans(
-                      fontSize: 14,
+                      fontSize: 13,
                       fontWeight: FontWeight.w500,
                       color: Colors.black,
                     ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ],
               ),

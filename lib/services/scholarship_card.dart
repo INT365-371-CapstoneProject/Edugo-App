@@ -158,7 +158,7 @@ class ScholarshipCard extends StatelessWidget {
                         ),
                     ],
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 4),
                   Text(
                     title,
                     style: const TextStyle(
@@ -167,7 +167,7 @@ class ScholarshipCard extends StatelessWidget {
                       color: Color(0xFF000000),
                       height: 1.4,
                     ),
-                    maxLines: 2,
+                    maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 4),
@@ -181,7 +181,7 @@ class ScholarshipCard extends StatelessWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 4),
                   Text(
                     description,
                     style: const TextStyle(
@@ -189,7 +189,7 @@ class ScholarshipCard extends StatelessWidget {
                       fontWeight: FontWeight.w400,
                       color: Color(0xFF94A2B8),
                     ),
-                    maxLines: 2,
+                    maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
                 ],

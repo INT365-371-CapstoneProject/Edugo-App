@@ -22,6 +22,7 @@ class ApiConfig {
 
   // Search endpoints
   static const String searchAnnounceUrl = "$apiUrl/search/announce-user";
+  static const String searchAnnounceProviderUrl ="$apiUrl/search/announce-provider";
 
   // Filter endpoints
   static const String categoryUrl = "$apiUrl/category";
