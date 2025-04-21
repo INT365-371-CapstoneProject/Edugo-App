@@ -122,318 +122,381 @@ class _ProviderProfileState extends State<ProviderProfile> {
     bool isProvider = profile != null && profile!['role'] == "provider";
     return Scaffold(
       backgroundColor: Color(0xFFFFFFFF),
-      body: ListView(
-        padding: EdgeInsets.zero,
+      body: Stack(
         children: [
-          // Cover Image Section
-          Container(
-            color: Colors.white, // Background color
-            child: Column(
+          Positioned.fill(
+            child: ListView(
+              padding: EdgeInsets.zero,
               children: [
-                SizedBox(
-                  height: coverHeight,
-                  child: Container(
-                    color: const Color(0xFF355FFF),
-                    child: Stack(
-                      clipBehavior: Clip.none,
-                      alignment: Alignment.center,
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.all(16.0),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                // Cover Image Section
+                Container(
+                  color: Colors.white, // Background color
+                  child: Column(
+                    children: [
+                      SizedBox(
+                        height: coverHeight,
+                        child: Container(
+                          color: const Color(0xFF355FFF),
+                          child: Stack(
+                            clipBehavior: Clip.none,
+                            alignment: Alignment.center,
                             children: [
-                              GestureDetector(
-                                onTap: () {},
-                                child: CircleAvatar(
-                                  backgroundColor: const Color(0xFFDAFB59),
-                                  child: Image.asset(
-                                    'assets/images/back_button.png',
-                                    width: 20.0,
-                                    height: 20.0,
-                                    color: const Color(0xFF355FFF),
-                                  ),
+                              Padding(
+                                padding: const EdgeInsets.all(16.0),
+                                child: Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    GestureDetector(
+                                      onTap: () {},
+                                      child: CircleAvatar(
+                                        backgroundColor:
+                                            const Color(0xFFDAFB59),
+                                        child: Image.asset(
+                                          'assets/images/back_button.png',
+                                          width: 20.0,
+                                          height: 20.0,
+                                          color: const Color(0xFF355FFF),
+                                        ),
+                                      ),
+                                    ),
+                                    CircleAvatar(
+                                      radius: 20,
+                                      backgroundColor: const Color(0xFFDAFB59),
+                                      child: GestureDetector(
+                                        onTap: () {
+                                          print(profile?["id"]);
+                                          Navigator.push(
+                                            context,
+                                            PageRouteBuilder(
+                                              pageBuilder: (context, animation,
+                                                      secondaryAnimation) =>
+                                                  NotificationList(
+                                                id: profile?['id'],
+                                              ),
+                                              transitionsBuilder: (context,
+                                                  animation,
+                                                  secondaryAnimation,
+                                                  child) {
+                                                const begin = 0.0;
+                                                const end = 1.0;
+                                                const curve = Curves.easeOut;
+
+                                                var tween = Tween(
+                                                        begin: begin, end: end)
+                                                    .chain(CurveTween(
+                                                        curve: curve));
+                                                return FadeTransition(
+                                                  opacity:
+                                                      animation.drive(tween),
+                                                  child: child,
+                                                );
+                                              },
+                                              transitionDuration:
+                                                  const Duration(
+                                                      milliseconds: 300),
+                                            ),
+                                          );
+                                        },
+                                        child: Image.asset(
+                                          'assets/images/notification.png',
+                                          width: 40.0,
+                                          height: 40.0,
+                                          color: const Color(0xFF355FFF),
+                                          colorBlendMode: BlendMode.srcIn,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
-                              CircleAvatar(
-                                radius: 20,
-                                backgroundColor: const Color(0xFFDAFB59),
-                                child: Image.asset(
-                                  'assets/images/notification.png',
-                                  width: 40.0,
-                                  height: 40.0,
+                              Positioned(
+                                top: top,
+                                child: Container(
+                                  margin: EdgeInsets.only(bottom: bottom),
+                                  width: profileHeight,
+                                  height: profileHeight,
+                                  decoration: BoxDecoration(
+                                    color: Colors.grey, // Background color
+                                    borderRadius: BorderRadius.circular(
+                                        profileHeight / 2),
+                                  ),
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(
+                                        profileHeight / 2),
+                                    child: imageData != null
+                                        ? Image.memory(imageData!)
+                                        : Image.asset(
+                                            'assets/images/avatar.png',
+                                            width: profileHeight,
+                                            height: profileHeight,
+                                            fit: BoxFit.cover,
+                                          ),
+                                  ),
                                 ),
                               ),
                             ],
                           ),
                         ),
-                        Positioned(
-                          top: top,
-                          child: Container(
-                            margin: EdgeInsets.only(bottom: bottom),
-                            width: profileHeight,
-                            height: profileHeight,
-                            decoration: BoxDecoration(
-                              color: Colors.grey, // Background color
-                              borderRadius:
-                                  BorderRadius.circular(profileHeight / 2),
-                            ),
-                            child: ClipRRect(
-                              borderRadius:
-                                  BorderRadius.circular(profileHeight / 2),
-                              child: imageData != null
-                                  ? Image.memory(imageData!)
-                                  : Image.asset(
-                                      'assets/images/welcome.png',
-                                      width: profileHeight,
-                                      height: profileHeight,
-                                      fit: BoxFit.cover,
+                      ),
+                    ],
+                  ),
+                ),
+                // Profile Options Section
+                Container(
+                  margin: EdgeInsets.only(top: bottom),
+                  padding: EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Center(
+                        child: Text(
+                          profile != null
+                              ? (profile!['role'] == "provider"
+                                  ? (profile!['company_name'].isNotEmpty
+                                      ? profile!['company_name']
+                                      : "No Company Name")
+                                  : "${profile!['first_name']} ${profile!['last_name']}"
+                                          .trim()
+                                          .isNotEmpty
+                                      ? "${profile!['first_name']} ${profile!['last_name']}"
+                                      : "No Name Available")
+                              : "Loading...",
+                          style: GoogleFonts.dmSans(
+                              fontSize: 20, fontWeight: FontWeight.w500),
+                        ),
+                      ),
+                      SizedBox(height: 16),
+                      // For role provider
+                      if (profile != null &&
+                          profile!['role'] == "provider") ...[
+                        Container(
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(24.0),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              GestureDetector(
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) =>
+                                          ProviderManagement(),
                                     ),
-                            ),
+                                  );
+                                },
+                                child: Image.asset(
+                                    "assets/images/scholarship_management.png"),
+                              ),
+                            ],
                           ),
                         ),
+                        const SizedBox(height: 0),
                       ],
-                    ),
+
+                      _buildProfileOption(
+                        icon: Icons.person,
+                        label: "Edit Profile",
+                        onTap: () {
+                          print(profile);
+                          if (profile != null) {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    ProviderProfileEdit(profileData: profile!),
+                              ),
+                            );
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                  content:
+                                      Text("Profile data is not available")),
+                            );
+                          }
+                        },
+                      ),
+                      // if (profile != null && profile!['role'] == "provider") ...[
+                      //   _buildProfileOption(
+                      //       icon: Icons.verified,
+                      //       label: "Get Verified Status",
+                      //       onTap: () {
+                      //         // Perform action
+                      //       }),
+                      // ],
+                      _buildProfileOption(
+                          icon: Icons.lock,
+                          label: "Change Password",
+                          onTap: () {
+                            // Navigate to Change Password Screen
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    const ChangePasswordScreen(),
+                              ),
+                            );
+                          }),
+                      _buildProfileOption(
+                          icon: Icons.bookmark,
+                          label: "Bookmark",
+                          onTap: () {
+                            Navigator.pushReplacement(
+                              context,
+                              PageRouteBuilder(
+                                pageBuilder:
+                                    (context, animation, secondaryAnimation) =>
+                                        BookmarkList(id: profile!['id']),
+                                transitionsBuilder: (context, animation,
+                                    secondaryAnimation, child) {
+                                  const begin = 0.0;
+                                  const end = 1.0;
+                                  const curve = Curves.easeOut;
+
+                                  var tween = Tween(begin: begin, end: end)
+                                      .chain(CurveTween(curve: curve));
+                                  return FadeTransition(
+                                    opacity: animation.drive(tween),
+                                    child: child,
+                                  );
+                                },
+                                transitionDuration:
+                                    const Duration(milliseconds: 300),
+                              ),
+                            );
+                          }),
+                      _buildProfileOption(
+                          icon: Icons.notifications,
+                          label: "Notification",
+                          onTap: () {
+                            Navigator.pushReplacement(
+                              context,
+                              PageRouteBuilder(
+                                pageBuilder:
+                                    (context, animation, secondaryAnimation) =>
+                                        NotificationList(id: profile!['id']),
+                                transitionsBuilder: (context, animation,
+                                    secondaryAnimation, child) {
+                                  const begin = 0.0;
+                                  const end = 1.0;
+                                  const curve = Curves.easeOut;
+
+                                  var tween = Tween(begin: begin, end: end)
+                                      .chain(CurveTween(curve: curve));
+                                  return FadeTransition(
+                                    opacity: animation.drive(tween),
+                                    child: child,
+                                  );
+                                },
+                                transitionDuration:
+                                    const Duration(milliseconds: 300),
+                              ),
+                            );
+                          }),
+                      _buildProfileOption(
+                          icon: Icons.settings,
+                          label: "Manage Account",
+                          onTap: () {
+                            Navigator.pushReplacement(
+                              context,
+                              PageRouteBuilder(
+                                pageBuilder:
+                                    (context, animation, secondaryAnimation) =>
+                                        ManageAccount(id: profile!['id']),
+                                transitionsBuilder: (context, animation,
+                                    secondaryAnimation, child) {
+                                  const begin = 0.0;
+                                  const end = 1.0;
+                                  const curve = Curves.easeOut;
+
+                                  var tween = Tween(begin: begin, end: end)
+                                      .chain(CurveTween(curve: curve));
+                                  return FadeTransition(
+                                    opacity: animation.drive(tween),
+                                    child: child,
+                                  );
+                                },
+                                transitionDuration:
+                                    const Duration(milliseconds: 300),
+                              ),
+                            );
+                          }),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                            vertical: 8.0), // เพิ่มระยะห่างแนวตั้ง
+                        child: ListTile(
+                          contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 16.0), // เพิ่ม padding ด้านซ้าย-ขวา
+                          leading: CircleAvatar(
+                            backgroundColor: const Color(0xFFEBEFFF),
+                            child: Icon(
+                              Icons.logout, // ใช้ไอคอน Logout
+                              color: const Color(0xFF355FFF), // กำหนดสีของไอคอน
+                            ),
+                          ),
+                          title: Text("Logout"),
+                          onTap: _handleLogout,
+                        ),
+                      ),
+
+                      // Conditional rendering of verification button only for providers
+                      // isProvider
+                      //     ? Padding(
+                      //         padding: const EdgeInsets.only(top: 16.0),
+                      //         child: SizedBox(
+                      //           width: double.infinity,
+                      //           height: 50.0,
+                      //           child: ElevatedButton(
+                      //             onPressed: () {
+                      //               // Navigate to appropriate verification screen
+                      //               Navigator.push(
+                      //                 context,
+                      //                 MaterialPageRoute(
+                      //                     builder: (context) =>
+                      //                         const ProviderManagement()),
+                      //               );
+                      //             },
+                      //             style: ElevatedButton.styleFrom(
+                      //               backgroundColor: const Color(0xFF355FFF),
+                      //               shape: RoundedRectangleBorder(
+                      //                 borderRadius: BorderRadius.circular(8),
+                      //               ),
+                      //             ),
+                      //             child: Text(
+                      //               "Get Verification",
+                      //               style: GoogleFonts.dmSans(
+                      //                 fontSize: 16.0,
+                      //                 fontWeight: FontWeight.w500,
+                      //                 color: Colors.white,
+                      //               ),
+                      //             ),
+                      //           ),
+                      //         ),
+                      //       )
+                      //     : Container(),
+                    ],
                   ),
                 ),
               ],
             ),
           ),
-          // Profile Options Section
-          Container(
-            margin: EdgeInsets.only(top: bottom),
-            padding: EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Center(
-                  child: Text(
-                    profile != null
-                        ? (profile!['role'] == "provider"
-                            ? (profile!['company_name'].isNotEmpty
-                                ? profile!['company_name']
-                                : "No Company Name")
-                            : "${profile!['first_name']} ${profile!['last_name']}"
-                                    .trim()
-                                    .isNotEmpty
-                                ? "${profile!['first_name']} ${profile!['last_name']}"
-                                : "No Name Available")
-                        : "Loading...",
-                    style: GoogleFonts.dmSans(
-                        fontSize: 20, fontWeight: FontWeight.w500),
-                  ),
-                ),
-                SizedBox(height: 16),
-                // For role provider
-                if (profile != null && profile!['role'] == "provider") ...[
-                  Container(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(12.0),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        GestureDetector(
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => ProviderManagement(),
-                              ),
-                            );
-                          },
-                          child: Image.asset(
-                              "assets/images/scholarship_management.png"),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                ],
-
-                _buildProfileOption(
-                  icon: Icons.person,
-                  label: "Edit Profile",
-                  onTap: () {
-                    print(profile);
-                    if (profile != null) {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) =>
-                              ProviderProfileEdit(profileData: profile!),
-                        ),
-                      );
-                    } else {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                            content: Text("Profile data is not available")),
-                      );
-                    }
-                  },
-                ),
-                // if (profile != null && profile!['role'] == "provider") ...[
-                //   _buildProfileOption(
-                //       icon: Icons.verified,
-                //       label: "Get Verified Status",
-                //       onTap: () {
-                //         // Perform action
-                //       }),
-                // ],
-                _buildProfileOption(
-                    icon: Icons.lock,
-                    label: "Change Password",
-                    onTap: () {
-                      // Navigate to Change Password Screen
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const ChangePasswordScreen(),
-                        ),
-                      );
-                    }),
-                _buildProfileOption(
-                    icon: Icons.bookmark,
-                    label: "Bookmark",
-                    onTap: () {
-                      Navigator.pushReplacement(
-                        context,
-                        PageRouteBuilder(
-                          pageBuilder:
-                              (context, animation, secondaryAnimation) =>
-                                  BookmarkList(id: profile!['id']),
-                          transitionsBuilder:
-                              (context, animation, secondaryAnimation, child) {
-                            const begin = 0.0;
-                            const end = 1.0;
-                            const curve = Curves.easeOut;
-
-                            var tween = Tween(begin: begin, end: end)
-                                .chain(CurveTween(curve: curve));
-                            return FadeTransition(
-                              opacity: animation.drive(tween),
-                              child: child,
-                            );
-                          },
-                          transitionDuration: const Duration(milliseconds: 300),
-                        ),
-                      );
-                    }),
-                _buildProfileOption(
-                    icon: Icons.notifications,
-                    label: "Notification",
-                    onTap: () {
-                      Navigator.pushReplacement(
-                        context,
-                        PageRouteBuilder(
-                          pageBuilder:
-                              (context, animation, secondaryAnimation) =>
-                                  NotificationList(id: profile!['id']),
-                          transitionsBuilder:
-                              (context, animation, secondaryAnimation, child) {
-                            const begin = 0.0;
-                            const end = 1.0;
-                            const curve = Curves.easeOut;
-
-                            var tween = Tween(begin: begin, end: end)
-                                .chain(CurveTween(curve: curve));
-                            return FadeTransition(
-                              opacity: animation.drive(tween),
-                              child: child,
-                            );
-                          },
-                          transitionDuration: const Duration(milliseconds: 300),
-                        ),
-                      );
-                    }),
-                _buildProfileOption(
-                    icon: Icons.settings,
-                    label: "Manage Account",
-                    onTap: () {
-                      Navigator.pushReplacement(
-                        context,
-                        PageRouteBuilder(
-                          pageBuilder:
-                              (context, animation, secondaryAnimation) =>
-                                  ManageAccount(id: profile!['id']),
-                          transitionsBuilder:
-                              (context, animation, secondaryAnimation, child) {
-                            const begin = 0.0;
-                            const end = 1.0;
-                            const curve = Curves.easeOut;
-
-                            var tween = Tween(begin: begin, end: end)
-                                .chain(CurveTween(curve: curve));
-                            return FadeTransition(
-                              opacity: animation.drive(tween),
-                              child: child,
-                            );
-                          },
-                          transitionDuration: const Duration(milliseconds: 300),
-                        ),
-                      );
-                    }),
-                Padding(
-                  padding: const EdgeInsets.symmetric(
-                      vertical: 8.0), // เพิ่มระยะห่างแนวตั้ง
-                  child: ListTile(
-                    contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16.0), // เพิ่ม padding ด้านซ้าย-ขวา
-                    leading: CircleAvatar(
-                      backgroundColor: const Color(0xFFEBEFFF),
-                      child: Icon(
-                        Icons.logout, // ใช้ไอคอน Logout
-                        color: const Color(0xFF355FFF), // กำหนดสีของไอคอน
-                      ),
-                    ),
-                    title: Text("Logout"),
-                    onTap: _handleLogout,
-                  ),
-                ),
-                // Conditional rendering of verification button only for providers
-                // isProvider
-                //     ? Padding(
-                //         padding: const EdgeInsets.only(top: 16.0),
-                //         child: SizedBox(
-                //           width: double.infinity,
-                //           height: 50.0,
-                //           child: ElevatedButton(
-                //             onPressed: () {
-                //               // Navigate to appropriate verification screen
-                //               Navigator.push(
-                //                 context,
-                //                 MaterialPageRoute(
-                //                     builder: (context) =>
-                //                         const ProviderManagement()),
-                //               );
-                //             },
-                //             style: ElevatedButton.styleFrom(
-                //               backgroundColor: const Color(0xFF355FFF),
-                //               shape: RoundedRectangleBorder(
-                //                 borderRadius: BorderRadius.circular(8),
-                //               ),
-                //             ),
-                //             child: Text(
-                //               "Get Verification",
-                //               style: GoogleFonts.dmSans(
-                //                 fontSize: 16.0,
-                //                 fontWeight: FontWeight.w500,
-                //                 color: Colors.white,
-                //               ),
-                //             ),
-                //           ),
-                //         ),
-                //       )
-                //     : Container(),
-              ],
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: MediaQuery.removeViewInsets(
+              context: context,
+              removeBottom: true,
+              child: FooterNav(
+                pageName: "profile",
+              ),
             ),
           ),
         ],
       ),
       // Footer Navigation Bar
-      bottomNavigationBar: FooterNav(
-        pageName: "profile",
-      ),
     );
   }
 

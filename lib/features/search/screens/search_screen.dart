@@ -25,38 +25,79 @@ class SearchScreen extends StatefulWidget {
 
 class _SearchScreenState extends State<SearchScreen> {
   int _currentIndex = 0;
-  List<dynamic> scholarships = [];
+  List<dynamic> scholarshipsForRecommended = [];
+  List<dynamic> scholarshipsForAll = [];
   final AuthService authService =
       AuthService(navigatorKey: navigatorKey); // Instance of AuthService
   final TextEditingController _searchController = TextEditingController();
   final Map<String, Uint8List?> _imageCache = {};
   Map<String, Set<String>> _selectedFilters = {}; // Add state for filters
+  String? providerName;
+  final Map<String, Uint8List?> _imageAvatarCache = {};
+  final Map<String, Future<Uint8List?>> _imageFutureCache = {};
+  final Map<String, Future<Uint8List?>> _avatarFutureCache = {};
+  final Map<String, Future<String?>> _providerNameFutureCache = {};
 
   @override
   void initState() {
     super.initState();
-    fetchScholarships(); // โหลดข้อมูลทุนการศึกษาเมื่อเริ่มต้น
+    // โหลดข้อมูลทุนการศึกษาเมื่อเริ่มต้น
+    getAnswer();
+    fetchAllScholarships();
   }
 
-  Future<void> fetchScholarships() async {
+  Future<void> fetchScholarshipsForAnswer(
+      bool isAnswer, Map<String, Set<String>>? filters) async {
     try {
       String? token = await authService.getToken();
-      Map<String, String> headers = {}; // Explicitly type the map
+      Map<String, String> headers = {};
       if (token != null) {
         headers['Authorization'] = 'Bearer $token';
       }
 
-      final response = await http.get(Uri.parse(ApiConfig.announceUserUrl),
-          headers: headers);
+      Uri uri;
+      if (isAnswer && filters != null) {
+        List<String> queryParams = [];
+
+        // Education Levels
+        if (filters.containsKey('educationLevels') &&
+            filters['educationLevels']!.isNotEmpty) {
+          final levels = filters['educationLevels']!.join(',');
+          queryParams.add("education_level=$levels");
+        }
+
+        // Countries
+        if (filters.containsKey('countries') &&
+            filters['countries']!.isNotEmpty) {
+          final countries = filters['countries']!.join(',');
+          queryParams.add("country=$countries");
+        }
+
+        String url = ApiConfig.searchAnnounceUrl;
+        if (queryParams.isNotEmpty) {
+          url += "?${queryParams.join('&')}";
+        }
+
+        uri = Uri.parse(url);
+      } else {
+        uri = Uri.parse(ApiConfig.announceUserUrl);
+      }
+
+      final response = await http.get(uri, headers: headers);
 
       if (response.statusCode == 200) {
-        final Map<String, dynamic> data =
-            json.decode(response.body); // Handle the response as a map
-        List<dynamic> scholarshipData =
-            data['data']; // Get the 'data' part, which is a list
+        final Map<String, dynamic> data = json.decode(response.body);
+
+        // ✅ Retry with default fetch if filtered data is null
+        if (data['data'] == null) {
+          await fetchScholarshipsForAnswer(false, null);
+          return; // ✅ This is valid in Future<void>
+        }
+
+        List<dynamic> scholarshipData = data['data'];
 
         setState(() {
-          scholarships = scholarshipData.map((scholarship) {
+          scholarshipsForRecommended = scholarshipData.map((scholarship) {
             scholarship['image'] = scholarship['image'] != null
                 ? "${ApiConfig.announceUserUrl}/${scholarship['id']}/image"
                 : 'assets/images/scholarship_program.png';
@@ -67,10 +108,12 @@ class _SearchScreenState extends State<SearchScreen> {
                 scholarship['published_date'] ?? scholarship['publish_date'];
             scholarship['close_date'] =
                 scholarship['close_date'] ?? scholarship['close_date'];
+            scholarship['provider_id'] =
+                scholarship['provider_id'] ?? scholarship['provider_id'];
             return scholarship;
           }).toList();
 
-          scholarships.sort(
+          scholarshipsForRecommended.sort(
               (a, b) => b['published_date'].compareTo(a['published_date']));
         });
       } else {
@@ -80,6 +123,179 @@ class _SearchScreenState extends State<SearchScreen> {
       setState(() {});
       print("Error fetching scholarships: $e");
     }
+  }
+
+  Future<void> fetchAllScholarships() async {
+    try {
+      String? token = await authService.getToken();
+      Map<String, String> headers = {
+        'Content-Type': 'application/json',
+      };
+      if (token != null) {
+        headers['Authorization'] = 'Bearer $token';
+      }
+
+      final response = await http.get(
+        Uri.parse(ApiConfig.announceUserUrl),
+        headers: headers,
+      );
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> data = json.decode(response.body);
+        List<dynamic> scholarshipData = data['data'] ?? [];
+
+        setState(() {
+          scholarshipsForAll =
+              scholarshipData.map<Map<String, dynamic>>((item) {
+            final String id = item['id'].toString();
+            return {
+              'id': id,
+              'image': item['image'] != null
+                  ? "${ApiConfig.announceUserUrl}/$id/image"
+                  : 'assets/images/scholarship_program.png',
+              'title': item['title'] ?? 'No Title',
+              'description': item['description'] ?? 'No Description Available',
+              'published_date':
+                  item['published_date'] ?? item['publish_date'] ?? '',
+              'close_date': item['close_date'] ?? '',
+              'provider_id': item['provider_id'] ?? '',
+            };
+          }).toList();
+
+          scholarshipsForAll.sort((a, b) {
+            final aDate = DateTime.tryParse(a['published_date']) ?? DateTime(0);
+            final bDate = DateTime.tryParse(b['published_date']) ?? DateTime(0);
+            return bDate.compareTo(aDate);
+          });
+        });
+      } else {
+        throw Exception('Failed to load scholarships: ${response.statusCode}');
+      }
+    } catch (e) {
+      setState(() {}); // Consider showing an error message instead
+      print("Error fetching scholarships: $e");
+    }
+  }
+
+  Future<Uint8List?> getImageFuture(String url) {
+    return _imageFutureCache.putIfAbsent(url, () => fetchImage(url));
+  }
+
+  Future<Uint8List?> getAvatarFuture(String url) {
+    return _avatarFutureCache.putIfAbsent(url, () => fetchPostAvatar(url));
+  }
+
+  Future<String?> getProviderNameFuture(String url) {
+    return _providerNameFutureCache.putIfAbsent(
+        url, () => fetchProviderName(url));
+  }
+
+  Future<Uint8List?> fetchPostAvatar(String url) async {
+    if (_imageAvatarCache.containsKey(url)) {
+      return _imageAvatarCache[url];
+    }
+
+    try {
+      String? token = await authService.getToken();
+      Map<String, String> headers = {};
+      if (token != null) {
+        headers['Authorization'] = 'Bearer $token';
+      }
+
+      final response = await http.get(Uri.parse(url), headers: headers);
+
+      if (response.statusCode == 200) {
+        _imageAvatarCache[url] = response.bodyBytes;
+        return response.bodyBytes;
+      } else {
+        debugPrint("Failed to load image: ${response.statusCode}");
+      }
+    } catch (e) {
+      debugPrint("Error fetching image: $e");
+    }
+    _imageAvatarCache[url] = null;
+    return null;
+  }
+
+  Future<String?> fetchProviderName(String url) async {
+    try {
+      String? token = await authService.getToken();
+      Map<String, String> headers = {};
+      if (token != null) {
+        headers['Authorization'] = 'Bearer $token';
+      }
+
+      final response = await http.get(Uri.parse(url), headers: headers);
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        providerName = data['company_name'];
+        return providerName;
+      } else {
+        debugPrint("Failed to load company name: ${response.statusCode}");
+      }
+    } catch (e) {
+      debugPrint("Error fetching company name: $e");
+    }
+    providerName = null;
+    return null;
+  }
+
+  Future<http.Response?> getAnswer() async {
+    final url = Uri.parse(ApiConfig.answerUrl);
+    String? token = await authService.getToken();
+
+    Map<String, String> headers = {'Content-Type': 'application/json'};
+    if (token != null) {
+      headers['Authorization'] = 'Bearer $token';
+    }
+
+    try {
+      final response = await http.get(url, headers: headers);
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final Map<String, dynamic> data = json.decode(response.body);
+        print(data);
+
+        final List categories = data['categories'] ?? [];
+        final List countries = data['countries'] ?? [];
+        final educationLevel = data['education_level'];
+
+        final isEmptyData =
+            categories.isEmpty && countries.isEmpty && educationLevel == null;
+
+        if (isEmptyData) {
+          fetchScholarshipsForAnswer(false, null);
+        } else {
+          final filters = extractFiltersFromAnswerData(data);
+          fetchScholarshipsForAnswer(true, filters);
+        }
+
+        return response;
+      } else {
+        fetchScholarshipsForAnswer(false, null);
+      }
+    } catch (e) {
+      print("Error fetching answer: $e");
+      fetchScholarshipsForAnswer(false, null);
+    }
+
+    return null;
+  }
+
+  // ฟังก์ชันแปลงข้อมูลจาก getAnswer ให้กลายเป็น filters
+  Map<String, Set<String>> extractFiltersFromAnswerData(
+      Map<String, dynamic> data) {
+    final Set<String> countries = (data['countries'] as List)
+        .map<String>((c) => c['name'].toString())
+        .toSet();
+
+    final String? educationLevel = data['education_level']?.toString();
+
+    return {
+      if (countries.isNotEmpty) 'countries': countries,
+      if (educationLevel != null && educationLevel.isNotEmpty)
+        'educationLevels': {educationLevel},
+    };
   }
 
   Future<Uint8List?> fetchImage(String url) async {
@@ -225,9 +441,9 @@ class _SearchScreenState extends State<SearchScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      body: Column(
+      body: Stack(
         children: [
-          Expanded(
+          Positioned.fill(
             child: SingleChildScrollView(
               child: Column(
                 children: [
@@ -408,7 +624,7 @@ class _SearchScreenState extends State<SearchScreen> {
                     child: Align(
                       alignment: Alignment.centerLeft,
                       child: Text(
-                        "Features & New Scholarships",
+                        "Recommended countries just for you",
                         style: TextStyleService.getDmSans(
                             fontSize: 16,
                             fontWeight: FontWeight.w400,
@@ -417,99 +633,87 @@ class _SearchScreenState extends State<SearchScreen> {
                     ),
                   ),
 
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 16),
 
                   // Scholarships Section (Horizontal Scroll)
                   SizedBox(
-                    height: 240, // เพิ่มความสูงให้รองรับ Text
+                    height: 250,
                     child: ListView.builder(
-                      scrollDirection: Axis.horizontal, // ให้เลื่อนไปทางแนวนอน
+                      scrollDirection: Axis.horizontal,
                       padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                      itemCount: scholarships.length,
+                      itemCount: scholarshipsForRecommended.length,
                       itemBuilder: (context, index) {
-                        final scholarship = scholarships[index];
-
-                        // แปลงวันที่เป็น DateTime และตรวจสอบ null
+                        final scholarship = scholarshipsForRecommended[index];
                         final DateTime publishedDate =
                             DateTime.tryParse(scholarship['published_date']) ??
                                 DateTime.now();
                         final DateTime closeDate =
                             DateTime.tryParse(scholarship['close_date']) ??
                                 DateTime.now();
-
                         final String imageUrl =
                             "${ApiConfig.announceUserUrl}/${scholarship['id']}/image";
-
-                        // แปลงวันที่เป็นรูปแบบที่ต้องการ
                         final duration =
                             "${DateFormat('d MMM').format(publishedDate)} - ${DateFormat('d MMM yyyy').format(closeDate)}";
 
-                        return Padding(
-                          padding: const EdgeInsets.only(
-                              right: 12.0), // เพิ่มระยะห่างระหว่างรูป
-                          child: GestureDetector(
-                            // Wrap with GestureDetector
-                            onTap: () async {
-                              final existingData = {
-                                'id': scholarship['id'],
-                                'title': scholarship['title'],
-                                'url': scholarship['url'],
-                                'category': scholarship['category'],
-                                'country': scholarship['country'],
-                                'description': scholarship['description'],
-                                'image': scholarship['image'],
-                                'attach_file': scholarship['attach_file'],
-                                'published_date': scholarship['published_date'],
-                                'close_date': scholarship['close_date'],
-                                'education_level':
-                                    scholarship['education_level'],
-                                'attach_name': scholarship['attach_name'],
-                              };
+                        final String providerName =
+                            "${ApiConfig.providerUrl}/${scholarship['provider_id']}";
 
-                              // Fetch the image and update the cache if necessary
-                              final cachedImage = await fetchImage(imageUrl);
+                        final String providerImage =
+                            "${ApiConfig.providerUrl}/avatar/${scholarship['provider_id']}";
 
-                              // Add the cached image to existingData
-                              existingData['cachedImage'] = cachedImage;
-                              // --- Start Modification ---
-                              // Pass previousRouteName
-                              existingData['previousRouteName'] = 'search';
-                              // --- End Modification ---
+                        return GestureDetector(
+                          onTap: () async {
+                            final existingData = {
+                              'id': scholarship['id'],
+                              'title': scholarship['title'],
+                              'url': scholarship['url'],
+                              'category': scholarship['category'],
+                              'country': scholarship['country'],
+                              'description': scholarship['description'],
+                              'image': scholarship['image'],
+                              'attach_file': scholarship['attach_file'],
+                              'published_date': scholarship['published_date'],
+                              'close_date': scholarship['close_date'],
+                              'education_level': scholarship['education_level'],
+                              'attach_name': scholarship['attach_name'],
+                            };
 
-                              Navigator.push(
-                                // Use push instead of pushReplacement if you want back button functionality
-                                context,
-                                PageRouteBuilder(
-                                  pageBuilder: (context, animation,
-                                          secondaryAnimation) =>
-                                      ProviderDetail(
-                                    initialData: existingData,
-                                    isProvider: false, // User is seeking
-                                    // --- Start Modification ---
-                                    // Pass previousRouteName as a separate parameter as well
-                                    previousRouteName: 'search',
-                                    // --- End Modification ---
-                                  ),
-                                  transitionsBuilder: (context, animation,
-                                      secondaryAnimation, child) {
-                                    const begin = 0.0;
-                                    const end = 1.0;
-                                    const curve = Curves.easeOut;
-                                    var tween = Tween(begin: begin, end: end)
-                                        .chain(CurveTween(curve: curve));
-                                    return FadeTransition(
-                                      opacity: animation.drive(tween),
-                                      child: child,
-                                    );
-                                  },
-                                  transitionDuration:
-                                      const Duration(milliseconds: 300),
+                            // Fetch the image and update the cache if necessary
+                            final cachedImage = await fetchImage(imageUrl);
+
+                            // Add the cached image to existingData
+                            existingData['cachedImage'] = cachedImage;
+                            Navigator.pushReplacement(
+                              context,
+                              PageRouteBuilder(
+                                pageBuilder:
+                                    (context, animation, secondaryAnimation) =>
+                                        ProviderDetail(
+                                  initialData: existingData,
+                                  // Always treat navigation from home screen as non-provider view for edit/delete buttons
+                                  isProvider: false,
                                 ),
-                              );
-                            },
+                                transitionsBuilder: (context, animation,
+                                    secondaryAnimation, child) {
+                                  const begin = 0.0;
+                                  const end = 1.0;
+                                  const curve = Curves.easeOut;
+                                  var tween = Tween(begin: begin, end: end)
+                                      .chain(CurveTween(curve: curve));
+                                  return FadeTransition(
+                                    opacity: animation.drive(tween),
+                                    child: child,
+                                  );
+                                },
+                                transitionDuration:
+                                    const Duration(milliseconds: 300),
+                              ),
+                            );
+                          },
+                          child: Padding(
+                            padding: const EdgeInsets.only(right: 12.0),
                             child: Column(
-                              crossAxisAlignment:
-                                  CrossAxisAlignment.start, // จัด text ชิดซ้าย
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 ClipRRect(
                                   borderRadius: BorderRadius.circular(12.0),
@@ -517,15 +721,14 @@ class _SearchScreenState extends State<SearchScreen> {
                                       ? (_imageCache[imageUrl] != null
                                           ? Image.memory(
                                               _imageCache[imageUrl]!,
-                                              width: 144, // กำหนดขนาดของรูป
-                                              height:
-                                                  160, // ปรับความสูงให้พอดีกับ Container
+                                              width: 144,
+                                              height: 192,
                                               fit: BoxFit.cover,
                                             )
                                           : Image.asset(
                                               "assets/images/scholarship_program.png",
                                               width: 144,
-                                              height: 160,
+                                              height: 192,
                                               fit: BoxFit.cover,
                                             ))
                                       : FutureBuilder<Uint8List?>(
@@ -533,11 +736,10 @@ class _SearchScreenState extends State<SearchScreen> {
                                           builder: (context, snapshot) {
                                             if (snapshot.connectionState ==
                                                 ConnectionState.waiting) {
-                                              return Container(
+                                              return const SizedBox(
                                                 width: 144,
-                                                height: 160,
-                                                color: Colors.grey[200],
-                                                child: const Center(
+                                                height: 192,
+                                                child: Center(
                                                     child:
                                                         CircularProgressIndicator()),
                                               );
@@ -546,14 +748,14 @@ class _SearchScreenState extends State<SearchScreen> {
                                               return Image.asset(
                                                 "assets/images/scholarship_program.png",
                                                 width: 144,
-                                                height: 160,
+                                                height: 192,
                                                 fit: BoxFit.cover,
                                               );
                                             }
                                             return Image.memory(
                                               snapshot.data!,
                                               width: 144,
-                                              height: 160,
+                                              height: 192,
                                               fit: BoxFit.cover,
                                             );
                                           },
@@ -566,23 +768,153 @@ class _SearchScreenState extends State<SearchScreen> {
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
                                     children: [
-                                      Text(
-                                        duration,
-                                        style: TextStyleService.getDmSans(
-                                          fontSize: 8,
-                                          color: Color(0xFF02A4CCC),
-                                          fontWeight: FontWeight.w400,
+                                      SizedBox(
+                                        width: 144,
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              duration,
+                                              style: TextStyleService.getDmSans(
+                                                  fontSize: 8,
+                                                  color: Color(0xFF2A4CCC),
+                                                  fontWeight: FontWeight.w400),
+                                            ),
+                                            const SizedBox(height: 4.0),
+                                            Text(
+                                              scholarship['title'],
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                              style: TextStyleService.getDmSans(
+                                                fontSize: 11,
+                                                fontWeight: FontWeight.w600,
+                                                color: Color(0xFF000000),
+                                              ),
+                                            ),
+                                            const SizedBox(height: 4.0),
+                                            SizedBox(
+                                              width: double.infinity,
+                                              child: Row(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.center,
+                                                children: [
+                                                  CircleAvatar(
+                                                    radius: 6,
+                                                    backgroundImage: _imageCache
+                                                                .containsKey(
+                                                                    providerImage) &&
+                                                            _imageCache[
+                                                                    providerImage] !=
+                                                                null
+                                                        ? MemoryImage(_imageCache[
+                                                            providerImage]!) // ใช้ภาพจากแคช
+                                                        : null, // ถ้าไม่มีภาพในแคช
+                                                    child: !_imageCache
+                                                            .containsKey(
+                                                                providerImage)
+                                                        ? FutureBuilder<
+                                                            Uint8List?>(
+                                                            future:
+                                                                getAvatarFuture(
+                                                                    providerImage),
+                                                            builder: (context,
+                                                                snapshot) {
+                                                              if (snapshot
+                                                                      .connectionState ==
+                                                                  ConnectionState
+                                                                      .waiting) {
+                                                                return const Center(
+                                                                  child:
+                                                                      CircularProgressIndicator(),
+                                                                );
+                                                              }
+                                                              if (snapshot
+                                                                      .data ==
+                                                                  null) {
+                                                                return ClipOval(
+                                                                  child: Image
+                                                                      .asset(
+                                                                    "assets/images/avatar.png",
+                                                                    fit: BoxFit
+                                                                        .cover,
+                                                                    width: 40,
+                                                                    height: 40,
+                                                                  ),
+                                                                );
+                                                              }
+                                                              return CircleAvatar(
+                                                                radius: 20,
+                                                                backgroundImage:
+                                                                    MemoryImage(
+                                                                        snapshot
+                                                                            .data!),
+                                                              );
+                                                            },
+                                                          )
+                                                        : null,
+                                                  ),
+                                                  const SizedBox(width: 4.0),
+                                                  Expanded(
+                                                    child:
+                                                        FutureBuilder<String?>(
+                                                      future:
+                                                          getProviderNameFuture(
+                                                              providerName),
+                                                      builder:
+                                                          (context, snapshot) {
+                                                        if (snapshot
+                                                                .connectionState ==
+                                                            ConnectionState
+                                                                .waiting) {
+                                                          return const SizedBox(
+                                                            width: 60,
+                                                            height: 10,
+                                                            child:
+                                                                LinearProgressIndicator(),
+                                                          );
+                                                        }
+                                                        if (snapshot.hasError ||
+                                                            snapshot.data ==
+                                                                null) {
+                                                          return Text(
+                                                            "Unknown",
+                                                            style:
+                                                                TextStyleService
+                                                                    .getDmSans(
+                                                              fontSize: 9.415,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .w400,
+                                                              color: Color(
+                                                                  0xFF000000),
+                                                            ),
+                                                          );
+                                                        }
+
+                                                        return Text(
+                                                          snapshot.data!,
+                                                          maxLines: 1,
+                                                          overflow: TextOverflow
+                                                              .ellipsis,
+                                                          style:
+                                                              TextStyleService
+                                                                  .getDmSans(
+                                                            fontSize: 9.415,
+                                                            fontWeight:
+                                                                FontWeight.w400,
+                                                            color: Color(
+                                                                0xFF000000),
+                                                          ),
+                                                        );
+                                                      },
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          ],
                                         ),
-                                      ),
-                                      const SizedBox(height: 4.0),
-                                      Text(
-                                        scholarship['title'],
-                                        maxLines: 2,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: TextStyleService.getDmSans(
-                                            fontSize: 11,
-                                            fontWeight: FontWeight.w600,
-                                            color: Color(0xFF000000)),
                                       ),
                                     ],
                                   ),
@@ -594,14 +926,331 @@ class _SearchScreenState extends State<SearchScreen> {
                       },
                     ),
                   ),
+                  SizedBox(height: 16),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        "Let's explore all the scholarship",
+                        style: TextStyleService.getDmSans(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w400,
+                            color: const Color(0xFF000000)),
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 16),
+                  // All Scholarship
+                  GridView.builder(
+                    shrinkWrap: true,
+                    physics:
+                        NeverScrollableScrollPhysics(), // ปิด scroll เพราะมี scroll ข้างนอกแล้ว
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                    itemCount: scholarshipsForAll.length,
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 2, // จำนวนคอลัมน์ = 2
+                      crossAxisSpacing: 16.0, // ระยะห่างระหว่างคอลัมน์
+                      mainAxisSpacing: 12.0, // ระยะห่างระหว่างแถว
+                      childAspectRatio:
+                          0.63, // สัดส่วนความสูง/กว้าง ของแต่ละ item
+                    ),
+                    itemBuilder: (context, index) {
+                      final scholarship = scholarshipsForAll[index];
+                      final DateTime publishedDate =
+                          DateTime.tryParse(scholarship['published_date']) ??
+                              DateTime.now();
+                      final DateTime closeDate =
+                          DateTime.tryParse(scholarship['close_date']) ??
+                              DateTime.now();
+                      final String imageUrl =
+                          "${ApiConfig.announceUserUrl}/${scholarship['id']}/image";
+                      final duration =
+                          "${DateFormat('d MMM').format(publishedDate)} - ${DateFormat('d MMM yyyy').format(closeDate)}";
+
+                      final String providerName =
+                          "${ApiConfig.providerUrl}/${scholarship['provider_id']}";
+
+                      final String providerImage =
+                          "${ApiConfig.providerUrl}/avatar/${scholarship['provider_id']}";
+
+                      return GestureDetector(
+                        onTap: () async {
+                          final existingData = {
+                            'id': scholarship['id'],
+                            'title': scholarship['title'],
+                            'url': scholarship['url'],
+                            'category': scholarship['category'],
+                            'country': scholarship['country'],
+                            'description': scholarship['description'],
+                            'image': scholarship['image'],
+                            'attach_file': scholarship['attach_file'],
+                            'published_date': scholarship['published_date'],
+                            'close_date': scholarship['close_date'],
+                            'education_level': scholarship['education_level'],
+                            'attach_name': scholarship['attach_name'],
+                          };
+
+                          // Fetch the image and update the cache if necessary
+                          final cachedImage = await fetchImage(imageUrl);
+
+                          // Add the cached image to existingData
+                          existingData['cachedImage'] = cachedImage;
+                          Navigator.pushReplacement(
+                            context,
+                            PageRouteBuilder(
+                              pageBuilder:
+                                  (context, animation, secondaryAnimation) =>
+                                      ProviderDetail(
+                                initialData: existingData,
+                                // Always treat navigation from home screen as non-provider view for edit/delete buttons
+                                isProvider: false,
+                              ),
+                              transitionsBuilder: (context, animation,
+                                  secondaryAnimation, child) {
+                                const begin = 0.0;
+                                const end = 1.0;
+                                const curve = Curves.easeOut;
+                                var tween = Tween(begin: begin, end: end)
+                                    .chain(CurveTween(curve: curve));
+                                return FadeTransition(
+                                  opacity: animation.drive(tween),
+                                  child: child,
+                                );
+                              },
+                              transitionDuration:
+                                  const Duration(milliseconds: 300),
+                            ),
+                          );
+                        },
+                        child: Padding(
+                          padding: const EdgeInsets.only(right: 0.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(12.0),
+                                child: _imageCache.containsKey(imageUrl)
+                                    ? (_imageCache[imageUrl] != null
+                                        ? Image.memory(
+                                            _imageCache[imageUrl]!,
+                                            width: 200,
+                                            height: 230,
+                                            fit: BoxFit.cover,
+                                          )
+                                        : Image.asset(
+                                            "assets/images/scholarship_program.png",
+                                            width: 200,
+                                            height: 230,
+                                            fit: BoxFit.cover,
+                                          ))
+                                    : FutureBuilder<Uint8List?>(
+                                        future: fetchImage(imageUrl),
+                                        builder: (context, snapshot) {
+                                          if (snapshot.connectionState ==
+                                              ConnectionState.waiting) {
+                                            return const SizedBox(
+                                              width: 200,
+                                              height: 230,
+                                              child: Center(
+                                                  child:
+                                                      CircularProgressIndicator()),
+                                            );
+                                          }
+                                          if (snapshot.data == null) {
+                                            return Image.asset(
+                                              "assets/images/scholarship_program.png",
+                                              width: 200,
+                                              height: 230,
+                                              fit: BoxFit.cover,
+                                            );
+                                          }
+                                          return Image.memory(
+                                            snapshot.data!,
+                                            width: 200,
+                                            height: 230,
+                                            fit: BoxFit.cover,
+                                          );
+                                        },
+                                      ),
+                              ),
+                              const SizedBox(height: 6.0),
+                              SizedBox(
+                                width: 144,
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    SizedBox(
+                                      width: 144,
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            duration,
+                                            style: TextStyleService.getDmSans(
+                                                fontSize: 8,
+                                                color: Color(0xFF2A4CCC),
+                                                fontWeight: FontWeight.w400),
+                                          ),
+                                          const SizedBox(height: 4.0),
+                                          Text(
+                                            scholarship['title'],
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: TextStyleService.getDmSans(
+                                              fontSize: 11,
+                                              fontWeight: FontWeight.w600,
+                                              color: Color(0xFF000000),
+                                            ),
+                                          ),
+                                          const SizedBox(height: 4.0),
+                                          SizedBox(
+                                            width: double.infinity,
+                                            child: Row(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.center,
+                                              children: [
+                                                CircleAvatar(
+                                                  radius: 6,
+                                                  backgroundImage: _imageCache
+                                                              .containsKey(
+                                                                  providerImage) &&
+                                                          _imageCache[
+                                                                  providerImage] !=
+                                                              null
+                                                      ? MemoryImage(_imageCache[
+                                                          providerImage]!) // ใช้ภาพจากแคช
+                                                      : null, // ถ้าไม่มีภาพในแคช
+                                                  child: !_imageCache
+                                                          .containsKey(
+                                                              providerImage)
+                                                      ? FutureBuilder<
+                                                          Uint8List?>(
+                                                          future:
+                                                              getAvatarFuture(
+                                                                  providerImage),
+                                                          builder: (context,
+                                                              snapshot) {
+                                                            if (snapshot
+                                                                    .connectionState ==
+                                                                ConnectionState
+                                                                    .waiting) {
+                                                              return const Center(
+                                                                child:
+                                                                    CircularProgressIndicator(),
+                                                              );
+                                                            }
+                                                            if (snapshot.data ==
+                                                                null) {
+                                                              return ClipOval(
+                                                                child:
+                                                                    Image.asset(
+                                                                  "assets/images/avatar.png",
+                                                                  fit: BoxFit
+                                                                      .cover,
+                                                                  width: 40,
+                                                                  height: 40,
+                                                                ),
+                                                              );
+                                                            }
+                                                            return CircleAvatar(
+                                                              radius: 20,
+                                                              backgroundImage:
+                                                                  MemoryImage(
+                                                                      snapshot
+                                                                          .data!),
+                                                            );
+                                                          },
+                                                        )
+                                                      : null,
+                                                ),
+                                                const SizedBox(width: 4.0),
+                                                Expanded(
+                                                  child: FutureBuilder<String?>(
+                                                    future:
+                                                        getProviderNameFuture(
+                                                            providerName),
+                                                    builder:
+                                                        (context, snapshot) {
+                                                      if (snapshot
+                                                              .connectionState ==
+                                                          ConnectionState
+                                                              .waiting) {
+                                                        return const SizedBox(
+                                                          width: 60,
+                                                          height: 10,
+                                                          child:
+                                                              LinearProgressIndicator(),
+                                                        );
+                                                      }
+                                                      if (snapshot.hasError ||
+                                                          snapshot.data ==
+                                                              null) {
+                                                        return Text(
+                                                          "Unknown",
+                                                          style:
+                                                              TextStyleService
+                                                                  .getDmSans(
+                                                            fontSize: 9.415,
+                                                            fontWeight:
+                                                                FontWeight.w400,
+                                                            color: Color(
+                                                                0xFF000000),
+                                                          ),
+                                                        );
+                                                      }
+
+                                                      return Text(
+                                                        snapshot.data!,
+                                                        maxLines: 1,
+                                                        overflow: TextOverflow
+                                                            .ellipsis,
+                                                        style: TextStyleService
+                                                            .getDmSans(
+                                                          fontSize: 9.415,
+                                                          fontWeight:
+                                                              FontWeight.w400,
+                                                          color:
+                                                              Color(0xFF000000),
+                                                        ),
+                                                      );
+                                                    },
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  ),
                   const SizedBox(
                       height: 20), // Add some spacing before the footer
                 ],
               ),
             ),
           ),
-          FooterNav(
-            pageName: "search",
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: MediaQuery.removeViewInsets(
+              context: context,
+              removeBottom: true,
+              child: FooterNav(
+                pageName: "search",
+              ),
+            ),
           ),
         ],
       ),

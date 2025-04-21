@@ -126,7 +126,12 @@ class _HomeScreenAppState extends State<HomeScreenApp> {
   bool isProvider = false;
   final TextEditingController _searchController = TextEditingController();
   Map<String, Set<String>> _selectedFilters = {};
-
+  String? providerName;
+  final Map<String, Uint8List?> _imageAvatarCache = {};
+  final Map<String, Future<Uint8List?>> _imageFutureCache = {};
+  final Map<String, Future<Uint8List?>> _avatarFutureCache = {};
+  final Map<String, Future<String?>> _providerNameFutureCache = {};
+  Uint8List? imageAvatar;
   final List<Map<String, dynamic>> countryList = [
     {
       'name': 'Australia',
@@ -170,8 +175,9 @@ class _HomeScreenAppState extends State<HomeScreenApp> {
     super.initState();
     authService.checkSessionValidity(); // เพิ่มการตรวจสอบ session ที่นี่
     _checkToken();
-    fetchScholarships();
     fetchProfile();
+    getAnswer();
+    fetchAvatarImage();
   }
 
   Future<void> _checkToken() async {
@@ -186,6 +192,65 @@ class _HomeScreenAppState extends State<HomeScreenApp> {
         );
       }
     }
+  }
+
+  Future<void> fetchAvatarImage() async {
+    String? token = await authService.getToken();
+
+    final response = await http.get(
+      Uri.parse(ApiConfig.profileAvatarUrl),
+      headers: {
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      setState(() {
+        imageAvatar = response.bodyBytes; // แปลง response เป็น Uint8List
+      });
+    } else {
+      throw Exception('Failed to load country data');
+    }
+  }
+
+  Future<Uint8List?> getImageFuture(String url) {
+    return _imageFutureCache.putIfAbsent(url, () => fetchImage(url));
+  }
+
+  Future<Uint8List?> getAvatarFuture(String url) {
+    return _avatarFutureCache.putIfAbsent(url, () => fetchPostAvatar(url));
+  }
+
+  Future<String?> getProviderNameFuture(String url) {
+    return _providerNameFutureCache.putIfAbsent(
+        url, () => fetchProviderName(url));
+  }
+
+  Future<Uint8List?> fetchPostAvatar(String url) async {
+    if (_imageAvatarCache.containsKey(url)) {
+      return _imageAvatarCache[url];
+    }
+
+    try {
+      String? token = await authService.getToken();
+      Map<String, String> headers = {};
+      if (token != null) {
+        headers['Authorization'] = 'Bearer $token';
+      }
+
+      final response = await http.get(Uri.parse(url), headers: headers);
+
+      if (response.statusCode == 200) {
+        _imageAvatarCache[url] = response.bodyBytes;
+        return response.bodyBytes;
+      } else {
+        debugPrint("Failed to load image: ${response.statusCode}");
+      }
+    } catch (e) {
+      debugPrint("Error fetching image: $e");
+    }
+    _imageAvatarCache[url] = null;
+    return null;
   }
 
   Future<void> fetchProfile() async {
@@ -222,7 +287,49 @@ class _HomeScreenAppState extends State<HomeScreenApp> {
     }
   }
 
-  Future<void> fetchScholarships() async {
+  Future<http.Response?> getAnswer() async {
+    final url = Uri.parse(ApiConfig.answerUrl);
+    String? token = await authService.getToken();
+
+    Map<String, String> headers = {'Content-Type': 'application/json'};
+    if (token != null) {
+      headers['Authorization'] = 'Bearer $token';
+    }
+
+    try {
+      final response = await http.get(url, headers: headers);
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final Map<String, dynamic> data = json.decode(response.body);
+        print(data);
+
+        final List categories = data['categories'] ?? [];
+        final List countries = data['countries'] ?? [];
+        final educationLevel = data['education_level'];
+
+        final isEmptyData =
+            categories.isEmpty && countries.isEmpty && educationLevel == null;
+
+        if (isEmptyData) {
+          fetchScholarships(false, null);
+        } else {
+          final filters = extractFiltersFromAnswerData(data);
+          fetchScholarships(true, filters);
+        }
+
+        return response;
+      } else {
+        fetchScholarships(false, null);
+      }
+    } catch (e) {
+      print("Error fetching answer: $e");
+      fetchScholarships(false, null);
+    }
+
+    return null;
+  }
+
+  Future<void> fetchScholarships(
+      bool isAnswer, Map<String, Set<String>>? filters) async {
     try {
       String? token = await authService.getToken();
       Map<String, String> headers = {};
@@ -230,11 +337,45 @@ class _HomeScreenAppState extends State<HomeScreenApp> {
         headers['Authorization'] = 'Bearer $token';
       }
 
-      final response = await http.get(Uri.parse(ApiConfig.announceUserUrl),
-          headers: headers);
+      Uri uri;
+      if (isAnswer && filters != null) {
+        List<String> queryParams = [];
+
+        // Education Levels
+        if (filters.containsKey('educationLevels') &&
+            filters['educationLevels']!.isNotEmpty) {
+          final levels = filters['educationLevels']!.join(',');
+          queryParams.add("education_level=$levels");
+        }
+
+        // Countries
+        if (filters.containsKey('countries') &&
+            filters['countries']!.isNotEmpty) {
+          final countries = filters['countries']!.join(',');
+          queryParams.add("country=$countries");
+        }
+
+        String url = ApiConfig.searchAnnounceUrl;
+        if (queryParams.isNotEmpty) {
+          url += "?${queryParams.join('&')}";
+        }
+
+        uri = Uri.parse(url);
+      } else {
+        uri = Uri.parse(ApiConfig.announceUserUrl);
+      }
+
+      final response = await http.get(uri, headers: headers);
 
       if (response.statusCode == 200) {
         final Map<String, dynamic> data = json.decode(response.body);
+
+        // ✅ Retry with default fetch if filtered data is null
+        if (data['data'] == null) {
+          await fetchScholarships(false, null);
+          return; // ✅ This is valid in Future<void>
+        }
+
         List<dynamic> scholarshipData = data['data'];
 
         setState(() {
@@ -249,10 +390,8 @@ class _HomeScreenAppState extends State<HomeScreenApp> {
                 scholarship['published_date'] ?? scholarship['publish_date'];
             scholarship['close_date'] =
                 scholarship['close_date'] ?? scholarship['close_date'];
-            scholarship['education_level'] =
-                scholarship['education_level'] ?? 'No Education Level';
-            scholarship['attach_name'] =
-                scholarship['attach_name'] ?? 'No Attach File Name';
+            scholarship['provider_id'] =
+                scholarship['provider_id'] ?? scholarship['provider_id'];
             return scholarship;
           }).toList();
 
@@ -295,6 +434,46 @@ class _HomeScreenAppState extends State<HomeScreenApp> {
     return null;
   }
 
+  // ฟังก์ชันแปลงข้อมูลจาก getAnswer ให้กลายเป็น filters
+  Map<String, Set<String>> extractFiltersFromAnswerData(
+      Map<String, dynamic> data) {
+    final Set<String> countries = (data['countries'] as List)
+        .map<String>((c) => c['name'].toString())
+        .toSet();
+
+    final String? educationLevel = data['education_level']?.toString();
+
+    return {
+      if (countries.isNotEmpty) 'countries': countries,
+      if (educationLevel != null && educationLevel.isNotEmpty)
+        'educationLevels': {educationLevel},
+    };
+  }
+
+  Future<String?> fetchProviderName(String url) async {
+    try {
+      String? token = await authService.getToken();
+      Map<String, String> headers = {};
+      if (token != null) {
+        headers['Authorization'] = 'Bearer $token';
+      }
+
+      final response = await http.get(Uri.parse(url), headers: headers);
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        providerName = data['company_name'];
+        return providerName;
+      } else {
+        debugPrint("Failed to load company name: ${response.statusCode}");
+      }
+    } catch (e) {
+      debugPrint("Error fetching company name: $e");
+    }
+    providerName = null;
+    return null;
+  }
+
   final List<String> carouselItems = [
     'assets/images/carousel_1.png',
     'assets/images/carousel_2.png',
@@ -328,9 +507,10 @@ class _HomeScreenAppState extends State<HomeScreenApp> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      body: Column(
+      resizeToAvoidBottomInset: false,
+      body: Stack(
         children: [
-          Expanded(
+          Positioned.fill(
             child: SingleChildScrollView(
               child: Column(
                 children: [
@@ -353,6 +533,24 @@ class _HomeScreenAppState extends State<HomeScreenApp> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
+                            CircleAvatar(
+                              radius: 20,
+                              child: ClipOval(
+                                child: imageAvatar != null
+                                    ? Image.memory(
+                                        imageAvatar!,
+                                        width: 40,
+                                        height: 40,
+                                        fit: BoxFit.cover,
+                                      )
+                                    : Image.asset(
+                                        'assets/images/avatar.png',
+                                        width: 40,
+                                        height: 40,
+                                        fit: BoxFit.cover,
+                                      ),
+                              ),
+                            ),
                             Image.asset(
                               'assets/images/brower.png',
                               width: 40.0,
@@ -653,7 +851,7 @@ class _HomeScreenAppState extends State<HomeScreenApp> {
                   const SizedBox(height: 10),
                   // Scholarships Section (Horizontal Scroll)
                   SizedBox(
-                    height: 240,
+                    height: 260,
                     child: ListView.builder(
                       scrollDirection: Axis.horizontal,
                       padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -670,6 +868,12 @@ class _HomeScreenAppState extends State<HomeScreenApp> {
                             "${ApiConfig.announceUserUrl}/${scholarship['id']}/image";
                         final duration =
                             "${DateFormat('d MMM').format(publishedDate)} - ${DateFormat('d MMM yyyy').format(closeDate)}";
+
+                        final String providerName =
+                            "${ApiConfig.providerUrl}/${scholarship['provider_id']}";
+
+                        final String providerImage =
+                            "${ApiConfig.providerUrl}/avatar/${scholarship['provider_id']}";
 
                         return GestureDetector(
                           onTap: () async {
@@ -732,13 +936,13 @@ class _HomeScreenAppState extends State<HomeScreenApp> {
                                           ? Image.memory(
                                               _imageCache[imageUrl]!,
                                               width: 144,
-                                              height: 160,
+                                              height: 192,
                                               fit: BoxFit.cover,
                                             )
                                           : Image.asset(
                                               "assets/images/scholarship_program.png",
                                               width: 144,
-                                              height: 160,
+                                              height: 192,
                                               fit: BoxFit.cover,
                                             ))
                                       : FutureBuilder<Uint8List?>(
@@ -748,7 +952,7 @@ class _HomeScreenAppState extends State<HomeScreenApp> {
                                                 ConnectionState.waiting) {
                                               return const SizedBox(
                                                 width: 144,
-                                                height: 160,
+                                                height: 192,
                                                 child: Center(
                                                     child:
                                                         CircularProgressIndicator()),
@@ -758,14 +962,14 @@ class _HomeScreenAppState extends State<HomeScreenApp> {
                                               return Image.asset(
                                                 "assets/images/scholarship_program.png",
                                                 width: 144,
-                                                height: 160,
+                                                height: 192,
                                                 fit: BoxFit.cover,
                                               );
                                             }
                                             return Image.memory(
                                               snapshot.data!,
                                               width: 144,
-                                              height: 160,
+                                              height: 192,
                                               fit: BoxFit.cover,
                                             );
                                           },
@@ -778,22 +982,152 @@ class _HomeScreenAppState extends State<HomeScreenApp> {
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
                                     children: [
-                                      Text(
-                                        duration,
-                                        style: TextStyleService.getDmSans(
-                                            fontSize: 8,
-                                            color: Color(0xFF2A4CCC),
-                                            fontWeight: FontWeight.w400),
-                                      ),
-                                      const SizedBox(height: 4.0),
-                                      Text(
-                                        scholarship['title'],
-                                        maxLines: 2,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: TextStyleService.getDmSans(
-                                          fontSize: 11,
-                                          fontWeight: FontWeight.w600,
-                                          color: Color(0xFF000000),
+                                      SizedBox(
+                                        width: 144,
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              duration,
+                                              style: TextStyleService.getDmSans(
+                                                  fontSize: 8,
+                                                  color: Color(0xFF2A4CCC),
+                                                  fontWeight: FontWeight.w400),
+                                            ),
+                                            const SizedBox(height: 4.0),
+                                            Text(
+                                              scholarship['title'],
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                              style: TextStyleService.getDmSans(
+                                                fontSize: 11,
+                                                fontWeight: FontWeight.w600,
+                                                color: Color(0xFF000000),
+                                              ),
+                                            ),
+                                            const SizedBox(height: 4.0),
+                                            SizedBox(
+                                              width: double.infinity,
+                                              child: Row(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.center,
+                                                children: [
+                                                  CircleAvatar(
+                                                    radius: 6,
+                                                    backgroundImage: _imageCache
+                                                                .containsKey(
+                                                                    providerImage) &&
+                                                            _imageCache[
+                                                                    providerImage] !=
+                                                                null
+                                                        ? MemoryImage(_imageCache[
+                                                            providerImage]!) // ใช้ภาพจากแคช
+                                                        : null, // ถ้าไม่มีภาพในแคช
+                                                    child: !_imageCache
+                                                            .containsKey(
+                                                                providerImage)
+                                                        ? FutureBuilder<
+                                                            Uint8List?>(
+                                                            future:
+                                                                getAvatarFuture(
+                                                                    providerImage),
+                                                            builder: (context,
+                                                                snapshot) {
+                                                              if (snapshot
+                                                                      .connectionState ==
+                                                                  ConnectionState
+                                                                      .waiting) {
+                                                                return const Center(
+                                                                  child:
+                                                                      CircularProgressIndicator(),
+                                                                );
+                                                              }
+                                                              if (snapshot
+                                                                      .data ==
+                                                                  null) {
+                                                                return ClipOval(
+                                                                  child: Image
+                                                                      .asset(
+                                                                    "assets/images/avatar.png",
+                                                                    fit: BoxFit
+                                                                        .cover,
+                                                                    width: 40,
+                                                                    height: 40,
+                                                                  ),
+                                                                );
+                                                              }
+                                                              return CircleAvatar(
+                                                                radius: 20,
+                                                                backgroundImage:
+                                                                    MemoryImage(
+                                                                        snapshot
+                                                                            .data!),
+                                                              );
+                                                            },
+                                                          )
+                                                        : null,
+                                                  ),
+                                                  const SizedBox(width: 4.0),
+                                                  Expanded(
+                                                    child:
+                                                        FutureBuilder<String?>(
+                                                      future:
+                                                          getProviderNameFuture(
+                                                              providerName),
+                                                      builder:
+                                                          (context, snapshot) {
+                                                        if (snapshot
+                                                                .connectionState ==
+                                                            ConnectionState
+                                                                .waiting) {
+                                                          return const SizedBox(
+                                                            width: 60,
+                                                            height: 10,
+                                                            child:
+                                                                LinearProgressIndicator(),
+                                                          );
+                                                        }
+                                                        if (snapshot.hasError ||
+                                                            snapshot.data ==
+                                                                null) {
+                                                          return Text(
+                                                            "Unknown",
+                                                            style:
+                                                                TextStyleService
+                                                                    .getDmSans(
+                                                              fontSize: 9.415,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .w400,
+                                                              color: Color(
+                                                                  0xFF000000),
+                                                            ),
+                                                          );
+                                                        }
+
+                                                        return Text(
+                                                          snapshot.data!,
+                                                          maxLines: 1,
+                                                          overflow: TextOverflow
+                                                              .ellipsis,
+                                                          style:
+                                                              TextStyleService
+                                                                  .getDmSans(
+                                                            fontSize: 9.415,
+                                                            fontWeight:
+                                                                FontWeight.w400,
+                                                            color: Color(
+                                                                0xFF000000),
+                                                          ),
+                                                        );
+                                                      },
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          ],
                                         ),
                                       ),
                                     ],
@@ -882,14 +1216,23 @@ class _HomeScreenAppState extends State<HomeScreenApp> {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 20), // Add space before FooterNav
+                  const SizedBox(height: 90), // Add space before FooterNav
                 ],
               ),
             ),
           ),
           // Footer Navigation Bar
-          FooterNav(
-            pageName: "home",
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: MediaQuery.removeViewInsets(
+              context: context,
+              removeBottom: true,
+              child: FooterNav(
+                pageName: "home",
+              ),
+            ),
           ),
         ],
       ),

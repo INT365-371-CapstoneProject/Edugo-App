@@ -446,7 +446,7 @@ class _ProviderProfileEditState extends State<ProviderProfileEdit> {
                       child: imageData != null
                           ? Image.memory(imageData!)
                           : Image.asset(
-                              'assets/images/welcome.png',
+                              'assets/images/avatar.png',
                               width: profileHeight,
                               height: profileHeight,
                               fit: BoxFit.cover,

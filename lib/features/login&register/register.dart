@@ -1019,9 +1019,7 @@ class _RegisterState extends State<Register> {
         return stepOne ? _buildNextButton() : _buildCreateAccountButton();
       }
     } else if (widget.isProvider) {
-      if (stepOne ||
-          stepTwo ||
-          stepThree && _controllers['confirmPassword']!.text.isNotEmpty) {
+      if (stepOne || stepTwo || stepThree) {
         if (stepOne || stepTwo) return _buildNextButton();
         return _buildCreateAccountButton();
       }

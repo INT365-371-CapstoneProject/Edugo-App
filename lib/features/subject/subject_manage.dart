@@ -521,116 +521,125 @@ class _SubjectManagementState extends State<SubjectManagement> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      body: Column(
+      resizeToAvoidBottomInset: false,
+      body: Stack(
         children: [
           // Blue header block
-          Container(
-            constraints: BoxConstraints(
-                minHeight: 120), // Use minHeight instead of fixed height
-            color: const Color(0xFF355FFF),
-            padding: const EdgeInsets.only(
-              top: 60.0, // ลด padding ด้านบนลงเล็กน้อย
-              right: 16,
-              left: 16,
-              bottom: 16, // รักษา padding ด้านล่าง
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.start,
-              crossAxisAlignment:
-                  CrossAxisAlignment.center, // Center items vertically
-              children: [
-                CircleAvatar(
-                  radius: 20,
-                  child: ClipOval(
-                    child: imageAvatar != null
-                        ? Image.memory(
-                            imageAvatar!,
-                            width: 40,
-                            height: 40,
-                            fit: BoxFit.cover,
-                          )
-                        : Image.asset(
-                            'assets/images/avatar.png',
-                            width: 40,
-                            height: 40,
-                            fit: BoxFit.cover,
-                          ),
-                  ),
-                ),
-                SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment
-                        .center, // Keep centering text vertically
-                    mainAxisSize:
-                        MainAxisSize.min, // Allow column to shrink vertically
-                    children: [
-                      Text(
-                        "What’s on your mind ?",
-                        style: GoogleFonts.dmSans(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w300,
-                          color: Color(0xFFFFFFFF),
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      SizedBox(height: 2), // Add a small gap between texts
-                      Text(
-                        "Share your thoughts here ...",
-                        style: GoogleFonts.dmSans(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w200,
-                          color: Color(0xFFFFFFFF),
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
-                  ),
-                ),
-                SizedBox(width: 8),
-                GestureDetector(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      PageRouteBuilder(
-                        pageBuilder: (context, animation, secondaryAnimation) =>
-                            NotificationList(
-                          id: profile?['id'],
-                        ),
-                        transitionsBuilder:
-                            (context, animation, secondaryAnimation, child) {
-                          const begin = 0.0;
-                          const end = 1.0;
-                          const curve = Curves.easeOut;
-
-                          var tween = Tween(begin: begin, end: end)
-                              .chain(CurveTween(curve: curve));
-                          return FadeTransition(
-                            opacity: animation.drive(tween),
-                            child: child,
-                          );
-                        },
-                        transitionDuration: const Duration(milliseconds: 300),
-                      ),
-                    );
-                  },
-                  child: CircleAvatar(
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: Container(
+              constraints: BoxConstraints(
+                  minHeight: 120), // Use minHeight instead of fixed height
+              color: const Color(0xFF355FFF),
+              padding: const EdgeInsets.only(
+                top: 60.0, // ลด padding ด้านบนลงเล็กน้อย
+                right: 16,
+                left: 16,
+                bottom: 16, // รักษา padding ด้านล่าง
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.start,
+                crossAxisAlignment:
+                    CrossAxisAlignment.center, // Center items vertically
+                children: [
+                  CircleAvatar(
                     radius: 20,
-                    backgroundColor: const Color(0xFFDAFB59),
-                    child: Image.asset(
-                      'assets/images/notification.png',
-                      width: 40.0,
-                      height: 40.0,
+                    child: ClipOval(
+                      child: imageAvatar != null
+                          ? Image.memory(
+                              imageAvatar!,
+                              width: 40,
+                              height: 40,
+                              fit: BoxFit.cover,
+                            )
+                          : Image.asset(
+                              'assets/images/avatar.png',
+                              width: 40,
+                              height: 40,
+                              fit: BoxFit.cover,
+                            ),
                     ),
                   ),
-                ),
-              ],
+                  SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment
+                          .center, // Keep centering text vertically
+                      mainAxisSize:
+                          MainAxisSize.min, // Allow column to shrink vertically
+                      children: [
+                        Text(
+                          "What’s on your mind ?",
+                          style: GoogleFonts.dmSans(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w300,
+                            color: Color(0xFFFFFFFF),
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        SizedBox(height: 2), // Add a small gap between texts
+                        Text(
+                          "Share your thoughts here ...",
+                          style: GoogleFonts.dmSans(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w200,
+                            color: Color(0xFFFFFFFF),
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
+                  ),
+                  SizedBox(width: 8),
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        PageRouteBuilder(
+                          pageBuilder:
+                              (context, animation, secondaryAnimation) =>
+                                  NotificationList(
+                            id: profile?['id'],
+                          ),
+                          transitionsBuilder:
+                              (context, animation, secondaryAnimation, child) {
+                            const begin = 0.0;
+                            const end = 1.0;
+                            const curve = Curves.easeOut;
+
+                            var tween = Tween(begin: begin, end: end)
+                                .chain(CurveTween(curve: curve));
+                            return FadeTransition(
+                              opacity: animation.drive(tween),
+                              child: child,
+                            );
+                          },
+                          transitionDuration: const Duration(milliseconds: 300),
+                        ),
+                      );
+                    },
+                    child: CircleAvatar(
+                      radius: 20,
+                      backgroundColor: const Color(0xFFDAFB59),
+                      child: Image.asset(
+                        'assets/images/notification.png',
+                        width: 40.0,
+                        height: 40.0,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
-          Expanded(
+          // content
+          Positioned.fill(
+            top: 120, // ต้องมากกว่า header
             child: isLoading
                 ? Center(child: CircularProgressIndicator())
                 : RefreshIndicator(
@@ -748,11 +757,15 @@ class _SubjectManagementState extends State<SubjectManagement> {
                                                               if (snapshot
                                                                       .data ==
                                                                   null) {
-                                                                return Image
-                                                                    .asset(
-                                                                  "assets/images/avatar.png",
-                                                                  fit: BoxFit
-                                                                      .cover,
+                                                                return ClipOval(
+                                                                  child: Image
+                                                                      .asset(
+                                                                    "assets/images/avatar.png",
+                                                                    fit: BoxFit
+                                                                        .cover,
+                                                                    width: 40,
+                                                                    height: 40,
+                                                                  ),
                                                                 );
                                                               }
                                                               return CircleAvatar(
@@ -1137,8 +1150,14 @@ class _SubjectManagementState extends State<SubjectManagement> {
                     ),
                   ),
           ),
-          FooterNav(
-            pageName: "subject",
+          // navbar
+          Positioned(
+            bottom: 0,
+            left: 0,
+            right: 0,
+            child: FooterNav(
+              pageName: "subject",
+            ),
           ),
         ],
       ),
