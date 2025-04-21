@@ -1006,7 +1006,7 @@ class _LoginState extends State<Login> {
                                     );
                                   },
                                   child: Text(
-                                    "Register as Provider",
+                                    "Register", // Changed from "Register as Provider"
                                     style: TextStyleService.getDmSans(
                                       color: Color(0xFF355FFF),
                                       fontWeight: FontWeight.w500,
