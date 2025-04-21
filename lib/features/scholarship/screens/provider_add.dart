@@ -566,52 +566,59 @@ class _ProviderAddEditState extends State<ProviderAddEdit> {
             borderRadius: BorderRadius.circular(10),
           ),
           child: SizedBox(
-            height: 370, // กำหนดความสูงของ Dialog
+            // Removed fixed height: 370
             width: 298,
             child: Padding(
               padding: const EdgeInsets.all(20),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Image.asset(
-                    'assets/images/success.png',
-                    height: 190,
-                    width: 220, // ปรับขนาดรูปที่นี่
-                  ),
-                  const SizedBox(height: 20),
-                  Text(
-                    isEdit ? "Update Successful" : "Post Successful!",
-                    style: GoogleFonts.dmSans(
-                      fontSize: 24, // ปรับขนาดฟอนต์ที่นี่
-                      fontWeight: FontWeight.w600,
+              child: SingleChildScrollView(
+                // Wrap the Column with SingleChildScrollView
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Image.asset(
+                      'assets/images/success.png',
+                      height: 190,
+                      width: 220, // ปรับขนาดรูปที่นี่
                     ),
-                  ),
-                  const SizedBox(height: 20),
-                  ElevatedButton(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => ProviderManagement(),
+                    const SizedBox(height: 20),
+                    Text(
+                      isEdit ? "Update Successful" : "Post Successful!",
+                      textAlign: TextAlign.center, // Center align the text
+                      style: GoogleFonts.dmSans(
+                        fontSize: 24, // ปรับขนาดฟอนต์ที่นี่
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    ElevatedButton(
+                      onPressed: () {
+                        // Navigate back to ProviderManagement, removing the current route
+                        Navigator.pushAndRemoveUntil(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => ProviderManagement(),
+                          ),
+                          (Route<dynamic> route) =>
+                              false, // Remove all previous routes
+                        );
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF355FFF),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
                         ),
-                      );
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF355FFF),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        "Back to Home",
+                        style: TextStyleService.getDmSans(
+                          color: Colors.white, // กำหนดสีข้อความเป็นสีขาว
+                          fontWeight: FontWeight.w400,
+                          fontSize: 16, // ปรับขนาดฟอนต์ที่นี่
+                        ),
                       ),
                     ),
-                    child: Text(
-                      "Back to Home",
-                      style: TextStyleService.getDmSans(
-                        color: Colors.white, // กำหนดสีข้อความเป็นสีขาว
-                        fontWeight: FontWeight.w400,
-                        fontSize: 16, // ปรับขนาดฟอนต์ที่นี่
-                      ),
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
