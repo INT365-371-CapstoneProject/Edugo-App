@@ -365,11 +365,14 @@ class _SearchScreenState extends State<SearchScreen> {
                             color: Color(0xFF000000),
                           ),
                         ),
+                        const SizedBox(
+                            height: 8.0), // เพิ่มระยะห่างเล็กน้อยก่อน GridView
                         GridView.count(
                           crossAxisCount: 5,
-                          mainAxisSpacing: 8.0,
-                          crossAxisSpacing: 8.0,
-                          childAspectRatio: 0.8,
+                          mainAxisSpacing: 8.0, // ระยะห่างแนวตั้งระหว่าง items
+                          crossAxisSpacing: 8.0, // ระยะห่างแนวนอนระหว่าง items
+                          childAspectRatio:
+                              0.8, // ปรับอัตราส่วน กว้าง/สูง ของแต่ละ item
                           shrinkWrap: true,
                           physics: const NeverScrollableScrollPhysics(),
                           children: countryList.map((country) {
@@ -651,14 +654,18 @@ class CountryFilter extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(height: 6.0),
-          Text(
-            name,
-            style: TextStyleService.getDmSans(
-              fontSize: 12,
-              fontWeight: FontWeight.w400,
+          const SizedBox(height: 4.0), // ลดระยะห่างระหว่าง Avatar กับ Text
+          Expanded(
+            // เพิ่ม Expanded รอบ Text
+            child: Text(
+              name,
+              style: TextStyleService.getDmSans(
+                fontSize: 11, // อาจจะลดขนาด font ลงเล็กน้อยถ้าจำเป็น
+                fontWeight: FontWeight.w400,
+              ),
+              overflow: TextOverflow.ellipsis, // จัดการข้อความที่ยาวเกินไป
+              textAlign: TextAlign.center, // จัดข้อความให้อยู่ตรงกลาง
             ),
-            overflow: TextOverflow.ellipsis,
           ),
         ],
       ),

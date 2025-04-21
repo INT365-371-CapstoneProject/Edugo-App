@@ -89,14 +89,18 @@ class CountryFilter extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(height: 6.0),
-          Text(
-            name,
-            style: TextStyleService.getDmSans(
-                fontSize: 11,
-                color: Color(0xFF64738B),
-                fontWeight: FontWeight.w400),
-            overflow: TextOverflow.ellipsis,
+          const SizedBox(height: 4.0), // ลดระยะห่างระหว่าง Avatar กับ Text
+          Expanded(
+            // เพิ่ม Expanded รอบ Text
+            child: Text(
+              name,
+              style: TextStyleService.getDmSans(
+                  fontSize: 11, // อาจจะลดขนาด font ลงเล็กน้อยถ้าจำเป็น
+                  color: Color(0xFF64738B),
+                  fontWeight: FontWeight.w400),
+              overflow: TextOverflow.ellipsis, // จัดการข้อความที่ยาวเกินไป
+              textAlign: TextAlign.center, // จัดข้อความให้อยู่ตรงกลาง
+            ),
           ),
         ],
       ),
@@ -306,12 +310,18 @@ class _HomeScreenAppState extends State<HomeScreenApp> {
                 children: [
                   // Header
                   Container(
-                    height: 263,
+                    // Removed fixed height to allow content to determine height
                     color: const Color(0xFF355FFF),
                     padding: const EdgeInsets.only(
-                        top: 58.0, right: 16, left: 16, bottom: 27),
+                        top: 58.0,
+                        right: 16,
+                        left: 16,
+                        bottom:
+                            27), // Keep original padding or adjust slightly if needed
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize:
+                          MainAxisSize.min, // Make column take minimum space
                       children: [
                         // Avatar and Notification Icon
                         Row(
@@ -385,9 +395,10 @@ class _HomeScreenAppState extends State<HomeScreenApp> {
                             fontWeight: FontWeight.w200,
                           ),
                         ),
-                        const SizedBox(height: 16.0),
+                        const SizedBox(height: 16.0), // Keep or adjust spacing
                         // Search Bar
                         SizedBox(
+                          // Keep SizedBox for consistent search bar height
                           height: 56.0,
                           child: Container(
                             padding:
@@ -415,7 +426,20 @@ class _HomeScreenAppState extends State<HomeScreenApp> {
                                         color: const Color(0xFF94A2B8),
                                       ),
                                       border: InputBorder.none,
+                                      // Remove explicit contentPadding calculation
+                                      // contentPadding: EdgeInsets.symmetric(vertical: (56.0 - 16 * 1.3) / 2),
+                                      isDense:
+                                          true, // Make the TextField take less vertical space
+                                      contentPadding: EdgeInsets
+                                          .zero, // Remove default padding
                                     ),
+                                    style: TextStyleService.getDmSans(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w400,
+                                      color: Colors.black,
+                                    ),
+                                    textAlignVertical: TextAlignVertical
+                                        .center, // Center text vertically
                                     onSubmitted: (value) {
                                       Navigator.push(
                                         context,
@@ -521,12 +545,15 @@ class _HomeScreenAppState extends State<HomeScreenApp> {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
-                            Text(
-                              "Discover Many Countries",
-                              style: TextStyleService.getDmSans(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w400,
-                                color: Color(0xFF000000),
+                            Expanded(
+                              // Wrap the Text with Expanded
+                              child: Text(
+                                "Discover Many Countries",
+                                style: TextStyleService.getDmSans(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w400,
+                                  color: Color(0xFF000000),
+                                ),
                               ),
                             ),
                             TextButton(
@@ -758,10 +785,87 @@ class _HomeScreenAppState extends State<HomeScreenApp> {
                     ),
                   ),
                   const SizedBox(height: 20),
+                  // Add the new Discover More Opportunities section here
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                    child: Container(
+                      height: 160, // Keep the height or adjust if needed
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(12.0),
+                        image: const DecorationImage(
+                          image: AssetImage('assets/images/Footer.png'),
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                      child: Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              "Discover More Opportunities",
+                              textAlign: TextAlign.center,
+                              style: TextStyleService.getDmSans(
+                                fontSize: 12, // ลดขนาดตัวอักษรลงอีก
+                                fontWeight: FontWeight.w600,
+                                color: Colors.white,
+                              ),
+                            ),
+                            const SizedBox(
+                                height: 12), // ปรับระยะห่างตามความเหมาะสม
+                            ElevatedButton(
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  PageRouteBuilder(
+                                    pageBuilder: (context, animation,
+                                            secondaryAnimation) =>
+                                        const SearchScreen(),
+                                    transitionsBuilder: (context, animation,
+                                        secondaryAnimation, child) {
+                                      const begin = 0.0;
+                                      const end = 1.0;
+                                      const curve = Curves.easeOut;
+                                      var tween = Tween(begin: begin, end: end)
+                                          .chain(CurveTween(curve: curve));
+                                      return FadeTransition(
+                                          opacity: animation.drive(tween),
+                                          child: child);
+                                    },
+                                    transitionDuration:
+                                        const Duration(milliseconds: 300),
+                                  ),
+                                );
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFF355FFF),
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 40,
+                                    vertical: 10), // ลด padding ของปุ่ม
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(
+                                      8), // ปรับมุมปุ่มตามต้องการ
+                                ),
+                              ),
+                              child: Text(
+                                "See all",
+                                style: TextStyleService.getDmSans(
+                                  fontSize: 13, // ลดขนาดตัวอักษรปุ่มลงอีก
+                                  fontWeight: FontWeight.w500,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20), // Add space before FooterNav
                 ],
               ),
             ),
           ),
+          // Footer Navigation Bar
           FooterNav(
             pageName: "home",
           ),

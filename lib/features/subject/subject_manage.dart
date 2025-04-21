@@ -525,102 +525,108 @@ class _SubjectManagementState extends State<SubjectManagement> {
         children: [
           // Blue header block
           Container(
-            height: 138,
+            constraints: BoxConstraints(
+                minHeight: 120), // Use minHeight instead of fixed height
             color: const Color(0xFF355FFF),
             padding: const EdgeInsets.only(
-              top: 72.0,
+              top: 60.0, // ลด padding ด้านบนลงเล็กน้อย
               right: 16,
               left: 16,
-              bottom: 22,
+              bottom: 16, // รักษา padding ด้านล่าง
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.start,
+              crossAxisAlignment:
+                  CrossAxisAlignment.center, // Center items vertically
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: [
-                    CircleAvatar(
-                      radius: 20,
-                      child: ClipOval(
-                        child: imageAvatar != null
-                            ? Image.memory(
-                                imageAvatar!,
-                                width: 40, // กำหนดขนาดให้พอดีกับ avatar
-                                height: 40,
-                                fit: BoxFit.cover,
-                              )
-                            : Image.asset(
-                                'assets/images/avatar.png',
-                                width: 40,
-                                height: 40,
-                                fit: BoxFit.cover,
-                              ),
+                CircleAvatar(
+                  radius: 20,
+                  child: ClipOval(
+                    child: imageAvatar != null
+                        ? Image.memory(
+                            imageAvatar!,
+                            width: 40,
+                            height: 40,
+                            fit: BoxFit.cover,
+                          )
+                        : Image.asset(
+                            'assets/images/avatar.png',
+                            width: 40,
+                            height: 40,
+                            fit: BoxFit.cover,
+                          ),
+                  ),
+                ),
+                SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment
+                        .center, // Keep centering text vertically
+                    mainAxisSize:
+                        MainAxisSize.min, // Allow column to shrink vertically
+                    children: [
+                      Text(
+                        "What’s on your mind ?",
+                        style: GoogleFonts.dmSans(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w300,
+                          color: Color(0xFFFFFFFF),
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                    ),
-                    SizedBox(width: 16), // เพิ่มช่องว่างระหว่าง Avatar กับ Text
-                    Column(
-                      crossAxisAlignment:
-                          CrossAxisAlignment.start, // ทำให้ข้อความชิดซ้าย
-                      children: [
-                        Text(
-                          "What’s on your mind ?",
-                          style: GoogleFonts.dmSans(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w300,
-                            color: Color(0xFFFFFFFF),
-                          ),
+                      SizedBox(height: 2), // Add a small gap between texts
+                      Text(
+                        "Share your thoughts here ...",
+                        style: GoogleFonts.dmSans(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w200,
+                          color: Color(0xFFFFFFFF),
                         ),
-                        Text(
-                          "Share your thoughts here ...",
-                          style: GoogleFonts.dmSans(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w200,
-                            color: Color(0xFFFFFFFF),
-                          ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(width: 8),
+                GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      PageRouteBuilder(
+                        pageBuilder: (context, animation, secondaryAnimation) =>
+                            NotificationList(
+                          id: profile?['id'],
                         ),
-                      ],
-                    ),
-                    Spacer(), // ใช้ Spacer เพื่อให้ notification ชิดขวา
-                    GestureDetector(
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          PageRouteBuilder(
-                            pageBuilder:
-                                (context, animation, secondaryAnimation) =>
-                                    NotificationList(
-                              id: profile?['id'],
-                            ),
-                            transitionsBuilder: (context, animation,
-                                secondaryAnimation, child) {
-                              const begin = 0.0;
-                              const end = 1.0;
-                              const curve = Curves.easeOut;
+                        transitionsBuilder:
+                            (context, animation, secondaryAnimation, child) {
+                          const begin = 0.0;
+                          const end = 1.0;
+                          const curve = Curves.easeOut;
 
-                              var tween = Tween(begin: begin, end: end)
-                                  .chain(CurveTween(curve: curve));
-                              return FadeTransition(
-                                opacity: animation.drive(tween),
-                                child: child,
-                              );
-                            },
-                            transitionDuration:
-                                const Duration(milliseconds: 300),
-                          ),
-                        );
-                      },
-                      child: CircleAvatar(
-                        radius: 20,
-                        backgroundColor: const Color(0xFFDAFB59),
-                        child: Image.asset(
-                          'assets/images/notification.png',
-                          width: 40.0,
-                          height: 40.0,
-                        ),
+                          var tween = Tween(begin: begin, end: end)
+                              .chain(CurveTween(curve: curve));
+                          return FadeTransition(
+                            opacity: animation.drive(tween),
+                            child: child,
+                          );
+                        },
+                        transitionDuration: const Duration(milliseconds: 300),
                       ),
+                    );
+                  },
+                  child: CircleAvatar(
+                    radius: 20,
+                    backgroundColor: const Color(0xFFDAFB59),
+                    child: Image.asset(
+                      'assets/images/notification.png',
+                      width: 40.0,
+                      height: 40.0,
                     ),
-                  ],
-                )
+                  ),
+                ),
               ],
             ),
           ),
