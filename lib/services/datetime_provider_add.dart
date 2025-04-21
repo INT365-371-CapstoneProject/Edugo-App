@@ -147,7 +147,7 @@ class _DateSelectorState extends State<DateSelector> {
                         ? DateFormat('d MMMM yyyy').format(startDate!)
                         : 'Select Date',
                     style: GoogleFonts.dmSans(
-                      fontSize: 16,
+                      fontSize: 13, // Reduced font size (adjust as needed)
                       color: isDetail == true
                           ? const Color(0xFF64738B)
                           : startDate == null
@@ -248,7 +248,7 @@ class _DateSelectorState extends State<DateSelector> {
                         ? DateFormat('d MMMM yyyy').format(endDate!)
                         : 'Select Date',
                     style: GoogleFonts.dmSans(
-                      fontSize: 16,
+                      fontSize: 13, // Reduced font size (adjust as needed)
                       color: isDetail == true
                           ? const Color(0xFF64738B)
                           : endDate == null

@@ -191,7 +191,7 @@ class _AttachFileState extends State<AttachFile> {
               ),
             ],
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 18),
           // Button Attach
           SizedBox(
             height: 36,

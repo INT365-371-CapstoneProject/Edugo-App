@@ -750,6 +750,9 @@ class _ProviderAddEditState extends State<ProviderAddEdit> {
                           controller: urlController,
                           onChanged: (value) => validateUrl(value),
                           decoration: InputDecoration(
+                            contentPadding: const EdgeInsets.symmetric(
+                                vertical: 10.0,
+                                horizontal: 12.0), // Adjust vertical padding
                             border: OutlineInputBorder(
                               borderRadius:
                                   BorderRadius.circular(6.0), // มุมโค้ง 6
@@ -950,7 +953,7 @@ class _ProviderAddEditState extends State<ProviderAddEdit> {
                       const SizedBox(height: 24),
                       // Date
                       Container(
-                        height: 190,
+                        // height: 190, // REMOVED fixed height
                         width: double.infinity,
                         padding: const EdgeInsets.only(
                             top: 15, left: 16, right: 16, bottom: 11),
@@ -1021,7 +1024,7 @@ class _ProviderAddEditState extends State<ProviderAddEdit> {
                       const SizedBox(height: 24),
                       // Attach File
                       Container(
-                        height: 146,
+                        height: 190, // Increased height from 146 to 190
                         width: double.infinity,
                         padding: const EdgeInsets.all(14),
                         decoration: BoxDecoration(
@@ -1038,7 +1041,6 @@ class _ProviderAddEditState extends State<ProviderAddEdit> {
                       ),
                       const SizedBox(height: 24),
                       Container(
-                        height: 414,
                         width: double.infinity,
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
@@ -1060,8 +1062,6 @@ class _ProviderAddEditState extends State<ProviderAddEdit> {
                             const SizedBox(height: 4),
                             // TextField
                             Container(
-                              height:
-                                  332, // Adjust this height to fit your design
                               width: double.infinity,
                               decoration: BoxDecoration(
                                 border: Border.all(
@@ -1135,383 +1135,384 @@ class _ProviderAddEditState extends State<ProviderAddEdit> {
           // ปุ่มด้านล่าง
           Container(
             color: const Color(0xFFFFFFFF),
-            padding: const EdgeInsets.all(28),
-            height: 113,
+            padding: const EdgeInsets.symmetric(
+                horizontal: 28, vertical: 20), // Adjust padding if needed
+            // Removed fixed height: 113 to allow content to determine height
             child: Align(
               alignment: Alignment.topCenter, // ชิดด้านบน
               child: SizedBox(
                 width: double.infinity,
                 child: Row(
-                  mainAxisAlignment:
-                      MainAxisAlignment.spaceBetween, // ชิดซ้ายขวา
+                  // Removed MainAxisAlignment.spaceBetween
                   children: [
-                    SizedBox(
-                      width: 170, // กำหนดความกว้างของปุ่ม Cancel
-                      height: 48, // กำหนดความสูงของปุ่ม Cancel
-                      child: ElevatedButton(
-                        onPressed: () {
-                          bool hasAddScholarshipUnsavedChanges = (urlController
-                                  .text.isNotEmpty ||
-                              (title != null &&
-                                  title!.isNotEmpty) || // Added null check
-                              (selectedCategoryId != null &&
-                                  selectedCategoryId!
-                                      .isNotEmpty) || // Added null check
-                              (selectedCountry != null &&
-                                  selectedCountry!
-                                      .isNotEmpty) || // Added null check
-                              (description != null &&
-                                  description!
-                                      .isNotEmpty) || // Added null check
-                              selectedStartDate != null ||
-                              selectedEndDate != null ||
-                              _imageBytes !=
-                                  null || // Check if image was picked
-                              _pdfFileBytes != null); // Check if pdf was picked
+                    Expanded(
+                      // Wrap Cancel button with Expanded
+                      child: SizedBox(
+                        // width: 170, // Removed fixed width
+                        height: 48, // กำหนดความสูงของปุ่ม Cancel
+                        child: ElevatedButton(
+                          onPressed: () {
+                            bool hasAddScholarshipUnsavedChanges =
+                                (urlController.text.isNotEmpty ||
+                                    (title != null &&
+                                        title!
+                                            .isNotEmpty) || // Added null check
+                                    (selectedCategoryId != null &&
+                                        selectedCategoryId!
+                                            .isNotEmpty) || // Added null check
+                                    (selectedCountry != null &&
+                                        selectedCountry!
+                                            .isNotEmpty) || // Added null check
+                                    (description != null &&
+                                        description!
+                                            .isNotEmpty) || // Added null check
+                                    selectedStartDate != null ||
+                                    selectedEndDate != null ||
+                                    _imageBytes !=
+                                        null || // Check if image was picked
+                                    _pdfFileBytes !=
+                                        null); // Check if pdf was picked
 
-                          if (hasAddScholarshipUnsavedChanges) {
-                            showDialog(
-                              context: context,
-                              builder: (BuildContext context) {
-                                return Dialog(
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(
-                                        12), // มุมโค้งของ Dialog
-                                  ),
-                                  child: SizedBox(
-                                    height: 382, // กำหนดความสูง
-                                    width: 320, // กำหนดความกว้าง
-                                    child: Column(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Padding(
-                                          padding:
-                                              const EdgeInsets.only(top: 29),
-                                          child: Image.asset(
-                                            'assets/images/success.png',
-                                            height: 166,
-                                            width: 216, // ปรับขนาดรูปที่นี่
-                                          ),
-                                        ),
-                                        const SizedBox(height: 18),
-                                        Padding(
-                                          padding: const EdgeInsets.symmetric(
-                                              horizontal: 24),
-                                          child: Text(
-                                            widget.isEdit
-                                                ? "Are you sure you want to discard Edit?"
-                                                : "Are you sure you want to discard this Draft?",
-                                            textAlign: TextAlign.center,
-                                            style: GoogleFonts.dmSans(
-                                              fontWeight: FontWeight.w500,
-                                              fontSize: 18,
-                                              color: const Color(0xFF000000),
-                                            ),
-                                          ),
-                                        ),
-                                        const SizedBox(height: 16),
-                                        Padding(
-                                          padding: const EdgeInsets.symmetric(
-                                              horizontal: 24.0),
-                                          child: Text(
-                                            "The progress will not be saved.",
-                                            textAlign: TextAlign.center,
-                                            style: GoogleFonts.dmSans(
-                                              fontWeight: FontWeight.w400,
-                                              fontSize: 12,
-                                              color: const Color(0xFF6B7280),
-                                            ),
-                                          ),
-                                        ),
-                                        const Spacer(), // ดันปุ่มลงไปด้านล่าง
-                                        Padding(
-                                          padding: const EdgeInsets.all(16.0),
-                                          child: Row(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.spaceBetween,
-                                            children: [
-                                              SizedBox(
-                                                width: 134, // ความกว้างของปุ่ม
-                                                height: 41, // ความสูงของปุ่ม
-                                                child: ElevatedButton(
-                                                  onPressed: () {
-                                                    Navigator.of(context)
-                                                        .pop(); // ปิด Dialog
-                                                  },
-                                                  style:
-                                                      ElevatedButton.styleFrom(
-                                                    backgroundColor: const Color(
-                                                        0xFF94A2B8), // สีปุ่ม
-                                                    shape:
-                                                        RoundedRectangleBorder(
-                                                      borderRadius:
-                                                          BorderRadius.circular(
-                                                              8), // มุมโค้ง
-                                                    ),
-                                                  ),
-                                                  child: Text(
-                                                    "Cancel",
-                                                    style: GoogleFonts.dmSans(
-                                                      color: Colors.white,
-                                                      fontWeight:
-                                                          FontWeight.w500,
-                                                      fontSize:
-                                                          10, // ขนาดตัวหนังสือ
-                                                    ),
-                                                  ),
-                                                ),
-                                              ),
-                                              SizedBox(
-                                                width: 134,
-                                                height: 41,
-                                                child: ElevatedButton(
-                                                  onPressed: () {
-                                                    // Close the discard confirmation dialog first
-                                                    Navigator.of(context)
-                                                        .pop(); // ปิด Dialog
-                                                    // Then pop the current screen (ProviderAdd)
-                                                    Navigator.of(context)
-                                                        .pop(); // กลับไปหน้า ProviderDetail
-                                                  },
-                                                  style:
-                                                      ElevatedButton.styleFrom(
-                                                    backgroundColor: const Color(
-                                                        0xFFD5448E), // สีปุ่ม
-                                                    shape:
-                                                        RoundedRectangleBorder(
-                                                      borderRadius:
-                                                          BorderRadius.circular(
-                                                              8), // มุมโค้ง
-                                                    ),
-                                                  ),
-                                                  child: Text(
-                                                    "Yes, Discard this",
-                                                    style: GoogleFonts.dmSans(
-                                                      color: Colors.white,
-                                                      fontWeight:
-                                                          FontWeight.w500,
-                                                      fontSize:
-                                                          10, // ขนาดตัวหนังสือ
-                                                    ),
-                                                  ),
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ],
+                            if (hasAddScholarshipUnsavedChanges) {
+                              showDialog(
+                                context: context,
+                                builder: (BuildContext context) {
+                                  return Dialog(
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(
+                                          12), // มุมโค้งของ Dialog
                                     ),
-                                  ),
-                                );
-                              },
-                            );
-                          } else {
-                            // --- Start Modification ---
-                            // No changes, just pop back to ProviderDetail
-                            Navigator.pop(context);
-                            // --- End Modification ---
-
-                            // Previous code navigated to ProviderManagement incorrectly
-                            // Navigator.pushReplacement(
-                            //   context,
-                            //   PageRouteBuilder(
-                            //     pageBuilder:
-                            //         (context, animation, secondaryAnimation) =>
-                            //             const ProviderManagement(),
-                            //     transitionsBuilder: (context, animation,
-                            //         secondaryAnimation, child) {
-                            //       const begin = 0.0;
-                            //       const end = 1.0;
-                            //       const curve = Curves.easeOut;
-                            //       var tween = Tween(begin: begin, end: end)
-                            //           .chain(CurveTween(curve: curve));
-                            //       return FadeTransition(
-                            //         opacity: animation.drive(tween),
-                            //         child: child,
-                            //       );
-                            //     },
-                            //     transitionDuration:
-                            //         const Duration(milliseconds: 300),
-                            //   ),
-                            // );
-                          }
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.grey, // สีสำหรับปุ่ม Cancel
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
+                                    child: SizedBox(
+                                      // Removed fixed height: 382
+                                      width:
+                                          320, // Keep width if desired, or remove if not needed
+                                      child: Column(
+                                        mainAxisSize: MainAxisSize
+                                            .min, // Allow column to shrink-wrap height
+                                        children: [
+                                          Padding(
+                                            padding:
+                                                const EdgeInsets.only(top: 29),
+                                            child: Image.asset(
+                                              'assets/images/success.png',
+                                              height: 166,
+                                              width: 216,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 18),
+                                          Padding(
+                                            padding: const EdgeInsets.symmetric(
+                                                horizontal: 24),
+                                            child: Text(
+                                              widget.isEdit // Use ternary operator for dynamic text
+                                                  ? "Are you sure you want to discard Edit?"
+                                                  : "Are you sure you want to discard this Draft?",
+                                              textAlign: TextAlign.center,
+                                              style: GoogleFonts.dmSans(
+                                                fontWeight: FontWeight
+                                                    .w700, // Bold as per image
+                                                fontSize:
+                                                    18, // Adjust size if needed
+                                                color: const Color(0xFF000000),
+                                              ),
+                                            ),
+                                          ),
+                                          const SizedBox(height: 16),
+                                          Padding(
+                                            padding: const EdgeInsets.symmetric(
+                                                horizontal: 24.0),
+                                            child: Text(
+                                              "The Progress will not be saved", // Match image text
+                                              textAlign: TextAlign.center,
+                                              style: GoogleFonts.dmSans(
+                                                fontWeight: FontWeight.w400,
+                                                fontSize:
+                                                    12, // Match image style
+                                                color: const Color(
+                                                    0xFF6B7280), // Match image color
+                                              ),
+                                            ),
+                                          ),
+                                          const SizedBox(height: 24),
+                                          Padding(
+                                            padding: const EdgeInsets.only(
+                                                left: 16.0,
+                                                right: 16.0,
+                                                bottom: 16.0), // Adjust padding
+                                            child: Row(
+                                              // Removed MainAxisAlignment.spaceBetween
+                                              children: [
+                                                Expanded(
+                                                  // Wrap first button in Expanded
+                                                  child: SizedBox(
+                                                    // width: 134, // Removed fixed width
+                                                    height: 41,
+                                                    child: ElevatedButton(
+                                                      onPressed: () {
+                                                        Navigator.of(context)
+                                                            .pop(); // ปิด Dialog
+                                                      },
+                                                      style: ElevatedButton
+                                                          .styleFrom(
+                                                        backgroundColor:
+                                                            const Color(
+                                                                0xFF94A2B8), // Match image color
+                                                        shape:
+                                                            RoundedRectangleBorder(
+                                                          borderRadius:
+                                                              BorderRadius
+                                                                  .circular(8),
+                                                        ),
+                                                      ),
+                                                      child: Text(
+                                                        "Cancel",
+                                                        style:
+                                                            GoogleFonts.dmSans(
+                                                          color: Colors.white,
+                                                          fontWeight:
+                                                              FontWeight.w500,
+                                                          fontSize:
+                                                              14, // Adjust font size to match image
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ),
+                                                const SizedBox(
+                                                    width: 8), // Add spacing
+                                                Expanded(
+                                                  // Wrap second button in Expanded
+                                                  child: SizedBox(
+                                                    // width: 134, // Removed fixed width
+                                                    height: 41,
+                                                    child: ElevatedButton(
+                                                      onPressed: () {
+                                                        Navigator.of(context)
+                                                            .pop(); // ปิด Dialog
+                                                        Navigator.of(context)
+                                                            .pop(); // กลับไปหน้า ProviderDetail
+                                                      },
+                                                      style: ElevatedButton
+                                                          .styleFrom(
+                                                        backgroundColor:
+                                                            const Color(
+                                                                0xFFD5448E), // Match image color
+                                                        shape:
+                                                            RoundedRectangleBorder(
+                                                          borderRadius:
+                                                              BorderRadius
+                                                                  .circular(8),
+                                                        ),
+                                                      ),
+                                                      child: Text(
+                                                        "Yes, Discard this",
+                                                        style:
+                                                            GoogleFonts.dmSans(
+                                                          color: Colors.white,
+                                                          fontWeight:
+                                                              FontWeight.w500,
+                                                          fontSize:
+                                                              10, // Adjust font size to match image
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  );
+                                },
+                              );
+                            } else {
+                              Navigator.pop(context);
+                            }
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.grey, // สีสำหรับปุ่ม Cancel
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
                           ),
-                        ),
-                        child: Text(
-                          "Cancel",
-                          style: GoogleFonts.dmSans(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w500,
-                            fontSize: 16,
+                          child: Text(
+                            "Cancel",
+                            style: GoogleFonts.dmSans(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w500,
+                              fontSize: 16,
+                            ),
                           ),
                         ),
                       ),
                     ),
-                    SizedBox(
-                      width: 170,
-                      height: 48,
-                      child: ElevatedButton(
-                        onPressed: () {
-                          validateUrl(urlController.text);
+                    const SizedBox(width: 16), // Add spacing between buttons
+                    Expanded(
+                      // Wrap Post/Update button with Expanded
+                      child: SizedBox(
+                        // width: 170, // Removed fixed width
+                        height: 48,
+                        child: ElevatedButton(
+                          onPressed: () {
+                            validateUrl(urlController.text);
 
-                          setState(() {
-                            if (urlError != null) {
-                              isValidUrl = false;
-                            } else {
-                              isValidUrl = true; // ฟอร์มทั้งหมดผ่านการตรวจสอบ
-                              urlBorderColor = Color(0xFFCBD5E0);
-                            }
-                          });
+                            setState(() {
+                              if (urlError != null) {
+                                isValidUrl = false;
+                              } else {
+                                isValidUrl = true; // ฟอร์มทั้งหมดผ่านการตรวจสอบ
+                                urlBorderColor = Color(0xFFCBD5E0);
+                              }
+                            });
 
-                          setState(() {
-                            // ตรวจสอบค่าของ selectedCategory
-                            if (selectedCategory == null ||
-                                selectedCategory!.isEmpty ||
-                                selectedCategory ==
-                                    "Select type of scholarship") {
-                              categoryError =
-                                  "Please select a type of scholarship";
-                              isValidCategory = false;
-                              dropdownBorderColor = Colors.red;
-                            } else {
-                              isValidCategory = true;
-                            }
+                            setState(() {
+                              // ตรวจสอบค่าของ selectedCategory
+                              if (selectedCategory == null ||
+                                  selectedCategory!.isEmpty ||
+                                  selectedCategory ==
+                                      "Select type of scholarship") {
+                                categoryError =
+                                    "Please select a type of scholarship";
+                                isValidCategory = false;
+                                dropdownBorderColor = Colors.red;
+                              } else {
+                                isValidCategory = true;
+                              }
 
-                            if (title == null ||
-                                title!.isEmpty ||
-                                title!.replaceAll(RegExp(r'\s+'), '').length <
-                                    5 ||
-                                title!.replaceAll(RegExp(r'\s+'), '').length >
-                                    100) {
-                              titleError =
-                                  "Minimum 5 characters, maximum 100 characters";
-                              isValidTitle = false;
-                              titleBorderColor = Colors.red;
-                            } else {
-                              isValidTitle = true;
-                            }
+                              if (title == null ||
+                                  title!.isEmpty ||
+                                  title!.replaceAll(RegExp(r'\s+'), '').length <
+                                      5 ||
+                                  title!.replaceAll(RegExp(r'\s+'), '').length >
+                                      100) {
+                                titleError =
+                                    "Minimum 5 characters, maximum 100 characters";
+                                isValidTitle = false;
+                                titleBorderColor = Colors.red;
+                              } else {
+                                isValidTitle = true;
+                              }
 
-                            if (selectedCountry == null ||
-                                selectedCountry!.isEmpty ||
-                                selectedCountry ==
-                                    "Select country of scholarship") {
-                              countryError = "Please select a country";
-                              isValidCountry = false;
-                              dropdownBorderColor = Colors.red;
-                            } else {
-                              isValidCountry = true;
-                            }
+                              if (selectedCountry == null ||
+                                  selectedCountry!.isEmpty ||
+                                  selectedCountry ==
+                                      "Select country of scholarship") {
+                                countryError = "Please select a country";
+                                isValidCountry = false;
+                                dropdownBorderColor = Colors.red;
+                              } else {
+                                isValidCountry = true;
+                              }
 
-                            if (selectedEducationLevel == null ||
-                                selectedEducationLevel!.isEmpty ||
-                                selectedEducationLevel ==
-                                    "Select country of scholarship") {
-                              educationLevelError =
-                                  "Please select a Education Level";
-                              isValidEducationLevel = false;
-                              dropdownBorderColor = Colors.red;
-                            } else {
-                              isValidEducationLevel = true;
-                            }
+                              if (selectedEducationLevel == null ||
+                                  selectedEducationLevel!.isEmpty ||
+                                  selectedEducationLevel ==
+                                      "Select country of scholarship") {
+                                educationLevelError =
+                                    "Please select a Education Level";
+                                isValidEducationLevel = false;
+                                dropdownBorderColor = Colors.red;
+                              } else {
+                                isValidEducationLevel = true;
+                              }
 
-                            if (description == null ||
-                                description!
-                                    .replaceAll(RegExp(r'\s+'), '')
-                                    .isEmpty ||
-                                description!
-                                        .replaceAll(RegExp(r'\s+'), '')
-                                        .length <
-                                    10 ||
-                                description!
-                                        .replaceAll(RegExp(r'\s+'), '')
-                                        .length >
-                                    3000) {
-                              descriptionError =
-                                  "Minimum 10 characters, maximum 3000 characters";
-                              isValidDescription = false;
-                              descriptionBorderColor = Colors.red;
-                            } else {
-                              isValidDescription = true;
-                            }
+                              if (description == null ||
+                                  description!
+                                      .replaceAll(RegExp(r'\s+'), '')
+                                      .isEmpty ||
+                                  description!
+                                          .replaceAll(RegExp(r'\s+'), '')
+                                          .length <
+                                      10 ||
+                                  description!
+                                          .replaceAll(RegExp(r'\s+'), '')
+                                          .length >
+                                      3000) {
+                                descriptionError =
+                                    "Minimum 10 characters, maximum 3000 characters";
+                                isValidDescription = false;
+                                descriptionBorderColor = Colors.red;
+                              } else {
+                                isValidDescription = true;
+                              }
 
-                            if (selectedEndDate == null &&
-                                selectedStartDate == null) {
-                              dateTimeError = "Select Start Date and End Date";
-                              isValidDateTime = false;
-                              dateTimeBorder = Colors.red;
-                            } else if (selectedStartDate == null &&
-                                selectedEndDate != null) {
-                              dateTimeError = "Select Start Date";
-                              isValidDateTime = false;
-                              dateTimeBorder = Colors.red;
-                            } else if (selectedStartDate != null &&
-                                selectedEndDate == null) {
-                              dateTimeError = "Select End Date";
-                              isValidDateTime = false;
-                              dateTimeBorder = Colors.red;
-                            } else {
-                              isValidDateTime = true;
-                            }
-                          });
+                              if (selectedEndDate == null &&
+                                  selectedStartDate == null) {
+                                dateTimeError =
+                                    "Select Start Date and End Date";
+                                isValidDateTime = false;
+                                dateTimeBorder = Colors.red;
+                              } else if (selectedStartDate == null &&
+                                  selectedEndDate != null) {
+                                dateTimeError = "Select Start Date";
+                                isValidDateTime = false;
+                                dateTimeBorder = Colors.red;
+                              } else if (selectedStartDate != null &&
+                                  selectedEndDate == null) {
+                                dateTimeError = "Select End Date";
+                                isValidDateTime = false;
+                                dateTimeBorder = Colors.red;
+                              } else {
+                                isValidDateTime = true;
+                              }
+                            });
 
-                          // ถ้าฟอร์มถูกต้อง ให้ดำเนินการ
-                          if (isValidUrl &&
-                              isValidCategory &&
-                              isValidTitle &&
-                              isValidCountry &&
-                              isValidEducationLevel &&
-                              isValidDescription &&
-                              isValidDateTime) {
-                            if (widget.isEdit) {
-                              submitEditData(); // เรียกใช้ API สำหรับแก้ไขข้อมูล
+                            // ถ้าฟอร์มถูกต้อง ให้ดำเนินการ
+                            if (isValidUrl &&
+                                isValidCategory &&
+                                isValidTitle &&
+                                isValidCountry &&
+                                isValidEducationLevel &&
+                                isValidDescription &&
+                                isValidDateTime) {
+                              if (widget.isEdit) {
+                                submitEditData(); // เรียกใช้ API สำหรับแก้ไขข้อมูล
+                              } else {
+                                submitAddData(); // เรียกใช้ API สำหรับเพิ่มข้อมูลใหม่
+                              }
                             } else {
-                              submitAddData(); // เรียกใช้ API สำหรับเพิ่มข้อมูลใหม่
+                              showDialog(
+                                context: context,
+                                builder: (BuildContext context) {
+                                  return AlertDialog(
+                                    title: Text("Required fields"),
+                                    content: Text(
+                                        "Please fill in all the required fields."),
+                                    actions: [
+                                      TextButton(
+                                        child: Text("OK"),
+                                        onPressed: () {
+                                          Navigator.of(context).pop();
+                                        },
+                                      ),
+                                    ],
+                                  );
+                                },
+                              );
                             }
-                          } else {
-                            showDialog(
-                              context: context,
-                              builder: (BuildContext context) {
-                                return AlertDialog(
-                                  title: Text("Required fields"),
-                                  content: Text(
-                                      "Please fill in all the required fields."),
-                                  actions: [
-                                    TextButton(
-                                      child: Text("OK"),
-                                      onPressed: () {
-                                        Navigator.of(context).pop();
-                                      },
-                                    ),
-                                  ],
-                                );
-                              },
-                            );
-                          }
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor:
-                              // isValidUrl &&
-                              //         isValidTitle &&
-                              //         isValidCategory &&
-                              //         isValidCountry &&
-                              //         isValidDescription &&
-                              //         isValidDateTime ?
-                              const Color(0xFF355FFF),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor:
+                                // isValidUrl &&
+                                //         isValidTitle &&
+                                //         isValidCategory &&
+                                //         isValidCountry &&
+                                //         isValidDescription &&
+                                //         isValidDateTime ?
+                                const Color(0xFF355FFF),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
                           ),
-                        ),
-                        child: Text(
-                          widget.isEdit ? "Update" : "Post",
-                          style: GoogleFonts.dmSans(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w500,
-                            fontSize: 16,
+                          child: Text(
+                            widget.isEdit ? "Update" : "Post",
+                            style: GoogleFonts.dmSans(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w500,
+                              fontSize: 16,
+                            ),
                           ),
                         ),
                       ),

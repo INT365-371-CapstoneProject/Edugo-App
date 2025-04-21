@@ -160,59 +160,76 @@ class _HeaderProviderAddState extends State<HeaderProviderAdd> {
                 Center(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment
+                        .center, // Add this line to center children horizontally
                     children: [
-                      // Texts
-                      Text(
-                        'Maximum file size 4 MB',
-                        style: GoogleFonts.dmSans(
-                          color: Colors.white,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          fontStyle: FontStyle.normal,
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                        child: Text(
+                          'Maximum file size 4 MB',
+                          style: GoogleFonts.dmSans(
+                            color: Colors.white,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            fontStyle: FontStyle.normal,
+                          ),
+                          textAlign: TextAlign.center,
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                      Text(
-                        'Support format: JPG, PNG, SVG',
-                        style: GoogleFonts.dmSans(
-                          color: Colors.white,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          fontStyle: FontStyle.normal,
+                      const SizedBox(height: 4),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                        child: Text(
+                          'Support format: JPG, PNG, SVG',
+                          style: GoogleFonts.dmSans(
+                            color: Colors.white,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            fontStyle: FontStyle.normal,
+                          ),
+                          textAlign: TextAlign.center,
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
                       const SizedBox(
                           height: 10), // Space between text and button
                       // Button
-                      SizedBox(
-                        width: 158,
-                        height: 38,
-                        child: ElevatedButton(
-                          onPressed: _pickImage, // Trigger image picker
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF355FFF),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          ElevatedButton(
+                            onPressed: _pickImage, // Trigger image picker
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF355FFF),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 15,
+                                  vertical: 10), // Reduced from 20
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  'Upload Photo',
+                                  style: GoogleFonts.dmSans(
+                                    fontSize:
+                                        10, // Reduced font size from 16 to 14
+                                    color: const Color(0xFFFFFFFF),
+                                  ),
+                                ),
+                                const SizedBox(width: 7),
+                                Image.asset(
+                                  'assets/images/icon_image.png', // Path to your icon
+                                  width: 12,
+                                  height: 14,
+                                ),
+                              ],
                             ),
                           ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(
-                                'Upload Photo',
-                                style: GoogleFonts.dmSans(
-                                  fontSize: 14,
-                                  color: const Color(0xFFFFFFFF),
-                                ),
-                              ),
-                              const SizedBox(width: 7),
-                              Image.asset(
-                                'assets/images/icon_image.png', // Path to your icon
-                                width: 14,
-                                height: 14,
-                              ),
-                            ],
-                          ),
-                        ),
+                        ],
                       ),
                     ],
                   ),
