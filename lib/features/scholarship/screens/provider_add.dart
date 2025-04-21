@@ -363,29 +363,33 @@ class _ProviderAddEditState extends State<ProviderAddEdit> {
             borderRadius: BorderRadius.circular(10),
           ),
           child: SizedBox(
-            height: 301, // กำหนดความสูงของ Dialog
+            // Removed fixed height: 301
             width: 298,
-            child: Center(
+            child: Padding(
+              // Added padding for better spacing
+              padding:
+                  const EdgeInsets.symmetric(vertical: 40.0, horizontal: 20.0),
               child: Column(
-                mainAxisSize: MainAxisSize.min,
+                mainAxisSize: MainAxisSize.min, // Keep this
+                mainAxisAlignment:
+                    MainAxisAlignment.center, // Center vertically
+                crossAxisAlignment:
+                    CrossAxisAlignment.center, // Center horizontally
                 children: [
-                  Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      SizedBox(
-                        height: 100,
-                        width: 100,
-                        child: CircularProgressIndicator(
-                          valueColor: AlwaysStoppedAnimation<Color>(
-                              const Color.fromARGB(249, 84, 83, 83)),
-                          strokeWidth: 18.0, // ความหนาของเส้น
-                        ),
-                      ),
-                    ],
+                  SizedBox(
+                    // Keep SizedBox for progress indicator size
+                    height: 100,
+                    width: 100,
+                    child: CircularProgressIndicator(
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                          const Color.fromARGB(249, 84, 83, 83)),
+                      strokeWidth: 18.0, // ความหนาของเส้น
+                    ),
                   ),
                   SizedBox(height: 40),
                   Text(
                     "Waiting for Posting",
+                    textAlign: TextAlign.center, // Ensure text is centered
                     style: GoogleFonts.dmSans(
                         fontSize: 24, // ปรับขนาดฟอนต์ที่นี่
                         fontWeight: FontWeight.w600,
@@ -500,29 +504,33 @@ class _ProviderAddEditState extends State<ProviderAddEdit> {
             borderRadius: BorderRadius.circular(10),
           ),
           child: SizedBox(
-            height: 301, // กำหนดความสูงของ Dialog
+            // Removed fixed height: 301
             width: 298,
-            child: Center(
+            child: Padding(
+              // Added padding for better spacing
+              padding:
+                  const EdgeInsets.symmetric(vertical: 40.0, horizontal: 20.0),
               child: Column(
-                mainAxisSize: MainAxisSize.min,
+                mainAxisSize: MainAxisSize.min, // Keep this
+                mainAxisAlignment:
+                    MainAxisAlignment.center, // Center vertically
+                crossAxisAlignment:
+                    CrossAxisAlignment.center, // Center horizontally
                 children: [
-                  Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      SizedBox(
-                        height: 100,
-                        width: 100,
-                        child: CircularProgressIndicator(
-                          valueColor: AlwaysStoppedAnimation<Color>(
-                              const Color.fromARGB(249, 84, 83, 83)),
-                          strokeWidth: 18.0, // ความหนาของเส้น
-                        ),
-                      ),
-                    ],
+                  SizedBox(
+                    // Keep SizedBox for progress indicator size
+                    height: 100,
+                    width: 100,
+                    child: CircularProgressIndicator(
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                          const Color.fromARGB(249, 84, 83, 83)),
+                      strokeWidth: 18.0, // ความหนาของเส้น
+                    ),
                   ),
                   SizedBox(height: 40),
                   Text(
                     "Waiting for Updating",
+                    textAlign: TextAlign.center, // Ensure text is centered
                     style: GoogleFonts.dmSans(
                         fontSize: 24, // ปรับขนาดฟอนต์ที่นี่
                         fontWeight: FontWeight.w600,
