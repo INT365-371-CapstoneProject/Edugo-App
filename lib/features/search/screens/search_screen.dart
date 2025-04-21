@@ -11,8 +11,8 @@ import 'dart:convert';
 import 'package:edugo/services/auth_service.dart';
 import 'package:intl/intl.dart'; // นำเข้า DateFormat
 import 'package:edugo/features/scholarship/screens/provider_detail.dart'; // เพิ่ม import
-import 'package:edugo/features/search/screens/search_screen.dart'; // เพิ่ม import SearchScreen
 import 'package:edugo/main.dart'; // Import main.dart เพื่อเข้าถึง navigatorKey
+import 'package:edugo/features/search/screens/filter.dart'; // Import filter.dart
 
 import '../../../services/scholarship_card.dart';
 
@@ -30,6 +30,7 @@ class _SearchScreenState extends State<SearchScreen> {
       AuthService(navigatorKey: navigatorKey); // Instance of AuthService
   final TextEditingController _searchController = TextEditingController();
   final Map<String, Uint8List?> _imageCache = {};
+  Map<String, Set<String>> _selectedFilters = {}; // Add state for filters
 
   @override
   void initState() {
@@ -196,6 +197,30 @@ class _SearchScreenState extends State<SearchScreen> {
     },
   ];
 
+  // Function to navigate to SearchList
+  void _navigateToSearchList(String query,
+      {Map<String, Set<String>>? filters}) {
+    Navigator.push(
+      context,
+      PageRouteBuilder(
+        pageBuilder: (context, animation, secondaryAnimation) => SearchList(
+            searchQuery: query, selectedFilters: filters ?? _selectedFilters),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          const begin = 0.0;
+          const end = 1.0;
+          const curve = Curves.easeOut;
+          var tween =
+              Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+          return FadeTransition(
+            opacity: animation.drive(tween),
+            child: child,
+          );
+        },
+        transitionDuration: const Duration(milliseconds: 300),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -249,44 +274,33 @@ class _SearchScreenState extends State<SearchScreen> {
                                       border: InputBorder.none,
                                     ),
                                     onSubmitted: (value) {
-                                      Navigator.push(
-                                        context,
-                                        PageRouteBuilder(
-                                          pageBuilder: (context, animation,
-                                                  secondaryAnimation) =>
-                                              SearchList(
-                                                  searchQuery:
-                                                      value), // ✅ Use 'value' instead of 'query'
-                                          transitionsBuilder: (context,
-                                              animation,
-                                              secondaryAnimation,
-                                              child) {
-                                            const begin = 0.0;
-                                            const end = 1.0;
-                                            const curve = Curves.easeOut;
-
-                                            var tween = Tween(
-                                                    begin: begin, end: end)
-                                                .chain(
-                                                    CurveTween(curve: curve));
-                                            return FadeTransition(
-                                              opacity: animation.drive(tween),
-                                              child: child,
-                                            );
-                                          },
-                                          transitionDuration:
-                                              const Duration(milliseconds: 300),
-                                        ),
-                                      );
+                                      _navigateToSearchList(value);
                                     },
                                   ),
                                 ),
-                                // Image.asset(
-                                //   'assets/images/three-line.png',
-                                //   width: 30.0,
-                                //   height: 18.0,
-                                //   color: const Color(0xFF8CA4FF),
-                                // ),
+                                GestureDetector(
+                                  onTap: () async {
+                                    final filters =
+                                        await openFilterDrawer(context);
+                                    if (filters != null) {
+                                      setState(() {
+                                        _selectedFilters = filters;
+                                      });
+                                      print(
+                                          "Filters selected: $_selectedFilters"); // Debug
+                                      // Navigate to SearchList with filters and current query
+                                      _navigateToSearchList(
+                                          _searchController.text,
+                                          filters: _selectedFilters);
+                                    }
+                                  },
+                                  child: Image.asset(
+                                    'assets/images/three-line.png', // Make sure this asset exists
+                                    width: 30.0,
+                                    height: 18.0,
+                                    color: const Color(0xFF8CA4FF),
+                                  ),
+                                ),
                               ],
                             ),
                           ),

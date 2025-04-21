@@ -13,6 +13,7 @@ import 'package:edugo/services/auth_service.dart';
 import 'package:intl/intl.dart';
 import 'package:edugo/features/login&register/login.dart';
 import 'package:edugo/main.dart'; // Import main.dart เพื่อเข้าถึง navigatorKey
+import 'package:edugo/features/search/screens/filter.dart'; // Import filter.dart
 
 import '../../../services/scholarship_card.dart';
 import 'package:edugo/features/search/screens/search_screen.dart';
@@ -123,6 +124,8 @@ class _HomeScreenAppState extends State<HomeScreenApp> {
   final Map<String, Uint8List?> _imageCache = {};
   final AuthService authService = AuthService(navigatorKey: navigatorKey);
   bool isProvider = false;
+  final TextEditingController _searchController = TextEditingController();
+  Map<String, Set<String>> _selectedFilters = {};
 
   final List<Map<String, dynamic>> countryList = [
     {
@@ -298,6 +301,29 @@ class _HomeScreenAppState extends State<HomeScreenApp> {
     'assets/images/carousel_3.png',
   ];
 
+  void _navigateToSearchList(String query,
+      {Map<String, Set<String>>? filters}) {
+    Navigator.push(
+      context,
+      PageRouteBuilder(
+        pageBuilder: (context, animation, secondaryAnimation) => SearchList(
+            searchQuery: query, selectedFilters: filters ?? _selectedFilters),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          const begin = 0.0;
+          const end = 1.0;
+          const curve = Curves.easeOut;
+          var tween =
+              Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+          return FadeTransition(
+            opacity: animation.drive(tween),
+            child: child,
+          );
+        },
+        transitionDuration: const Duration(milliseconds: 300),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -418,6 +444,8 @@ class _HomeScreenAppState extends State<HomeScreenApp> {
                                 const SizedBox(width: 19.0),
                                 Expanded(
                                   child: TextField(
+                                    controller:
+                                        _searchController, // Use controller
                                     decoration: InputDecoration(
                                       hintText: "Search Experiences",
                                       hintStyle: TextStyleService.getDmSans(
@@ -426,49 +454,43 @@ class _HomeScreenAppState extends State<HomeScreenApp> {
                                         color: const Color(0xFF94A2B8),
                                       ),
                                       border: InputBorder.none,
-                                      // Remove explicit contentPadding calculation
-                                      // contentPadding: EdgeInsets.symmetric(vertical: (56.0 - 16 * 1.3) / 2),
-                                      isDense:
-                                          true, // Make the TextField take less vertical space
-                                      contentPadding: EdgeInsets
-                                          .zero, // Remove default padding
+                                      isDense: true,
+                                      contentPadding: EdgeInsets.zero,
                                     ),
                                     style: TextStyleService.getDmSans(
                                       fontSize: 16,
                                       fontWeight: FontWeight.w400,
                                       color: Colors.black,
                                     ),
-                                    textAlignVertical: TextAlignVertical
-                                        .center, // Center text vertically
+                                    textAlignVertical: TextAlignVertical.center,
                                     onSubmitted: (value) {
-                                      Navigator.push(
-                                        context,
-                                        PageRouteBuilder(
-                                          pageBuilder: (context, animation,
-                                                  secondaryAnimation) =>
-                                              SearchList(searchQuery: value),
-                                          transitionsBuilder: (context,
-                                              animation,
-                                              secondaryAnimation,
-                                              child) {
-                                            const begin = 0.0;
-                                            const end = 1.0;
-                                            const curve = Curves.easeOut;
-
-                                            var tween = Tween(
-                                                    begin: begin, end: end)
-                                                .chain(
-                                                    CurveTween(curve: curve));
-                                            return FadeTransition(
-                                              opacity: animation.drive(tween),
-                                              child: child,
-                                            );
-                                          },
-                                          transitionDuration:
-                                              const Duration(milliseconds: 300),
-                                        ),
-                                      );
+                                      // Navigate to SearchList with query
+                                      _navigateToSearchList(value);
                                     },
+                                  ),
+                                ),
+                                // Add Filter Icon
+                                GestureDetector(
+                                  onTap: () async {
+                                    final filters =
+                                        await openFilterDrawer(context);
+                                    if (filters != null) {
+                                      setState(() {
+                                        _selectedFilters = filters;
+                                      });
+                                      print(
+                                          "Filters selected: $_selectedFilters"); // Debug
+                                      // Navigate to SearchList with filters (and current query if any)
+                                      _navigateToSearchList(
+                                          _searchController.text,
+                                          filters: _selectedFilters);
+                                    }
+                                  },
+                                  child: Image.asset(
+                                    'assets/images/three-line.png', // Make sure this asset exists
+                                    width: 30.0,
+                                    height: 18.0,
+                                    color: const Color(0xFF8CA4FF),
                                   ),
                                 ),
                               ],
