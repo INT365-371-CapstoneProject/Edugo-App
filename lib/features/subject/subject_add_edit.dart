@@ -125,7 +125,6 @@ class _SubjectAddEditState extends State<SubjectAddEdit> {
 
       setState(() {
         _selectedImage = File(image.path); // เก็บไฟล์รูปที่ผ่านการตรวจสอบแล้ว
-        print(_selectedImage);
       });
     }
   }
@@ -153,8 +152,6 @@ class _SubjectAddEditState extends State<SubjectAddEdit> {
         setState(() {
           _selectedImage = tempFile; // เก็บไฟล์ใน _selectedImage
         });
-
-        print("Image saved to: ${tempFile.path}");
         return response.bodyBytes;
       } else {
         debugPrint("Failed to load image: ${response.statusCode}");

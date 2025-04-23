@@ -57,39 +57,39 @@ class ApiService {
 
     if (announce.attachFile == null || announce.attachFile == '') {
       request.fields.remove('attach_file');
+
+      var response = await request.send();
+      if (response.statusCode != 200 && response.statusCode != 201) {
+        throw Exception('Failed to add announce');
+      }
     }
 
-    print(request.fields);
+    Future<void> updateAnnounce(Announce announce,
+        {Uint8List? image, Uint8List? file}) async {
+      var request = http.MultipartRequest('PUT',
+          Uri.parse(ApiEndpoints.updateAnnounce(announce.id.toString()!)));
 
-    var response = await request.send();
-    if (response.statusCode != 200 && response.statusCode != 201) {
-      throw Exception('Failed to add announce');
-    }
-  }
+      request.fields.addAll(announce
+          .toJson()
+          .map((key, value) => MapEntry(key, value.toString())));
 
-  Future<void> updateAnnounce(Announce announce,
-      {Uint8List? image, Uint8List? file}) async {
-    var request = http.MultipartRequest(
-        'PUT', Uri.parse(ApiEndpoints.updateAnnounce(announce.id.toString()!)));
+      if (image != null) {
+        request.files.add(
+          http.MultipartFile.fromBytes('image', image, filename: 'image.jpg'),
+        );
+      }
 
-    request.fields.addAll(
-        announce.toJson().map((key, value) => MapEntry(key, value.toString())));
+      if (file != null) {
+        request.files.add(
+          http.MultipartFile.fromBytes('attach_file', file,
+              filename: 'file.pdf'),
+        );
+      }
 
-    if (image != null) {
-      request.files.add(
-        http.MultipartFile.fromBytes('image', image, filename: 'image.jpg'),
-      );
-    }
-
-    if (file != null) {
-      request.files.add(
-        http.MultipartFile.fromBytes('attach_file', file, filename: 'file.pdf'),
-      );
-    }
-
-    var response = await request.send();
-    if (response.statusCode != 200 && response.statusCode != 201) {
-      throw Exception('Failed to update announce');
+      var response = await request.send();
+      if (response.statusCode != 200 && response.statusCode != 201) {
+        throw Exception('Failed to update announce');
+      }
     }
   }
 }

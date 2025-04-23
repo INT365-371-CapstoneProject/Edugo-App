@@ -26,7 +26,6 @@ class _HeaderProviderAddState extends State<HeaderProviderAdd> {
   @override
   void initState() {
     super.initState();
-    print('Initial Image URL: ${widget.initialImage}'); // Add this debug print
   }
 
   // Function to pick an image

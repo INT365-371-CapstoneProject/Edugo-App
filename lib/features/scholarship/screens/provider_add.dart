@@ -128,8 +128,6 @@ class _ProviderAddEditState extends State<ProviderAddEdit> {
     fetchCountryData();
     fetchCategoryData();
 
-    print(widget.initialData);
-
     if (widget.isEdit && widget.initialData != null) {
       final data = widget.initialData!;
       id = data['id'] ?? '';

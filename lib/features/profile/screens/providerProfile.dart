@@ -132,10 +132,6 @@ class _ProviderProfileState extends State<ProviderProfile> {
       if (token != null) {
         headers['Authorization'] = 'Bearer $token';
       }
-
-      print(
-          '${ApiConfig.announceUserUrl}/provider/${widget.initialData?['provider_id']}?page=$page');
-
       final response = await http.get(
         Uri.parse(
             '${ApiConfig.announceUserUrl}/provider/${widget.initialData?['provider_id']}?page=$page'),
@@ -172,8 +168,6 @@ class _ProviderProfileState extends State<ProviderProfile> {
           _currentPage = data['page'] ?? 1;
           _totalPages = data['last_page'] ?? 1;
           _totalScholarships = data['total'] ?? 0;
-
-          print(_totalScholarships);
         });
       } else {
         throw Exception('Failed to load scholarships: ${response.statusCode}');

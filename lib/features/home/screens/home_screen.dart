@@ -7,6 +7,7 @@ import 'package:edugo/shared/utils/textStyle.dart';
 import 'package:flutter/material.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:edugo/services/footer.dart';
+import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:edugo/services/auth_service.dart';
@@ -40,7 +41,6 @@ class CountryFilter extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () {
-        print("Selected country: $fullName"); // ใช้ fullName ที่รับเข้ามา
         Navigator.push(
           context,
           PageRouteBuilder(
@@ -300,8 +300,6 @@ class _HomeScreenAppState extends State<HomeScreenApp> {
       final response = await http.get(url, headers: headers);
       if (response.statusCode == 200 || response.statusCode == 201) {
         final Map<String, dynamic> data = json.decode(response.body);
-        print(data);
-
         final List categories = data['categories'] ?? [];
         final List countries = data['countries'] ?? [];
         final educationLevel = data['education_level'];
@@ -676,9 +674,6 @@ class _HomeScreenAppState extends State<HomeScreenApp> {
                                       setState(() {
                                         _selectedFilters = filters;
                                       });
-                                      print(
-                                          "Filters selected: $_selectedFilters"); // Debug
-                                      // Navigate to SearchList with filters (and current query if any)
                                       _navigateToSearchList(
                                           _searchController.text,
                                           filters: _selectedFilters);

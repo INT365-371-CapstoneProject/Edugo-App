@@ -83,7 +83,6 @@ class _SearchListState extends State<SearchList> {
     List<String> queryParams = [];
 
     final activeFilters = filters ?? selectedFilters;
-    print("Using filters: $activeFilters"); // Debug
 
     if (searchQuery.isNotEmpty) {
       queryParams.add("search=$searchQuery");
@@ -118,8 +117,6 @@ class _SearchListState extends State<SearchList> {
       if (token != null) {
         headers['Authorization'] = 'Bearer $token';
       }
-
-      print("Fetching URL: $url"); // Debugging
 
       final response = await http.get(Uri.parse(url), headers: headers);
 
@@ -251,8 +248,6 @@ class _SearchListState extends State<SearchList> {
                                       setState(() {
                                         selectedFilters = filters;
                                       });
-                                      print(
-                                          "Filters selected: $selectedFilters"); // Debug
                                       searchScholarships(
                                           _searchController
                                               .text, // Use current text

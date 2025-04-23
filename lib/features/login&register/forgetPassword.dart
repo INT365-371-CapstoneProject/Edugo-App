@@ -309,8 +309,6 @@ class _ForgetPasswordState extends State<ForgetPassword> {
           "new_password": newPassword,
         }),
       );
-
-      print(response.statusCode);
       Navigator.of(context).pop();
       if (response.statusCode == 200) {
         _showSuccessDialog(const Login());

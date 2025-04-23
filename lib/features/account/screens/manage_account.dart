@@ -339,7 +339,6 @@ class _ManageAccountState extends State<ManageAccount> {
 
   Future<void> submitDeleteAccount() async {
     final String apiUrl = "${ApiConfig.userUrl}/${widget.id}";
-    print(apiUrl);
     String? token = await authService.getToken();
 
     Map<String, String> headers = {};
@@ -362,14 +361,12 @@ class _ManageAccountState extends State<ManageAccount> {
       if (response.statusCode == 200) {
         _showSuccessDialogAndNavigate(Login());
       } else {
-        print(response);
         // แจ้ง Error เพิ่มเติมได้ที่นี่
         _showErrorDialog("Failed to delete account", "Please try again later.");
       }
     } catch (e) {
       // ปิด loading dialog กรณีเกิด error
       Navigator.of(context).pop();
-      print(e);
       _showErrorDialog("Error deleting account", "Please try again later.");
     }
   }

@@ -63,10 +63,7 @@ class _AnimationQuestionState extends State<AnimationQuestion>
       );
 
       if (response.statusCode == 201 || response.statusCode == 200) {
-        print("Success");
-      } else {
-        print(response);
-      }
+      } else {}
     } catch (e) {
       print(e);
     }

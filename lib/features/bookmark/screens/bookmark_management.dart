@@ -67,8 +67,6 @@ class _BookmarkListState extends State<BookmarkList> {
               .toSet() // ลบค่าซ้ำ
               .toList(); // แปลงกลับเป็น List
         });
-
-        print("Filtered announce_id list: $announceIds"); // Debug
         fetchAnnounceDetails();
       } else {
         throw Exception('Failed to load bookmarks');
@@ -96,7 +94,6 @@ class _BookmarkListState extends State<BookmarkList> {
 
         setState(() {
           announceDetails = responseData; // เก็บข้อมูลที่ได้
-          print(announceDetails); // Debug
         });
       } else {
         throw Exception('Failed to load announcement details');

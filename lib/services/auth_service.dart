@@ -112,8 +112,6 @@ class AuthService {
   // ฟังก์ชันสำหรับ Logout และกลับไปหน้า Login พร้อมแสดง Dialog (ถ้ามี)
   Future<void> logoutAndRedirectToLogin(
       {String? title, String? message}) async {
-    print("Logging out and redirecting to login...");
-
     // แสดง Dialog ก่อนถ้ามี title และ message
     if (navigatorKey.currentContext != null &&
         title != null &&
@@ -160,7 +158,6 @@ class AuthService {
 
   // ฟังก์ชันตรวจสอบสถานะ Session ล่าสุด
   Future<void> checkSessionValidity() async {
-    print("Checking session validity...");
     final profileData = await _fetchProfileData();
 
     // ถ้า profileData เป็น null อาจจะเกิดจาก token หมดอายุ, ไม่มี token, หรือ API error
@@ -183,7 +180,6 @@ class AuthService {
     // ตรวจสอบ Status
     final status = profileData['status'];
     if (status == 'Suspended') {
-      print("Account suspended. Logging out.");
       await logoutAndRedirectToLogin(
         title: "Account Suspended",
         message: "Your account is currently suspended. Please contact support.",
@@ -196,7 +192,6 @@ class AuthService {
     if (role == 'provider') {
       final verify = profileData['verify'];
       if (verify == 'No') {
-        print("Provider verification is 'No'. Logging out.");
         await logoutAndRedirectToLogin(
           title: "Verification Required",
           message:
@@ -204,7 +199,6 @@ class AuthService {
         );
         return; // ออกจากการทำงานหลัง logout
       } else if (verify == 'Waiting') {
-        print("Provider verification is 'Waiting'. Logging out.");
         await logoutAndRedirectToLogin(
           title: "Verification Pending",
           message:

@@ -5,11 +5,13 @@ import 'package:edugo/config/api_config.dart';
 import 'package:edugo/features/scholarship/screens/provider_add.dart';
 import 'package:edugo/features/scholarship/screens/provider_detail.dart';
 import 'package:edugo/features/profile/screens/profile.dart';
+import 'package:edugo/features/search/screens/filter.dart';
 // import 'package:edugo/features/subject/subject_manage.dart'; // Removed unused import
 import 'package:edugo/services/scholarship_card.dart';
 import 'package:edugo/services/status_box.dart';
 // import 'package:flutter/cupertino.dart'; // Removed unused import
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -29,10 +31,11 @@ class _ProviderManagementState extends State<ProviderManagement> {
   List<dynamic> scholarships = []; // Holds data for the current API page
   List<dynamic> _allScholarships = []; // Holds all fetched data for filtering
   List<dynamic> useItem = []; // Holds items currently displayed in the list
-
+  final TextEditingController _searchController = TextEditingController();
   // Loading states
   bool isLoading = true; // Loading API page data
   bool _isLoadingCounts = true; // Loading all data for counts/filtering
+  Map<String, Set<String>> _selectedFilters = {}; // Add state for filters
 
   // Image cache
   final Map<String, Uint8List?> _imageCache = {};
@@ -64,7 +67,8 @@ class _ProviderManagementState extends State<ProviderManagement> {
   void initState() {
     super.initState();
     authService.checkSessionValidity();
-    _delayedLoad();
+    //_delayedLoad();
+    fetchScholarships(page: 1, refreshCounts: true);
   }
 
   Future<Uint8List?> fetchImage(String url) async {
@@ -98,20 +102,60 @@ class _ProviderManagementState extends State<ProviderManagement> {
   }
 
   // Fetches data for a specific API page
-  Future<void> fetchScholarships(
-      {int page = 1, bool refreshCounts = false}) async {
+  Future<void> fetchScholarships({
+    int page = 1,
+    bool refreshCounts = false,
+    String? query,
+    Map<String, Set<String>>? filters,
+  }) async {
     if (!mounted) return;
+    _countsCalculated = false;
+
+    // Trigger refreshCounts automatically if needed
+    if (!_countsCalculated && selectedStatus != "All") {
+      refreshCounts = true;
+    }
+
+    String searchQuery = (query == null || query.isEmpty) ? "" : query;
+    List<String> queryParams = [];
+
+    final activeFilters = filters ?? _selectedFilters;
+
+    if (searchQuery.isNotEmpty) {
+      queryParams.add("search=$searchQuery");
+    }
+
+    if (activeFilters.containsKey('educationLevels') &&
+        activeFilters['educationLevels']!.isNotEmpty) {
+      queryParams.addAll(activeFilters['educationLevels']!
+          .map((level) => "education_level=$level"));
+    }
+
+    if (activeFilters.containsKey('scholarshipTypes') &&
+        activeFilters['scholarshipTypes']!.isNotEmpty) {
+      queryParams.addAll(
+          activeFilters['scholarshipTypes']!.map((type) => "category=$type"));
+    }
+
+    if (activeFilters.containsKey('countries') &&
+        activeFilters['countries']!.isNotEmpty) {
+      queryParams.add("country=${activeFilters['countries']!.first}");
+    }
+
     setState(() {
-      isLoading = true; // Loading indicator for API page data
+      isLoading = true;
       if (refreshCounts) {
         _isLoadingCounts = true;
         _countsCalculated = false;
-        _allScholarships.clear(); // Clear all data if refreshing counts
+        _allScholarships.clear(); // Reset for full reload
       }
-      // Clear current API page list
       scholarships.clear();
-      // Don't clear useItem here, it will be updated by _applyFilterAndPagination or directly if "All"
     });
+
+    String url = ApiConfig.searchAnnounceProviderUrl;
+    if (queryParams.isNotEmpty) {
+      url += "?${queryParams.join('&')}";
+    }
 
     try {
       String? token = await authService.getToken();
@@ -119,9 +163,10 @@ class _ProviderManagementState extends State<ProviderManagement> {
       if (token != null) {
         headers['Authorization'] = 'Bearer $token';
       }
-
-      final Uri uri = Uri.parse('${ApiConfig.announceUrl}?page=$page');
-      final response = await http.get(uri, headers: headers);
+      String paginatedUrl =
+          url.contains('?') ? '$url&page=$page' : '$url?page=$page';
+      final response =
+          await http.get(Uri.parse(paginatedUrl), headers: headers);
 
       if (!mounted) return;
 
@@ -130,15 +175,13 @@ class _ProviderManagementState extends State<ProviderManagement> {
         List<dynamic> scholarshipData = data['data'] ?? [];
 
         List<dynamic> newScholarships = scholarshipData.map((scholarship) {
-          // ... (mapping logic remains the same) ...
           scholarship['image'] =
               "${ApiConfig.announceUrl}/${scholarship['id']}/image";
           scholarship['title'] = scholarship['title'] ?? 'No Title';
           scholarship['description'] =
               scholarship['description'] ?? 'No Description Available';
-          scholarship['published_date'] =
-              scholarship['publish_date']; // Correct key
-          scholarship['close_date'] = scholarship['close_date']; // Correct key
+          scholarship['published_date'] = scholarship['publish_date'];
+          scholarship['close_date'] = scholarship['close_date'];
           scholarship['education_level'] =
               scholarship['education_level'] ?? 'No Education Level';
           scholarship['attach_name'] =
@@ -149,19 +192,20 @@ class _ProviderManagementState extends State<ProviderManagement> {
         newScholarships
             .sort((a, b) => b['published_date'].compareTo(a['published_date']));
 
-        // Update API pagination state
         _currentPage = data['page'] ?? 1;
         _totalPages = data['last_page'] ?? 1;
         _totalScholarships = data['total'] ?? 0;
-        scholarships = newScholarships; // Store current API page data
+        scholarships = newScholarships;
 
-        // Trigger total count calculation if needed
         if (!_countsCalculated && _totalPages > 0) {
-          // Don't await this, let it run in the background
-          _calculateAllCounts();
+          _calculateAllCounts(
+              query: query,
+              filters: filters,
+              refreshCounts: true); // Background process
+        } else {
+          print("Error");
         }
 
-        // Update the displayed list
         _applyFilterAndPagination();
       } else {
         throw Exception('Failed to load scholarships: ${response.statusCode}');
@@ -175,15 +219,50 @@ class _ProviderManagementState extends State<ProviderManagement> {
     } finally {
       if (mounted) {
         setState(() {
-          isLoading = false; // Done loading API page data
+          isLoading = false;
         });
       }
     }
   }
 
   // Function to fetch all pages, calculate total counts, and store all data
-  Future<void> _calculateAllCounts() async {
+  Future<void> _calculateAllCounts({
+    bool refreshCounts = false,
+    String? query,
+    Map<String, Set<String>>? filters,
+  }) async {
     if (_countsCalculated || !mounted) return;
+
+    String searchQuery = (query == null || query.isEmpty) ? "" : query;
+    List<String> queryParams = [];
+
+    final activeFilters = filters ?? _selectedFilters;
+
+    if (searchQuery.isNotEmpty) {
+      queryParams.add("search=$searchQuery");
+    }
+
+    if (activeFilters.containsKey('educationLevels') &&
+        activeFilters['educationLevels']!.isNotEmpty) {
+      queryParams.addAll(activeFilters['educationLevels']!
+          .map((level) => "education_level=$level"));
+    }
+
+    if (activeFilters.containsKey('scholarshipTypes') &&
+        activeFilters['scholarshipTypes']!.isNotEmpty) {
+      queryParams.addAll(
+          activeFilters['scholarshipTypes']!.map((type) => "category=$type"));
+    }
+
+    if (activeFilters.containsKey('countries') &&
+        activeFilters['countries']!.isNotEmpty) {
+      queryParams.add("country=${activeFilters['countries']!.first}");
+    }
+
+    String url = ApiConfig.searchAnnounceProviderUrl;
+    if (queryParams.isNotEmpty) {
+      url += "?${queryParams.join('&')}";
+    }
 
     // No need to set _isLoadingCounts = true here, it's set in fetchScholarships(refreshCounts: true)
 
@@ -200,38 +279,39 @@ class _ProviderManagementState extends State<ProviderManagement> {
         if (mounted) {
           setState(() {
             _isLoadingCounts = false;
-            _countsCalculated = true; // Mark as calculated even if no pages
           });
         }
         return;
       }
 
       for (int page = 1; page <= _totalPages; page++) {
-        if (!mounted) return;
-        final Uri uri = Uri.parse('${ApiConfig.announceUrl}?page=$page');
-        final response = await http.get(uri, headers: headers);
+        // if (!mounted) return;
+        String paginatedUrl =
+            url.contains('?') ? '$url&page=$page' : '$url?page=$page';
+        final response =
+            await http.get(Uri.parse(paginatedUrl), headers: headers);
 
         if (response.statusCode == 200) {
           final Map<String, dynamic> data = json.decode(response.body);
           List<dynamic> pageData = data['data'] ?? [];
 
           // Map keys consistently before adding to the list
-          List<dynamic> processedPageData = pageData.map((scholarship) {
-            scholarship['published_date'] =
-                scholarship['publish_date']; // Map original key
-            scholarship['close_date'] = scholarship[
+          List<dynamic> processedPageData = pageData.map((scholarships) {
+            scholarships['published_date'] =
+                scholarships['publish_date']; // Map original key
+            scholarships['close_date'] = scholarships[
                 'close_date']; // Ensure this key exists or map if needed
             // Add other mappings if necessary
-            scholarship['image'] =
-                "${ApiConfig.announceUrl}/${scholarship['id']}/image";
-            scholarship['title'] = scholarship['title'] ?? 'No Title';
-            scholarship['description'] =
-                scholarship['description'] ?? 'No Description Available';
-            scholarship['education_level'] =
-                scholarship['education_level'] ?? 'No Education Level';
-            scholarship['attach_name'] =
-                scholarship['attach_name'] ?? 'No Attach File Name';
-            return scholarship;
+            scholarships['image'] =
+                "${ApiConfig.announceUrl}/${scholarships['id']}/image";
+            scholarships['title'] = scholarships['title'] ?? 'No Title';
+            scholarships['description'] =
+                scholarships['description'] ?? 'No Description Available';
+            scholarships['education_level'] =
+                scholarships['education_level'] ?? 'No Education Level';
+            scholarships['attach_name'] =
+                scholarships['attach_name'] ?? 'No Attach File Name';
+            return scholarships;
           }).toList();
 
           tempAllScholarships.addAll(processedPageData); // Add processed data
@@ -287,15 +367,15 @@ class _ProviderManagementState extends State<ProviderManagement> {
 
   // Applies the current filter and handles pagination (client-side or API-based)
   void _applyFilterAndPagination() {
-    if (!_countsCalculated && selectedStatus != "All") {
-      // If counts (and thus all data) aren't ready yet for filtering, show nothing or loading
-      // isLoading should handle the main loading indicator
-      // We might want a specific indicator if _isLoadingCounts is true
-      setState(() {
-        useItem = []; // Clear items until counts/all data are loaded
-      });
-      return;
-    }
+    // if (!_countsCalculated && selectedStatus != "All") {
+    //   // If counts (and thus all data) aren't ready yet for filtering, show nothing or loading
+    //   // isLoading should handle the main loading indicator
+    //   // We might want a specific indicator if _isLoadingCounts is true
+    //   setState(() {
+    //     useItem = []; // Clear items until counts/all data are loaded
+    //   });
+    //   return;
+    // }
 
     List<dynamic> itemsToShow = [];
     int currentPageToShow = 1;
@@ -359,11 +439,11 @@ class _ProviderManagementState extends State<ProviderManagement> {
     });
   }
 
-  Future<void> _delayedLoad() async {
-    await Future.delayed(const Duration(seconds: 1));
-    // Fetch first API page and trigger count calculation
-    fetchScholarships(page: 1, refreshCounts: true);
-  }
+  // Future<void> _delayedLoad() async {
+  //   await Future.delayed(const Duration(seconds: 1));
+  //   // Fetch first API page and trigger count calculation
+  //   fetchScholarships(page: 1, refreshCounts: true);
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -467,13 +547,18 @@ class _ProviderManagementState extends State<ProviderManagement> {
                         ),
                       ),
                     ),
-                    CircleAvatar(
-                      radius: 20,
-                      backgroundColor: const Color(0xFFC0CDFF),
-                      child: Image.asset(
-                        'assets/images/brower.png',
-                        width: 40.0,
-                        height: 40.0,
+                    GestureDetector(
+                      onTap: () => CopyLinkButton(
+                          link:
+                              "https://capstone24.sit.kmutt.ac.th/un2/Officialwebpage"),
+                      child: CircleAvatar(
+                        radius: 20,
+                        backgroundColor: const Color(0xFFC0CDFF),
+                        child: Image.asset(
+                          'assets/images/brower.png',
+                          width: 40.0,
+                          height: 40.0,
+                        ),
                       ),
                     ),
                   ],
@@ -509,6 +594,7 @@ class _ProviderManagementState extends State<ProviderManagement> {
                         const SizedBox(width: 19.0),
                         Expanded(
                           child: TextField(
+                            controller: _searchController,
                             decoration: InputDecoration(
                               hintText: "Search for scholarship",
                               hintStyle: GoogleFonts.dmSans(
@@ -522,15 +608,32 @@ class _ProviderManagementState extends State<ProviderManagement> {
                               contentPadding:
                                   EdgeInsets.zero, // Remove default padding
                             ),
+                            onSubmitted: (value) {
+                              // fetchScholarships(value);
+                            },
                             textAlignVertical: TextAlignVertical
                                 .center, // Center hint text vertically
                           ),
                         ),
-                        Image.asset(
-                          'assets/images/three-line.png',
-                          width: 30.0,
-                          height: 18.0,
-                          color: const Color(0xFF8CA4FF),
+                        GestureDetector(
+                          onTap: () async {
+                            final filters = await openFilterDrawer(context);
+                            if (filters != null) {
+                              setState(() {
+                                _selectedFilters = filters;
+                              });
+                              // Navigate to SearchList with filters and current query
+                              // _navigateToSearchList(_searchController.text,
+                              //     filters: _selectedFilters);
+                              fetchScholarships(filters: _selectedFilters);
+                            }
+                          },
+                          child: Image.asset(
+                            'assets/images/three-line.png', // Make sure this asset exists
+                            width: 30.0,
+                            height: 18.0,
+                            color: const Color(0xFF8CA4FF),
+                          ),
                         ),
                       ],
                     ),
@@ -925,6 +1028,81 @@ class _ProviderManagementState extends State<ProviderManagement> {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class CopyLinkButton extends StatefulWidget {
+  final String link;
+
+  const CopyLinkButton({Key? key, required this.link}) : super(key: key);
+
+  @override
+  State<CopyLinkButton> createState() => _CopyLinkButtonState();
+}
+
+class _CopyLinkButtonState extends State<CopyLinkButton> {
+  OverlayEntry? _overlayEntry;
+
+  void _copyLinkAndShowPopup(BuildContext context) async {
+    // คัดลอกลิงก์ไปยังคลิปบอร์ด
+    await Clipboard.setData(ClipboardData(text: widget.link));
+
+    // แสดง overlay popup
+    _overlayEntry = _createOverlayEntry(context);
+    Overlay.of(context).insert(_overlayEntry!);
+
+    // รอ 2 วินาทีแล้วลบ overlay
+    await Future.delayed(Duration(seconds: 2));
+    _overlayEntry?.remove();
+    _overlayEntry = null;
+  }
+
+  OverlayEntry _createOverlayEntry(BuildContext context) {
+    RenderBox renderBox = context.findRenderObject() as RenderBox;
+    Offset offset = renderBox.localToGlobal(Offset.zero);
+
+    return OverlayEntry(
+      builder: (context) => Positioned(
+        top: offset.dy - 10,
+        left: offset.dx + 10,
+        child: Material(
+          color: Colors.transparent,
+          child: Container(
+            padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.9),
+              borderRadius: BorderRadius.circular(8),
+              boxShadow: [
+                BoxShadow(color: Colors.black26, blurRadius: 4),
+              ],
+            ),
+            child: Text(
+              'Copied!',
+              style: TextStyle(
+                color: Color(0xFF5A6CF3),
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () => _copyLinkAndShowPopup(context),
+      child: CircleAvatar(
+        radius: 20,
+        backgroundColor: const Color(0xFFC0CDFF),
+        child: Image.asset(
+          'assets/images/brower.png',
+          width: 40.0,
+          height: 40.0,
+        ),
       ),
     );
   }

@@ -194,8 +194,6 @@ class _SearchScreenState extends State<SearchScreen> {
           _currentPage = data['page'] ?? 1;
           _totalPages = data['last_page'] ?? 1;
           _totalScholarships = data['total'] ?? 0;
-
-          print(_totalScholarships);
         });
       } else {
         throw Exception('Failed to load scholarships: ${response.statusCode}');
@@ -283,8 +281,6 @@ class _SearchScreenState extends State<SearchScreen> {
       final response = await http.get(url, headers: headers);
       if (response.statusCode == 200 || response.statusCode == 201) {
         final Map<String, dynamic> data = json.decode(response.body);
-        print(data);
-
         final List categories = data['categories'] ?? [];
         final List countries = data['countries'] ?? [];
         final educationLevel = data['education_level'];
@@ -540,9 +536,6 @@ class _SearchScreenState extends State<SearchScreen> {
                                       setState(() {
                                         _selectedFilters = filters;
                                       });
-                                      print(
-                                          "Filters selected: $_selectedFilters"); // Debug
-                                      // Navigate to SearchList with filters and current query
                                       _navigateToSearchList(
                                           _searchController.text,
                                           filters: _selectedFilters);
@@ -1386,7 +1379,6 @@ class CountryFilter extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () {
-        print("Selected country: $fullName");
         Navigator.push(
           context,
           MaterialPageRoute(

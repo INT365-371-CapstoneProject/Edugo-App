@@ -94,9 +94,6 @@ class _LoginState extends State<Login> {
         Navigator.pop(context); // ปิด Loading Dialog
       }
 
-      print('Response status: ${response.statusCode}');
-      print('Response body: ${response.body}');
-
       if (response.statusCode == 200) {
         final Map<String, dynamic> data = json.decode(response.body);
         final String token = data['token'];
@@ -157,7 +154,6 @@ class _LoginState extends State<Login> {
       );
 
       if (response.statusCode == 201 || response.statusCode == 200) {
-        print("Success");
       } else {
         print(response);
       }
@@ -426,7 +422,6 @@ class _LoginState extends State<Login> {
     try {
       await _authService.removeToken(); // ใช้ _authService ที่มีอยู่
       await _authService.removeFCMToken();
-      print("User logged out due to post-login check failure.");
     } catch (e) {
       print("Error during logout on error: $e");
     }
@@ -459,7 +454,6 @@ class _LoginState extends State<Login> {
     if (role == 'provider') {
       final verify = profileData['verify'];
       if (verify == 'No') {
-        print("Provider verification is 'No'. Logging out.");
         await _handleLogoutOnError();
         _showLoginErrorDialog(
           "Verification Required",

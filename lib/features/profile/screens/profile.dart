@@ -101,8 +101,6 @@ class _PersonalProfileState extends State<PersonalProfile> {
             'postal_code': profileData['postal_code'] ?? '',
           };
         });
-        print(profile);
-        print(profile);
       } else {
         throw Exception('Failed to load profile');
       }
@@ -305,7 +303,6 @@ class _PersonalProfileState extends State<PersonalProfile> {
                         icon: Icons.person,
                         label: "Edit Profile",
                         onTap: () {
-                          print(profile);
                           if (profile != null) {
                             Navigator.push(
                               context,

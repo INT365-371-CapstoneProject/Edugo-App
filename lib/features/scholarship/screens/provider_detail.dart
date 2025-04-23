@@ -68,7 +68,6 @@ class _ProviderDetailState extends State<ProviderDetail> {
     super.initState();
     // fetchScholarshipsDetail(widget.initialData?['id']);
     fetchProfile(); // เรียกใช้ฟังก์ชันนี้เพื่อดึงข้อมูลโปรไฟล์
-    print(widget);
     fetchScholarshipsDetail(widget.initialData?['id']);
 
     // Store previousRouteName locally
@@ -205,7 +204,6 @@ class _ProviderDetailState extends State<ProviderDetail> {
             'id': profileData['id'],
           };
         });
-        print(profile);
         fetchBookmark(profile?['id']);
       } else {
         throw Exception('Failed to load profile');
@@ -351,7 +349,6 @@ class _ProviderDetailState extends State<ProviderDetail> {
             'id': profileData['id'],
           };
         });
-        print(profile);
         fetchBookmark(profile?['id']);
       } else {
         throw Exception('Failed to load profile');
@@ -385,8 +382,6 @@ class _ProviderDetailState extends State<ProviderDetail> {
                   (item) => item['announce_id'] as int) // ดึงเฉพาะ announce_id
               .toSet() // ลบค่าซ้ำ
               .toList(); // แปลงกลับเป็น List
-
-          print(announceIds);
           if (widget.initialData?['id'] != null &&
               announceIds.contains(widget.initialData?['id'])) {
             isBookmarked = true;
@@ -579,41 +574,41 @@ class _ProviderDetailState extends State<ProviderDetail> {
                               children: [
                                 GestureDetector(
                                   onTap: () {
-                                    // Navigator.pop(context);
-                                    // Navigate back based on previousRouteName
-                                    Widget destination;
-                                    print(localPreviousRouteName);
-                                    if (localPreviousRouteName == 'search') {
-                                      destination = const SearchScreen();
-                                    } else if (widget.isProvider) {
-                                      destination = const ProviderManagement();
-                                    } else {
-                                      destination = const HomeScreenApp();
-                                    }
-                                    Navigator.pushReplacement(
-                                      context,
-                                      PageRouteBuilder(
-                                        pageBuilder: (context, animation,
-                                                secondaryAnimation) =>
-                                            destination,
-                                        transitionsBuilder: (context, animation,
-                                            secondaryAnimation, child) {
-                                          const begin = 0.0;
-                                          const end = 1.0;
-                                          const curve = Curves.easeOut;
+                                    Navigator.pop(
+                                        context); // กลับไปยังหน้าก่อนหน้านี้
+                                    //  Widget destination;
+                                    // print(localPreviousRouteName);
+                                    // if (localPreviousRouteName == 'search') {
+                                    //   destination = const SearchScreen();
+                                    // } else if (widget.isProvider) {
+                                    //   destination = const ProviderManagement();
+                                    // } else {
+                                    //   destination = const HomeScreenApp();
+                                    // }
+                                    // Navigator.pushReplacement(
+                                    //   context,
+                                    //   PageRouteBuilder(
+                                    //     pageBuilder: (context, animation,
+                                    //             secondaryAnimation) =>
+                                    //         destination,
+                                    //     transitionsBuilder: (context, animation,
+                                    //         secondaryAnimation, child) {
+                                    //       const begin = 0.0;
+                                    //       const end = 1.0;
+                                    //       const curve = Curves.easeOut;
 
-                                          var tween = Tween(
-                                                  begin: begin, end: end)
-                                              .chain(CurveTween(curve: curve));
-                                          return FadeTransition(
-                                            opacity: animation.drive(tween),
-                                            child: child,
-                                          );
-                                        },
-                                        transitionDuration:
-                                            const Duration(milliseconds: 300),
-                                      ),
-                                    );
+                                    //       var tween = Tween(
+                                    //               begin: begin, end: end)
+                                    //           .chain(CurveTween(curve: curve));
+                                    //       return FadeTransition(
+                                    //         opacity: animation.drive(tween),
+                                    //         child: child,
+                                    //       );
+                                    //     },
+                                    //     transitionDuration:
+                                    //         const Duration(milliseconds: 300),
+                                    //   ),
+                                    // );
                                   },
                                   child: CircleAvatar(
                                     radius: 20,

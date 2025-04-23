@@ -748,7 +748,6 @@ class _RegisterState extends State<Register> {
         if (!_validateUserStepOne()) return;
         stepOne = false;
         stepTwo = true;
-        print(_errors);
       } else if (stepTwo && widget.isUser) {
         if (!_validateUserStepTwo()) return;
         stepTwo = false;

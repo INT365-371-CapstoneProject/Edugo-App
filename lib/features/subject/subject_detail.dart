@@ -73,7 +73,6 @@ class _SubjectDetailState extends State<SubjectDetail> {
 
   Future<void> fetchComment() async {
     if (id == null) {
-      print("ID is null, cannot fetch comments.");
       return;
     }
 
@@ -171,8 +170,6 @@ class _SubjectDetailState extends State<SubjectDetail> {
         setState(() {
           postImge = response.bodyBytes; // เก็บไฟล์ใน _selectedImage
         });
-
-        print(postImge);
         return response.bodyBytes;
       } else {
         debugPrint("Failed to load image: ${response.statusCode}");
@@ -217,7 +214,6 @@ class _SubjectDetailState extends State<SubjectDetail> {
 
   Future<void> AddNewComment() async {
     if (id == null) {
-      print("ID is null, cannot fetch comments.");
       return;
     }
 
@@ -244,7 +240,6 @@ class _SubjectDetailState extends State<SubjectDetail> {
       );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        print("Comment added successfully.");
         _commentController.clear();
         fetchComment();
       } else {

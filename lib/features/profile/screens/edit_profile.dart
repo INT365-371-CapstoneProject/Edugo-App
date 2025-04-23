@@ -121,9 +121,6 @@ class _PersonalProfileEditState extends State<PersonalProfileEdit> {
     super.initState();
     fetchCountryData();
     fetchAvatarImage();
-    print(widget.profileData);
-    print(widget.profileData['address']);
-    print(fetchCountryData);
     // สร้าง controller สำหรับแต่ละฟิลด์ใน Company และ Personal
     companyControllers = {
       'company_name':
@@ -136,8 +133,6 @@ class _PersonalProfileEditState extends State<PersonalProfileEdit> {
       'postal_code':
           TextEditingController(text: widget.profileData['postal_code']),
     };
-
-    print(companyControllers['address']);
 
     personalControllers = {
       'first_name':
@@ -169,8 +164,6 @@ class _PersonalProfileEditState extends State<PersonalProfileEdit> {
             .map<String>((country) => country['country_name'].toString())
             .toList();
       });
-
-      print(countries); // ตรวจสอบค่าที่ได้
     } else {
       throw Exception('Failed to load country data');
     }
