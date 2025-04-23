@@ -20,13 +20,13 @@ import 'package:dropdown_search/dropdown_search.dart';
 import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:image_picker/image_picker.dart';
 
-class ProviderProfileEdit extends StatefulWidget {
+class PersonalProfileEdit extends StatefulWidget {
   final Map<String, dynamic> profileData;
 
-  const ProviderProfileEdit({super.key, required this.profileData});
+  const PersonalProfileEdit({super.key, required this.profileData});
 
   @override
-  State<ProviderProfileEdit> createState() => _ProviderProfileEditState();
+  State<PersonalProfileEdit> createState() => _PersonalProfileEditState();
 }
 
 final double coverHeight = 152;
@@ -34,7 +34,7 @@ final double profileHeight = 90;
 final _formKey = GlobalKey<FormState>();
 bool isFormValid = true;
 
-class _ProviderProfileEditState extends State<ProviderProfileEdit> {
+class _PersonalProfileEditState extends State<PersonalProfileEdit> {
   // แก้ไขการสร้าง AuthService instance
   final AuthService authService = AuthService(navigatorKey: navigatorKey);
   final top = coverHeight - profileHeight / 2;
@@ -393,7 +393,7 @@ class _ProviderProfileEditState extends State<ProviderProfileEdit> {
                       context,
                       PageRouteBuilder(
                         pageBuilder: (context, animation, secondaryAnimation) =>
-                            const ProviderProfile(),
+                            const PersonalProfile(),
                         transitionsBuilder:
                             (context, animation, secondaryAnimation, child) {
                           const begin = 0.0;
@@ -444,7 +444,12 @@ class _ProviderProfileEditState extends State<ProviderProfileEdit> {
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(profileHeight / 2),
                       child: imageData != null
-                          ? Image.memory(imageData!)
+                          ? Image.memory(
+                              imageData!,
+                              width: profileHeight,
+                              height: profileHeight,
+                              fit: BoxFit.cover,
+                            )
                           : Image.asset(
                               'assets/images/avatar.png',
                               width: profileHeight,

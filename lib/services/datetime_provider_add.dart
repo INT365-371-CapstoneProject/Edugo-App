@@ -34,7 +34,6 @@ class _DateSelectorState extends State<DateSelector> {
   @override
   void initState() {
     super.initState();
-    // Initialize the start and end dates if they are provided
     startDate = widget.initialStartDate;
     endDate = widget.initialEndDate;
     isDetail = widget.isDetail;
@@ -187,7 +186,7 @@ class _DateSelectorState extends State<DateSelector> {
                         ? '${startTime!.format(context)}'
                         : 'Select Time',
                     style: GoogleFonts.dmSans(
-                      fontSize: 16,
+                      fontSize: 13,
                       color: isDetail == true
                           ? const Color(0xFF64738B)
                           : startTime == null
@@ -307,7 +306,7 @@ class _DateSelectorState extends State<DateSelector> {
                         ? '${endTime!.format(context)}'
                         : 'Select Time',
                     style: GoogleFonts.dmSans(
-                      fontSize: 16,
+                      fontSize: 13,
                       color: isDetail == true
                           ? const Color(0xFF64738B)
                           : endTime == null

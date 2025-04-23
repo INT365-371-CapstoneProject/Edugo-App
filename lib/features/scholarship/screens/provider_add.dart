@@ -138,12 +138,12 @@ class _ProviderAddEditState extends State<ProviderAddEdit> {
       url = data['url'];
       selectedCountry = data['country'] ?? '';
       selectedCategory = data['category'] ?? '';
-      selectedStartDate = data['published_date'] != null
-          ? DateTime.tryParse(data['published_date'])
-          : null;
-      selectedEndDate = data['close_date'] != null
-          ? DateTime.tryParse(data['close_date'])
-          : null;
+      selectedStartDate = data['published_date'];
+      // ? DateTime.tryParse(data['published_date'])
+      // : null;
+      selectedEndDate = data['close_date'];
+      // ? DateTime.tryParse(data['close_date'])
+      // : null;
 
       // --- Start Modification ---
       // Correctly handle null for image data
@@ -1078,6 +1078,7 @@ class _ProviderAddEditState extends State<ProviderAddEdit> {
                             // TextField
                             Container(
                               width: double.infinity,
+                              height: 353,
                               decoration: BoxDecoration(
                                 border: Border.all(
                                   color: Color(0xFFCBD5E0),
@@ -1141,6 +1142,9 @@ class _ProviderAddEditState extends State<ProviderAddEdit> {
                           ],
                         ),
                       ),
+                      SizedBox(
+                        height: 40,
+                      )
                     ],
                   ),
                 ),

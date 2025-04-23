@@ -83,7 +83,7 @@ class _FooterNavState extends State<FooterNav> {
                     isActive: widget.pageName == 'subject',
                   ),
                   _buildIconButton(
-                    onTap: () => _navigateTo(context, const ProviderProfile()),
+                    onTap: () => _navigateTo(context, const PersonalProfile()),
                     iconPath: 'assets/images/profile_icon.png',
                     isSvg: false,
                     isActive: widget.pageName == 'profile',

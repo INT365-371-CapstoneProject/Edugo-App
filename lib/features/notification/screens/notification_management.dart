@@ -97,7 +97,7 @@ class _NotificationListState extends State<NotificationList> {
                       //   PageRouteBuilder(
                       //     pageBuilder:
                       //         (context, animation, secondaryAnimation) =>
-                      //             const ProviderProfile(),
+                      //             const PersonalProfile(),
                       //     transitionsBuilder:
                       //         (context, animation, secondaryAnimation, child) {
                       //       const begin = 0.0;

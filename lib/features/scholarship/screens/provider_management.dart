@@ -436,7 +436,7 @@ class _ProviderManagementState extends State<ProviderManagement> {
                           PageRouteBuilder(
                             pageBuilder:
                                 (context, animation, secondaryAnimation) =>
-                                    const ProviderProfile(),
+                                    const PersonalProfile(),
                             transitionsBuilder: (context, animation,
                                 secondaryAnimation, child) {
                               const begin = 0.0;

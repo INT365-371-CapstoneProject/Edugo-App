@@ -38,6 +38,16 @@ class _SearchScreenState extends State<SearchScreen> {
   final Map<String, Future<Uint8List?>> _avatarFutureCache = {};
   final Map<String, Future<String?>> _providerNameFutureCache = {};
 
+  bool showPaginationControls = true;
+  int displayPage = 1;
+  int displayTotal = 1;
+  bool canGoPrev = false;
+  bool canGoNext = false;
+  int _currentPage = 1;
+  int _totalPages = 1; // Total API pages
+  int _totalScholarships = 0; // Overall total from API
+  bool isLoading = true;
+
   @override
   void initState() {
     super.initState();
@@ -125,7 +135,21 @@ class _SearchScreenState extends State<SearchScreen> {
     }
   }
 
-  Future<void> fetchAllScholarships() async {
+  bool _countsCalculated = false;
+
+  Future<void> fetchAllScholarships(
+      {int page = 1, bool refreshCounts = false}) async {
+    if (!mounted) return;
+    setState(() {
+      isLoading = true; // Loading indicator for API page data
+      if (refreshCounts) {
+        _countsCalculated = false;
+        scholarshipsForAll.clear(); // Clear all data if refreshing counts
+      }
+      // Clear current API page list
+      scholarshipsForAll.clear();
+      // Don't clear useItem here, it will be updated by _applyFilterAndPagination or directly if "All"
+    });
     try {
       String? token = await authService.getToken();
       Map<String, String> headers = {
@@ -136,7 +160,7 @@ class _SearchScreenState extends State<SearchScreen> {
       }
 
       final response = await http.get(
-        Uri.parse(ApiConfig.announceUserUrl),
+        Uri.parse('${ApiConfig.announceUserUrl}?page=$page'),
         headers: headers,
       );
 
@@ -167,6 +191,11 @@ class _SearchScreenState extends State<SearchScreen> {
             final bDate = DateTime.tryParse(b['published_date']) ?? DateTime(0);
             return bDate.compareTo(aDate);
           });
+          _currentPage = data['page'] ?? 1;
+          _totalPages = data['last_page'] ?? 1;
+          _totalScholarships = data['total'] ?? 0;
+
+          print(_totalScholarships);
         });
       } else {
         throw Exception('Failed to load scholarships: ${response.statusCode}');
@@ -439,6 +468,15 @@ class _SearchScreenState extends State<SearchScreen> {
 
   @override
   Widget build(BuildContext context) {
+    bool canGoPrev = false;
+    bool canGoNext = false;
+    int displayPage = 1;
+    int displayTotal = 1;
+    displayPage = _currentPage;
+    displayTotal = _totalPages;
+    canGoPrev = _currentPage > 1;
+    canGoNext = _currentPage < _totalPages;
+
     return Scaffold(
       backgroundColor: Colors.white,
       body: Stack(
@@ -595,8 +633,6 @@ class _SearchScreenState extends State<SearchScreen> {
                             color: Color(0xFF000000),
                           ),
                         ),
-                        const SizedBox(
-                            height: 8.0), // เพิ่มระยะห่างเล็กน้อยก่อน GridView
                         GridView.count(
                           crossAxisCount: 5,
                           mainAxisSpacing: 8.0, // ระยะห่างแนวตั้งระหว่าง items
@@ -686,13 +722,13 @@ class _SearchScreenState extends State<SearchScreen> {
                             Navigator.pushReplacement(
                               context,
                               PageRouteBuilder(
-                                pageBuilder:
-                                    (context, animation, secondaryAnimation) =>
-                                        ProviderDetail(
-                                  initialData: existingData,
-                                  // Always treat navigation from home screen as non-provider view for edit/delete buttons
-                                  isProvider: false,
-                                ),
+                                pageBuilder: (context, animation,
+                                        secondaryAnimation) =>
+                                    ProviderDetail(
+                                        initialData: existingData,
+                                        // Always treat navigation from home screen as non-provider view for edit/delete buttons
+                                        isProvider: false,
+                                        previousRouteName: 'search'),
                                 transitionsBuilder: (context, animation,
                                     secondaryAnimation, child) {
                                   const begin = 0.0;
@@ -1234,8 +1270,80 @@ class _SearchScreenState extends State<SearchScreen> {
                       );
                     },
                   ),
+                  // Pagination Controls
+                  if (showPaginationControls)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                          vertical: 16.0, horizontal: 16.0),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          ElevatedButton.icon(
+                            onPressed: canGoPrev
+                                ? () {
+                                    fetchAllScholarships(
+                                        page: _currentPage - 1,
+                                        refreshCounts: true);
+                                  }
+                                : null, // Disable if cannot go previous
+                            icon: Icon(Icons.arrow_back_ios,
+                                size: 16,
+                                color: canGoPrev
+                                    ? Colors.white
+                                    : Colors.grey[400]),
+                            label: Text("Prev",
+                                style: TextStyle(
+                                    color: canGoPrev
+                                        ? Colors.white
+                                        : Colors.grey[400])),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: canGoPrev
+                                  ? Color(0xFF355FFF)
+                                  : Colors.grey[300],
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8)),
+                              padding: EdgeInsets.symmetric(
+                                  horizontal: 12, vertical: 8),
+                            ),
+                          ),
+                          Text(
+                            'Page $displayPage of $displayTotal', // Use calculated display values
+                            style: TextStyleService.getDmSans(
+                                fontSize: 14, fontWeight: FontWeight.w500),
+                          ),
+                          ElevatedButton.icon(
+                            onPressed: canGoNext
+                                ? () {
+                                    fetchAllScholarships(
+                                        page: _currentPage + 1,
+                                        refreshCounts: true);
+                                  }
+                                : null, // Disable if cannot go next
+                            icon: Icon(Icons.arrow_forward_ios,
+                                size: 16,
+                                color: canGoNext
+                                    ? Colors.white
+                                    : Colors.grey[400]),
+                            label: Text("Next",
+                                style: TextStyle(
+                                    color: canGoNext
+                                        ? Colors.white
+                                        : Colors.grey[400])),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: canGoNext
+                                  ? Color(0xFF355FFF)
+                                  : Colors.grey[300],
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8)),
+                              padding: EdgeInsets.symmetric(
+                                  horizontal: 12, vertical: 8),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   const SizedBox(
-                      height: 20), // Add some spacing before the footer
+                      height: 90), // Add some spacing before the footer
                 ],
               ),
             ),

@@ -57,4 +57,6 @@ class ApiConfig {
   static const String userUrl = "$apiUrl/user";
 
   static const String providerUrl = "$apiUrl/provider";
+
+  static const String providerAvatarUrl = "$apiUrl/provider/avatar";
 }

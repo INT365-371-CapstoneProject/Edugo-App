@@ -21,17 +21,17 @@ import 'package:http/http.dart' as http;
 import 'package:edugo/main.dart'; // Import main.dart เพื่อเข้าถึง navigatorKey
 import 'package:edugo/features/profile/screens/change_password.dart'; // Import the new screen
 
-class ProviderProfile extends StatefulWidget {
-  const ProviderProfile({super.key});
+class PersonalProfile extends StatefulWidget {
+  const PersonalProfile({super.key});
 
   @override
-  State<ProviderProfile> createState() => _ProviderProfileState();
+  State<PersonalProfile> createState() => _PersonalProfileState();
 }
 
 final double coverHeight = 152;
 final double profileHeight = 90;
 
-class _ProviderProfileState extends State<ProviderProfile> {
+class _PersonalProfileState extends State<PersonalProfile> {
   // แก้ไขการสร้าง AuthService instance
   final AuthService authService = AuthService(navigatorKey: navigatorKey);
   final top = coverHeight - profileHeight / 2;
@@ -126,7 +126,7 @@ class _ProviderProfileState extends State<ProviderProfile> {
         children: [
           Positioned.fill(
             child: ListView(
-              padding: EdgeInsets.zero,
+              padding: const EdgeInsets.only(bottom: 80.0),
               children: [
                 // Cover Image Section
                 Container(
@@ -141,75 +141,75 @@ class _ProviderProfileState extends State<ProviderProfile> {
                             clipBehavior: Clip.none,
                             alignment: Alignment.center,
                             children: [
-                              Padding(
-                                padding: const EdgeInsets.all(16.0),
-                                child: Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    GestureDetector(
-                                      onTap: () {},
-                                      child: CircleAvatar(
-                                        backgroundColor:
-                                            const Color(0xFFDAFB59),
-                                        child: Image.asset(
-                                          'assets/images/back_button.png',
-                                          width: 20.0,
-                                          height: 20.0,
-                                          color: const Color(0xFF355FFF),
-                                        ),
-                                      ),
-                                    ),
-                                    CircleAvatar(
-                                      radius: 20,
-                                      backgroundColor: const Color(0xFFDAFB59),
-                                      child: GestureDetector(
-                                        onTap: () {
-                                          print(profile?["id"]);
-                                          Navigator.push(
-                                            context,
-                                            PageRouteBuilder(
-                                              pageBuilder: (context, animation,
-                                                      secondaryAnimation) =>
-                                                  NotificationList(
-                                                id: profile?['id'],
-                                              ),
-                                              transitionsBuilder: (context,
-                                                  animation,
-                                                  secondaryAnimation,
-                                                  child) {
-                                                const begin = 0.0;
-                                                const end = 1.0;
-                                                const curve = Curves.easeOut;
+                              // Padding(
+                              //   padding: const EdgeInsets.all(16.0),
+                              //   child: Row(
+                              //     mainAxisAlignment:
+                              //         MainAxisAlignment.spaceBetween,
+                              //     children: [
+                              //       GestureDetector(
+                              //         onTap: () {},
+                              //         child: CircleAvatar(
+                              //           backgroundColor:
+                              //               const Color(0xFFDAFB59),
+                              //           child: Image.asset(
+                              //             'assets/images/back_button.png',
+                              //             width: 20.0,
+                              //             height: 20.0,
+                              //             color: const Color(0xFF355FFF),
+                              //           ),
+                              //         ),
+                              //       ),
+                              //       CircleAvatar(
+                              //         radius: 20,
+                              //         backgroundColor: const Color(0xFFDAFB59),
+                              //         child: GestureDetector(
+                              //           onTap: () {
+                              //             print(profile?["id"]);
+                              //             Navigator.push(
+                              //               context,
+                              //               PageRouteBuilder(
+                              //                 pageBuilder: (context, animation,
+                              //                         secondaryAnimation) =>
+                              //                     NotificationList(
+                              //                   id: profile?['id'],
+                              //                 ),
+                              //                 transitionsBuilder: (context,
+                              //                     animation,
+                              //                     secondaryAnimation,
+                              //                     child) {
+                              //                   const begin = 0.0;
+                              //                   const end = 1.0;
+                              //                   const curve = Curves.easeOut;
 
-                                                var tween = Tween(
-                                                        begin: begin, end: end)
-                                                    .chain(CurveTween(
-                                                        curve: curve));
-                                                return FadeTransition(
-                                                  opacity:
-                                                      animation.drive(tween),
-                                                  child: child,
-                                                );
-                                              },
-                                              transitionDuration:
-                                                  const Duration(
-                                                      milliseconds: 300),
-                                            ),
-                                          );
-                                        },
-                                        child: Image.asset(
-                                          'assets/images/notification.png',
-                                          width: 40.0,
-                                          height: 40.0,
-                                          color: const Color(0xFF355FFF),
-                                          colorBlendMode: BlendMode.srcIn,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
+                              //                   var tween = Tween(
+                              //                           begin: begin, end: end)
+                              //                       .chain(CurveTween(
+                              //                           curve: curve));
+                              //                   return FadeTransition(
+                              //                     opacity:
+                              //                         animation.drive(tween),
+                              //                     child: child,
+                              //                   );
+                              //                 },
+                              //                 transitionDuration:
+                              //                     const Duration(
+                              //                         milliseconds: 300),
+                              //               ),
+                              //             );
+                              //           },
+                              //           child: Image.asset(
+                              //             'assets/images/notification.png',
+                              //             width: 40.0,
+                              //             height: 40.0,
+                              //             color: const Color(0xFF355FFF),
+                              //             colorBlendMode: BlendMode.srcIn,
+                              //           ),
+                              //         ),
+                              //       ),
+                              //     ],
+                              //   ),
+                              // ),
                               Positioned(
                                 top: top,
                                 child: Container(
@@ -225,7 +225,12 @@ class _ProviderProfileState extends State<ProviderProfile> {
                                     borderRadius: BorderRadius.circular(
                                         profileHeight / 2),
                                     child: imageData != null
-                                        ? Image.memory(imageData!)
+                                        ? Image.memory(
+                                            imageData!,
+                                            width: profileHeight,
+                                            height: profileHeight,
+                                            fit: BoxFit.cover,
+                                          )
                                         : Image.asset(
                                             'assets/images/avatar.png',
                                             width: profileHeight,
@@ -306,7 +311,7 @@ class _ProviderProfileState extends State<ProviderProfile> {
                               context,
                               MaterialPageRoute(
                                 builder: (context) =>
-                                    ProviderProfileEdit(profileData: profile!),
+                                    PersonalProfileEdit(profileData: profile!),
                               ),
                             );
                           } else {

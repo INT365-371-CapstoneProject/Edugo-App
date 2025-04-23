@@ -8,6 +8,6 @@ class AppRoutes {
 
   static Map<String, WidgetBuilder> routes = {
     login: (context) => const Login(),
-    scholarship: (context) => const ProviderProfile(),
+    scholarship: (context) => const PersonalProfile(),
   };
 }

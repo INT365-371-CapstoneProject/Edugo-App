@@ -175,7 +175,7 @@ class _HomeScreenAppState extends State<HomeScreenApp> {
     super.initState();
     authService.checkSessionValidity(); // เพิ่มการตรวจสอบ session ที่นี่
     _checkToken();
-    fetchProfile();
+    // fetchProfile();
     getAnswer();
     fetchAvatarImage();
   }
@@ -253,39 +253,39 @@ class _HomeScreenAppState extends State<HomeScreenApp> {
     return null;
   }
 
-  Future<void> fetchProfile() async {
-    try {
-      String? token = await authService.getToken();
-      Map<String, String> headers = {};
-      if (token != null) {
-        headers['Authorization'] = 'Bearer $token';
-      }
+  // Future<void> fetchProfile() async {
+  //   try {
+  //     String? token = await authService.getToken();
+  //     Map<String, String> headers = {};
+  //     if (token != null) {
+  //       headers['Authorization'] = 'Bearer $token';
+  //     }
 
-      final response =
-          await http.get(Uri.parse(ApiConfig.profileUrl), headers: headers);
+  //     final response =
+  //         await http.get(Uri.parse(ApiConfig.profileUrl), headers: headers);
 
-      if (response.statusCode == 200) {
-        final Map<String, dynamic> data = json.decode(response.body);
-        final Map<String, dynamic> profileData = data['profile'];
+  //     if (response.statusCode == 200) {
+  //       final Map<String, dynamic> data = json.decode(response.body);
+  //       final Map<String, dynamic> profileData = data['profile'];
 
-        // เก็บเฉพาะ id และ role
-        setState(() {
-          profile = {
-            'id': profileData['id'],
-            'role': profileData['role'],
-          };
+  //       // เก็บเฉพาะ id และ role
+  //       setState(() {
+  //         profile = {
+  //           'id': profileData['id'],
+  //           'role': profileData['role'],
+  //         };
 
-          // เช็ค role และตั้งค่า isProvider
-          isProvider = profile!['role'] == 'provider';
-        });
-      } else {
-        throw Exception('Failed to load profile');
-      }
-    } catch (e) {
-      setState(() {});
-      print("Error fetching profile: $e");
-    }
-  }
+  //         // เช็ค role และตั้งค่า isProvider
+  //         isProvider = profile!['role'] == 'provider';
+  //       });
+  //     } else {
+  //       throw Exception('Failed to load profile');
+  //     }
+  //   } catch (e) {
+  //     setState(() {});
+  //     print("Error fetching profile: $e");
+  //   }
+  // }
 
   Future<http.Response?> getAnswer() async {
     final url = Uri.parse(ApiConfig.answerUrl);
@@ -890,6 +890,7 @@ class _HomeScreenAppState extends State<HomeScreenApp> {
                               'close_date': scholarship['close_date'],
                               'education_level': scholarship['education_level'],
                               'attach_name': scholarship['attach_name'],
+                              'providerId': scholarship['providerId']
                             };
 
                             // Fetch the image and update the cache if necessary
@@ -1216,7 +1217,7 @@ class _HomeScreenAppState extends State<HomeScreenApp> {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 90), // Add space before FooterNav
+                  const SizedBox(height: 110), // Add space before FooterNav
                 ],
               ),
             ),

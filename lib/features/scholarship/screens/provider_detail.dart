@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:edugo/config/api_config.dart';
 import 'package:edugo/features/home/screens/home_screen.dart';
+import 'package:edugo/features/profile/screens/providerProfile.dart';
 import 'package:edugo/features/scholarship/screens/provider_add.dart';
 import 'package:edugo/features/scholarship/screens/provider_management.dart';
 import 'package:edugo/features/search/screens/search_screen.dart'; // Import SearchScreen
@@ -55,68 +56,24 @@ class _ProviderDetailState extends State<ProviderDetail> {
   List<dynamic> bookmarks = [];
   bool isBookmarked = false;
   String? localPreviousRouteName; // Local variable to store route name
+  Map<String, dynamic>? scholarshipDetail;
+  Map<String, dynamic>? providerDetail;
+  bool isLoading = true;
+  String? providerCompanyName;
+  Uint8List? imageAvatar;
+  Uint8List? imageAnnounce;
 
   @override
   void initState() {
     super.initState();
     // fetchScholarshipsDetail(widget.initialData?['id']);
     fetchProfile(); // เรียกใช้ฟังก์ชันนี้เพื่อดึงข้อมูลโปรไฟล์
+    print(widget);
+    fetchScholarshipsDetail(widget.initialData?['id']);
 
     // Store previousRouteName locally
     localPreviousRouteName =
         widget.previousRouteName ?? widget.initialData?['previousRouteName'];
-
-    if (widget.initialData != null) {
-      // Print the received data
-      print("Received initialData in ProviderDetail: ${widget.initialData}");
-
-      final data = widget.initialData!;
-      _initializeData(data);
-    }
-  }
-
-  void _initializeData(Map<String, dynamic>? data) {
-    if (data != null) {
-      // Check the type of 'id' and parse if it's a String
-      if (data['id'] is String) {
-        id =
-            int.tryParse(data['id']); // Use tryParse to handle potential errors
-      } else if (data['id'] is int) {
-        id = data['id'];
-      } else {
-        id = null; // Set to null if it's neither String nor int
-      }
-
-      title = data['title'] ?? 'No Title';
-      description = data['description'] ?? 'No Description';
-      url = data['url'] ?? 'No Website';
-      selectedCountry = data['country'] ?? 'No Country';
-      selectedScholarshipType = data['category'] ?? 'No Category';
-      selectedStartDate = data['published_date'] != null
-          ? DateTime.tryParse(data['published_date'])
-          : null;
-      selectedEndDate = data['close_date'] != null
-          ? DateTime.tryParse(data['close_date'])
-          : null;
-      educationLevel = data['education_level'] ?? 'No Education Level';
-
-      // Use 'attach_file' key consistently
-      if (data['attach_file'] != null && data['attach_file'] is String) {
-        attachFile = data['attach_file'];
-      } else {
-        attachFile = 'No Attach Files';
-      }
-
-      // Handle image, checking both 'image' and 'cachedImage' keys
-      if (data['image'] != null && data['image'] is Uint8List) {
-        image = data['image'];
-      } else if (data['cachedImage'] != null &&
-          data['cachedImage'] is Uint8List) {
-        image = data['cachedImage'];
-      } else {
-        image = null; // Fallback if no valid image data is provided
-      }
-    }
   }
 
   void confirmDelete(BuildContext context) {
@@ -259,54 +216,151 @@ class _ProviderDetailState extends State<ProviderDetail> {
     }
   }
 
-  // Future<void> fetchScholarshipsDetail(int id) async {
-  //   try {
-  //     String? token = await authService.getToken();
-  //     Map<String, String> headers = {};
-  //     if (token != null) {
-  //       headers['Authorization'] = 'Bearer $token';
-  //     }
+  Future<void> fetchScholarshipsDetail(int id) async {
+    try {
+      String? token = await authService.getToken();
+      Map<String, String> headers = {};
+      if (token != null) {
+        headers['Authorization'] = 'Bearer $token';
+      }
 
-  //     final response = await http.get(Uri.parse("${ApiConfig.announceUrl}/$id"),
-  //         headers: headers);
+      final response = await http
+          .get(Uri.parse("${ApiConfig.announceUserUrl}/$id"), headers: headers);
 
-  //     if (response.statusCode == 200) {
-  //       final Map<String, dynamic> scholarshipData = json.decode(response.body);
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> scholarshipData = json.decode(response.body);
+        scholarshipDetail = scholarshipData;
+        id = scholarshipDetail?['id'];
+        title = scholarshipDetail?['title'] ?? 'No Title';
+        description = scholarshipDetail?['description'] ?? 'No Description';
+        url = scholarshipDetail?['url'] ?? 'No Website';
+        selectedCountry = scholarshipDetail?['country'] ?? 'No Country';
+        selectedScholarshipType =
+            scholarshipDetail?['category'] ?? 'No Category';
+        scholarshipDetail?['publish_date'] =
+            DateTime.tryParse(scholarshipDetail?['publish_date']);
 
-  //       print('Raw publish_date: ${scholarshipData['publish_date']}');
-  //       print('Raw close_date: ${scholarshipData['close_date']}');
+        scholarshipDetail?['close_date'] =
+            DateTime.tryParse(scholarshipDetail?['close_date']);
 
-  //       setState(() {
-  //         title = scholarshipData['title'] ?? 'No Title';
-  //         description =
-  //             scholarshipData['description'] ?? 'No Description Available';
-  //         url = scholarshipData['url'];
-  //         selectedScholarshipType = scholarshipData['category'];
-  //         selectedCountry = scholarshipData['country'];
+        educationLevel =
+            scholarshipDetail?['education_level'] ?? 'No Education Level';
 
-  //         selectedStartDate = scholarshipData['publish_date'] != null
-  //             ? DateTime.tryParse(scholarshipData['publish_date'])
-  //             : null;
+        final rawAttachFile = scholarshipDetail?['attach_name'];
 
-  //         if (scholarshipData['close_date'] != null) {
-  //           try {
-  //             selectedEndDate = DateTime.parse(scholarshipData['close_date']);
-  //           } catch (e) {
-  //             print('Error parsing close_date: $e');
-  //             selectedEndDate = null;
-  //           }
-  //         }
+        if (rawAttachFile != null && rawAttachFile is String) {
+          try {
+            attachFile = utf8.decode(rawAttachFile.runes.toList());
+          } catch (e) {
+            attachFile = rawAttachFile; // fallback ถ้า decode ไม่ได้
+          }
+        } else {
+          attachFile = 'No Attach Files';
+        }
+        setState(
+          () {
+            isLoading = false;
+          },
+        );
+        fetchAnnounceImage(scholarshipData['id']);
+        fetchProviderAvatar(scholarshipData['provider_id']);
+        fetchProviderDetail(scholarshipData['provider_id']);
+      } else {
+        throw Exception('Failed to load scholarship details');
+      }
+    } catch (e) {
+      print("Error fetching scholarship details: $e");
+    }
+  }
 
-  //         // Handle attachment
-  //         attachFile = scholarshipData['attach_name'] ?? 'No Attach Files';
-  //       });
-  //     } else {
-  //       throw Exception('Failed to load scholarship details');
-  //     }
-  //   } catch (e) {
-  //     print("Error fetching scholarship details: $e");
-  //   }
-  // }
+  Future<void> fetchAnnounceImage(int id) async {
+    String? token = await authService.getToken();
+
+    final response = await http.get(
+      Uri.parse("${ApiConfig.announceUserUrl}/$id/image"),
+      headers: {
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      setState(() {
+        imageAnnounce = response.bodyBytes; // แปลง response เป็น Uint8List
+      });
+    } else {
+      throw Exception('Failed to load country data');
+    }
+  }
+
+  Future<void> fetchProviderAvatar(int id) async {
+    String? token = await authService.getToken();
+
+    final response = await http.get(
+      Uri.parse("${ApiConfig.providerAvatarUrl}/$id"),
+      headers: {
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      setState(() {
+        imageAvatar = response.bodyBytes; // แปลง response เป็น Uint8List
+      });
+    } else {
+      throw Exception('Failed to load country data');
+    }
+  }
+
+  Future<void> fetchProviderDetail(int id) async {
+    String? token = await authService.getToken();
+
+    final response = await http.get(
+      Uri.parse("${ApiConfig.providerUrl}/$id"),
+      headers: {
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      final Map<String, dynamic> providerData = json.decode(response.body);
+      providerCompanyName = providerData['company_name'];
+      setState(() {});
+    } else {
+      throw Exception('Failed to load country data');
+    }
+  }
+
+  Future<void> fetchAnnounceDetail(int id) async {
+    try {
+      String? token = await authService.getToken();
+      Map<String, String> headers = {};
+      if (token != null) {
+        headers['Authorization'] = 'Bearer $token';
+      }
+
+      final response = await http
+          .get(Uri.parse('${ApiConfig.announceUserUrl}/$id'), headers: headers);
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> data = json.decode(response.body);
+        final Map<String, dynamic> profileData = data['profile'];
+
+        // เก็บเฉพาะ id และ role
+        setState(() {
+          profile = {
+            'id': profileData['id'],
+          };
+        });
+        print(profile);
+        fetchBookmark(profile?['id']);
+      } else {
+        throw Exception('Failed to load profile');
+      }
+    } catch (e) {
+      setState(() {});
+      print("Error fetching profile: $e");
+    }
+  }
 
   Future<void> fetchBookmark(int id) async {
     String? token = await authService.getToken();
@@ -315,7 +369,7 @@ class _ProviderDetailState extends State<ProviderDetail> {
       headers['Authorization'] = 'Bearer $token';
     }
 
-    final url = "${ApiConfig.bookmarkUrl}/acc/$id}";
+    final url = "${ApiConfig.bookmarkUrl}/acc/$id";
 
     try {
       final response = await http.get(Uri.parse(url), headers: headers);
@@ -418,14 +472,15 @@ class _ProviderDetailState extends State<ProviderDetail> {
       if (isBookmarked) {
         // Remove bookmark
         final response = await http.delete(
-          Uri.parse("$url/ann/$id"),
+          Uri.parse("$url/ann/${widget.initialData?['id']}"),
           headers: headers,
         );
 
         if (response.statusCode == 200 || response.statusCode == 204) {
           setState(() {
             isBookmarked = false;
-            announceIds.remove(id); // เอา id ออกจากรายการ
+            announceIds
+                .remove(widget.initialData?['id']); // เอา id ออกจากรายการ
           });
           // showSuccess("Bookmark removed.");
         } else {
@@ -436,13 +491,14 @@ class _ProviderDetailState extends State<ProviderDetail> {
         final response = await http.post(
           url,
           headers: headers,
-          body: json.encode({"announce_id": id}),
+          body: json.encode({"announce_id": widget.initialData?['id']}),
         );
 
         if (response.statusCode == 201 || response.statusCode == 200) {
           setState(() {
             isBookmarked = true;
-            announceIds.add(id!); // เพิ่ม id เข้าไปในรายการ
+            announceIds
+                .add(widget.initialData?['id']!); // เพิ่ม id เข้าไปในรายการ
           });
           // showSuccess("Bookmark added.");
         } else {
@@ -471,6 +527,10 @@ class _ProviderDetailState extends State<ProviderDetail> {
 
   @override
   Widget build(BuildContext context) {
+    if (isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
     final top = coverHeight - pictureHeight / 2;
 
     return WillPopScope(
@@ -519,8 +579,10 @@ class _ProviderDetailState extends State<ProviderDetail> {
                               children: [
                                 GestureDetector(
                                   onTap: () {
+                                    // Navigator.pop(context);
                                     // Navigate back based on previousRouteName
                                     Widget destination;
+                                    print(localPreviousRouteName);
                                     if (localPreviousRouteName == 'search') {
                                       destination = const SearchScreen();
                                     } else if (widget.isProvider) {
@@ -623,13 +685,11 @@ class _ProviderDetailState extends State<ProviderDetail> {
                       Positioned(
                         top: top,
                         child: Center(
-                          child: image != null ||
-                                  image !=
-                                      "assets/images/scholarship_program.png"
+                          child: imageAnnounce != null
                               ? ClipRRect(
                                   borderRadius: BorderRadius.circular(12),
                                   child: Image.memory(
-                                    image ?? Uint8List(0),
+                                    imageAnnounce!,
                                     width: 245,
                                     height: 338,
                                     fit: BoxFit.cover,
@@ -660,14 +720,114 @@ class _ProviderDetailState extends State<ProviderDetail> {
                     ],
                   ),
 
-                  const SizedBox(height: 22),
-
                   // Details Section
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 28.0),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        if (widget.isProvider == false) ...[
+                          const SizedBox(height: 22),
+                          GestureDetector(
+                            onTap: () {
+                              final existingData = {
+                                'id': scholarshipDetail?['id'],
+                                'provider_id':
+                                    scholarshipDetail?['provider_id'],
+                              };
+                              Navigator.push(
+                                context,
+                                PageRouteBuilder(
+                                  pageBuilder: (context, animation,
+                                          secondaryAnimation) =>
+                                      ProviderProfile(
+                                          initialData: existingData),
+                                  transitionsBuilder: (context, animation,
+                                      secondaryAnimation, child) {
+                                    const begin = 0.0;
+                                    const end = 1.0;
+                                    const curve = Curves.easeOut;
+
+                                    var tween = Tween(begin: begin, end: end)
+                                        .chain(CurveTween(curve: curve));
+                                    return FadeTransition(
+                                      opacity: animation.drive(tween),
+                                      child: child,
+                                    );
+                                  },
+                                  transitionDuration:
+                                      const Duration(milliseconds: 300),
+                                ),
+                              );
+                            },
+                            child: Container(
+                              height: 108,
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 26, vertical: 21),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(6),
+                                border: Border.all(color: Colors.grey.shade300),
+                              ),
+                              child: Row(
+                                children: [
+                                  CircleAvatar(
+                                    radius: 30,
+                                    backgroundColor: Colors.blue.shade200,
+                                    child: ClipOval(
+                                      child: SizedBox(
+                                        width:
+                                            66, // ควรเท่ากับ diameter ของ CircleAvatar
+                                        height: 66,
+                                        child: imageAvatar == null
+                                            ? Image.asset(
+                                                'assets/images/avatar.png',
+                                                fit: BoxFit
+                                                    .cover, // สำคัญ! เพื่อให้รูปเต็มวงกลม
+                                              )
+                                            : Image.memory(
+                                                imageAvatar!,
+                                                fit: BoxFit
+                                                    .cover, // เช่นเดียวกัน
+                                              ),
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 27),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          providerCompanyName ??
+                                              'No Company Name',
+                                          overflow: TextOverflow.ellipsis,
+                                          style: TextStyleService.getDmSans(
+                                            color: Color(0xFF000000),
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                        SizedBox(height: 10),
+                                        Text(
+                                          'Provider',
+                                          style: TextStyleService.getDmSans(
+                                            color: Color(0xFF64738B),
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+
+                        SizedBox(height: 20),
                         // Scholarship Name
                         Text(
                           'Scholarship Name*',
@@ -834,8 +994,11 @@ class _ProviderDetailState extends State<ProviderDetail> {
                           ),
                           child: DateSelector(
                             isDetail: true,
-                            initialStartDate: selectedStartDate,
-                            initialEndDate: selectedEndDate,
+                            // initialStartDate: selectedStartDate,
+                            // initialEndDate: selectedEndDate,
+                            initialStartDate:
+                                scholarshipDetail?['publish_date'],
+                            initialEndDate: scholarshipDetail?['close_date'],
                           ),
                         ),
                         const SizedBox(height: 24),
@@ -933,7 +1096,8 @@ class _ProviderDetailState extends State<ProviderDetail> {
                                   // Disable button if attachFile is null or indicates no file
                                   onPressed: (attachFile != null &&
                                           attachFile != 'No Attach Files')
-                                      ? () async => await fetchAndOpenPdf(id!)
+                                      ? () async => await fetchAndOpenPdf(
+                                          scholarshipDetail?['id'])
                                       : null, // เรียก method _pickFile
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: const Color(0xFF355FFF),
@@ -1045,20 +1209,20 @@ class _ProviderDetailState extends State<ProviderDetail> {
                     onPressed: () {
                       // Prepare data to pass
                       final existingData = {
-                        'id': id,
+                        'id': widget.initialData?['id'],
                         'title': title,
                         // Use null check for url before comparison
                         'url': (url == 'No Website') ? null : url,
                         'category': selectedScholarshipType,
                         'country': selectedCountry,
                         'description': description,
-                        'image': image,
+                        'image': imageAnnounce,
                         // Use null check for attachFile before comparison
                         'attach_file': (attachFile == 'No Attach Files')
                             ? null
                             : attachFile,
-                        'published_date': selectedStartDate?.toIso8601String(),
-                        'close_date': selectedEndDate?.toIso8601String(),
+                        'published_date': scholarshipDetail?['publish_date'],
+                        'close_date': scholarshipDetail?['close_date'],
                         'education_level': educationLevel,
                       };
 
