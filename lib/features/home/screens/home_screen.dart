@@ -132,6 +132,7 @@ class _HomeScreenAppState extends State<HomeScreenApp> {
   final Map<String, Future<Uint8List?>> _avatarFutureCache = {};
   final Map<String, Future<String?>> _providerNameFutureCache = {};
   Uint8List? imageAvatar;
+  int notReadCount = 0;
   final List<Map<String, dynamic>> countryList = [
     {
       'name': 'Australia',
@@ -175,7 +176,7 @@ class _HomeScreenAppState extends State<HomeScreenApp> {
     super.initState();
     authService.checkSessionValidity(); // เพิ่มการตรวจสอบ session ที่นี่
     _checkToken();
-    // fetchProfile();
+    fetchProfile();
     getAnswer();
     fetchAvatarImage();
   }
@@ -209,7 +210,8 @@ class _HomeScreenAppState extends State<HomeScreenApp> {
         imageAvatar = response.bodyBytes; // แปลง response เป็น Uint8List
       });
     } else {
-      throw Exception('Failed to load country data');
+      // throw Exception('Failed to load country data');
+      imageAvatar = null;
     }
   }
 
@@ -253,39 +255,41 @@ class _HomeScreenAppState extends State<HomeScreenApp> {
     return null;
   }
 
-  // Future<void> fetchProfile() async {
-  //   try {
-  //     String? token = await authService.getToken();
-  //     Map<String, String> headers = {};
-  //     if (token != null) {
-  //       headers['Authorization'] = 'Bearer $token';
-  //     }
+  Future<void> fetchProfile() async {
+    try {
+      String? token = await authService.getToken();
+      Map<String, String> headers = {};
+      if (token != null) {
+        headers['Authorization'] = 'Bearer $token';
+      }
 
-  //     final response =
-  //         await http.get(Uri.parse(ApiConfig.profileUrl), headers: headers);
+      final response =
+          await http.get(Uri.parse(ApiConfig.profileUrl), headers: headers);
 
-  //     if (response.statusCode == 200) {
-  //       final Map<String, dynamic> data = json.decode(response.body);
-  //       final Map<String, dynamic> profileData = data['profile'];
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> data = json.decode(response.body);
+        final Map<String, dynamic> profileData = data['profile'];
 
-  //       // เก็บเฉพาะ id และ role
-  //       setState(() {
-  //         profile = {
-  //           'id': profileData['id'],
-  //           'role': profileData['role'],
-  //         };
+        // เก็บเฉพาะ id และ role
+        setState(() {
+          profile = {
+            'id': profileData['id'],
+            'role': profileData['role'],
+          };
 
-  //         // เช็ค role และตั้งค่า isProvider
-  //         isProvider = profile!['role'] == 'provider';
-  //       });
-  //     } else {
-  //       throw Exception('Failed to load profile');
-  //     }
-  //   } catch (e) {
-  //     setState(() {});
-  //     print("Error fetching profile: $e");
-  //   }
-  // }
+          // เช็ค role และตั้งค่า isProvider
+          isProvider = profile!['role'] == 'provider';
+        });
+
+        fetchCountNotifications();
+      } else {
+        throw Exception('Failed to load profile');
+      }
+    } catch (e) {
+      setState(() {});
+      print("Error fetching profile: $e");
+    }
+  }
 
   Future<http.Response?> getAnswer() async {
     final url = Uri.parse(ApiConfig.answerUrl);
@@ -402,6 +406,32 @@ class _HomeScreenAppState extends State<HomeScreenApp> {
     } catch (e) {
       setState(() {});
       print("Error fetching scholarships: $e");
+    }
+  }
+
+  Future<void> fetchCountNotifications() async {
+    String? token = await authService.getToken();
+    Map<String, String> headers = {};
+    if (token != null) {
+      headers['Authorization'] = 'Bearer $token';
+    }
+
+    final url = "${ApiConfig.notificationUrl}/count/${profile?['id']}";
+
+    try {
+      final response = await http.get(Uri.parse(url), headers: headers);
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> responseData = json.decode(response.body);
+
+        setState(() {
+          // เก็บค่าลง state หรือใช้งานได้เลย
+          notReadCount = responseData['read_count'];
+        });
+      } else {
+        throw Exception('Failed to load notifications');
+      }
+    } catch (e) {
+      print("Error fetching notifications: $e");
     }
   }
 
@@ -554,47 +584,67 @@ class _HomeScreenAppState extends State<HomeScreenApp> {
                               width: 40.0,
                               height: 40.0,
                             ),
-                            CircleAvatar(
-                              radius: 20,
-                              backgroundColor: const Color(0xFFDAFB59),
-                              child: GestureDetector(
-                                onTap: () {
-                                  Navigator.push(
-                                    context,
-                                    PageRouteBuilder(
-                                      pageBuilder: (context, animation,
-                                              secondaryAnimation) =>
-                                          NotificationList(
-                                        id: profile?['id'],
-                                      ),
-                                      transitionsBuilder: (context, animation,
-                                          secondaryAnimation, child) {
-                                        const begin = 0.0;
-                                        const end = 1.0;
-                                        const curve = Curves.easeOut;
+                            Stack(
+                              children: [
+                                CircleAvatar(
+                                  radius: 20,
+                                  backgroundColor: const Color(0xFFDAFB59),
+                                  child: GestureDetector(
+                                    onTap: () {
+                                      Navigator.push(
+                                        context,
+                                        PageRouteBuilder(
+                                          pageBuilder: (context, animation,
+                                                  secondaryAnimation) =>
+                                              NotificationList(
+                                            id: profile?['id'],
+                                          ),
+                                          transitionsBuilder: (context,
+                                              animation,
+                                              secondaryAnimation,
+                                              child) {
+                                            const begin = 0.0;
+                                            const end = 1.0;
+                                            const curve = Curves.easeOut;
 
-                                        var tween = Tween(
-                                                begin: begin, end: end)
-                                            .chain(CurveTween(curve: curve));
-                                        return FadeTransition(
-                                          opacity: animation.drive(tween),
-                                          child: child,
-                                        );
-                                      },
-                                      transitionDuration:
-                                          const Duration(milliseconds: 300),
+                                            var tween = Tween(
+                                                    begin: begin, end: end)
+                                                .chain(
+                                                    CurveTween(curve: curve));
+                                            return FadeTransition(
+                                              opacity: animation.drive(tween),
+                                              child: child,
+                                            );
+                                          },
+                                          transitionDuration:
+                                              const Duration(milliseconds: 300),
+                                        ),
+                                      );
+                                    },
+                                    child: Image.asset(
+                                      'assets/images/notification.png',
+                                      width: 40.0,
+                                      height: 40.0,
+                                      color: const Color(0xFF355FFF),
+                                      colorBlendMode: BlendMode.srcIn,
                                     ),
-                                  );
-                                },
-                                child: Image.asset(
-                                  'assets/images/notification.png',
-                                  width: 40.0,
-                                  height: 40.0,
-                                  color: const Color(0xFF355FFF),
-                                  colorBlendMode: BlendMode.srcIn,
+                                  ),
                                 ),
-                              ),
-                            ),
+                                if (notReadCount > 0)
+                                  Positioned(
+                                    right: 0,
+                                    top: 0,
+                                    child: Container(
+                                      width: 12,
+                                      height: 12,
+                                      decoration: BoxDecoration(
+                                        color: Colors.pinkAccent,
+                                        shape: BoxShape.circle,
+                                      ),
+                                    ),
+                                  ),
+                              ],
+                            )
                           ],
                         ),
                         const SizedBox(height: 16),
@@ -739,7 +789,7 @@ class _HomeScreenAppState extends State<HomeScreenApp> {
                         width: 8.0,
                         height: 8.0,
                         margin: const EdgeInsets.symmetric(
-                            vertical: 10.0, horizontal: 4.0),
+                            vertical: 8.0, horizontal: 4.0),
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           color: _currentIndex == index
@@ -749,7 +799,7 @@ class _HomeScreenAppState extends State<HomeScreenApp> {
                       );
                     }),
                   ),
-                  const SizedBox(height: 10.0),
+                  const SizedBox(height: 0.0),
                   // Discover Countries
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -765,7 +815,7 @@ class _HomeScreenAppState extends State<HomeScreenApp> {
                               child: Text(
                                 "Discover Many Countries",
                                 style: TextStyleService.getDmSans(
-                                  fontSize: 14,
+                                  fontSize: 16,
                                   fontWeight: FontWeight.w400,
                                   color: Color(0xFF000000),
                                 ),
@@ -806,7 +856,7 @@ class _HomeScreenAppState extends State<HomeScreenApp> {
                           ],
                         ),
                         const SizedBox(
-                            height: 4.0), // ลดระยะห่างจาก 8.0 เป็น 4.0
+                            height: 10), // ลดระยะห่างจาก 8.0 เป็น 4.0
                         GridView.count(
                           padding: EdgeInsets.zero, // ลบ padding ของ GridView
                           shrinkWrap: true,
@@ -829,7 +879,7 @@ class _HomeScreenAppState extends State<HomeScreenApp> {
                       ],
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 8),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16.0),
                     child: Align(
@@ -843,7 +893,7 @@ class _HomeScreenAppState extends State<HomeScreenApp> {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 16),
                   // Scholarships Section (Horizontal Scroll)
                   SizedBox(
                     height: 260,
@@ -1141,7 +1191,7 @@ class _HomeScreenAppState extends State<HomeScreenApp> {
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16.0),
                     child: Container(
-                      height: 160, // Keep the height or adjust if needed
+                      height: 200, // Keep the height or adjust if needed
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(12.0),
                         image: const DecorationImage(

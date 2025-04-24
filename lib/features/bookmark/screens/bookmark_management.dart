@@ -1,5 +1,6 @@
 import 'package:edugo/config/api_config.dart';
 import 'package:edugo/features/scholarship/screens/provider_detail.dart';
+import 'package:edugo/shared/utils/textStyle.dart';
 import 'package:flutter/material.dart';
 import 'dart:typed_data';
 import 'package:edugo/features/scholarship/screens/provider_management.dart';
@@ -33,6 +34,22 @@ class _BookmarkListState extends State<BookmarkList> {
   final AuthService authService = AuthService(navigatorKey: navigatorKey);
   List<dynamic> bookmarks = [];
   bool isFetching = false; // ป้องกันการโหลดซ้ำซ้อน
+  final Map<String, Uint8List?> _imageCache = {};
+  final Map<String, Uint8List?> _imageAvatarCache = {};
+  final Map<String, Future<Uint8List?>> _avatarFutureCache = {};
+  final Map<String, Future<String?>> _providerNameFutureCache = {};
+  String? providerName;
+  bool showPaginationControls = false;
+  int displayPage = 1;
+  int displayTotal = 1;
+  bool canGoPrev = false;
+  bool canGoNext = false;
+
+  // API Pagination state
+  int _currentPage = 1; // Current API page
+  int _totalPages = 1; // Total API pages
+  int _totalScholarships = 0; // Overall total from API
+  final int _itemsPerPage = 10; // Define items per page (from API)
 
   @override
   void didChangeDependencies() {
@@ -76,12 +93,73 @@ class _BookmarkListState extends State<BookmarkList> {
     }
   }
 
-  Future<void> fetchAnnounceDetails() async {
+  Future<Uint8List?> getAvatarFuture(String url) {
+    return _avatarFutureCache.putIfAbsent(url, () => fetchPostAvatar(url));
+  }
+
+  Future<String?> getProviderNameFuture(String url) {
+    return _providerNameFutureCache.putIfAbsent(
+        url, () => fetchProviderName(url));
+  }
+
+  Future<Uint8List?> fetchPostAvatar(String url) async {
+    if (_imageAvatarCache.containsKey(url)) {
+      return _imageAvatarCache[url];
+    }
+
+    try {
+      String? token = await authService.getToken();
+      Map<String, String> headers = {};
+      if (token != null) {
+        headers['Authorization'] = 'Bearer $token';
+      }
+
+      final response = await http.get(Uri.parse(url), headers: headers);
+
+      if (response.statusCode == 200) {
+        _imageAvatarCache[url] = response.bodyBytes;
+        return response.bodyBytes;
+      } else {
+        debugPrint("Failed to load image: ${response.statusCode}");
+      }
+    } catch (e) {
+      debugPrint("Error fetching image: $e");
+    }
+    _imageAvatarCache[url] = null;
+    return null;
+  }
+
+  Future<String?> fetchProviderName(String url) async {
+    try {
+      String? token = await authService.getToken();
+      Map<String, String> headers = {};
+      if (token != null) {
+        headers['Authorization'] = 'Bearer $token';
+      }
+
+      final response = await http.get(Uri.parse(url), headers: headers);
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        providerName = data['company_name'];
+        return providerName;
+      } else {
+        debugPrint("Failed to load company name: ${response.statusCode}");
+      }
+    } catch (e) {
+      debugPrint("Error fetching company name: $e");
+    }
+    providerName = null;
+    return null;
+  }
+
+  Future<void> fetchAnnounceDetails(
+      {page = 1, bool refreshCounts = false}) async {
     String? token = await authService.getToken();
 
     try {
       final response = await http.post(
-        Uri.parse(ApiConfig.bookmarkUser),
+        Uri.parse('${ApiConfig.bookmarkUser}?page=$page'),
         headers: {
           'Authorization': token != null ? 'Bearer $token' : '',
           'Content-Type': 'application/json',
@@ -94,6 +172,10 @@ class _BookmarkListState extends State<BookmarkList> {
 
         setState(() {
           announceDetails = responseData; // เก็บข้อมูลที่ได้
+          _currentPage = responseData['page'] ?? 1;
+          _totalPages = responseData['last_page'] ?? 1;
+          _totalScholarships = responseData['total'] ?? 0;
+          showPaginationControls = _totalPages > 1;
         });
       } else {
         throw Exception('Failed to load announcement details');
@@ -101,6 +183,33 @@ class _BookmarkListState extends State<BookmarkList> {
     } catch (e) {
       print("Error fetching announce details: $e");
     }
+  }
+
+  Future<Uint8List?> fetchImage(String url) async {
+    if (_imageCache.containsKey(url)) {
+      return _imageCache[url];
+    }
+
+    try {
+      String? token = await authService.getToken();
+      Map<String, String> headers = {};
+      if (token != null) {
+        headers['Authorization'] = 'Bearer $token';
+      }
+
+      final response = await http.get(Uri.parse(url), headers: headers);
+
+      if (response.statusCode == 200) {
+        _imageCache[url] = response.bodyBytes;
+        return response.bodyBytes;
+      } else {
+        debugPrint("Failed to load image: ${response.statusCode}");
+      }
+    } catch (e) {
+      debugPrint("Error fetching image: $e");
+    }
+    _imageCache[url] = null;
+    return null;
   }
 
   Future<void> deleteBookmark(int id) async {
@@ -125,6 +234,15 @@ class _BookmarkListState extends State<BookmarkList> {
 
   @override
   Widget build(BuildContext context) {
+    bool canGoPrev = false;
+    bool canGoNext = false;
+    int displayPage = 1;
+    int displayTotal = 1;
+    displayPage = _currentPage;
+    displayTotal = _totalPages;
+    canGoPrev = _currentPage > 1;
+    canGoNext = _currentPage < _totalPages;
+
     return Scaffold(
       backgroundColor: Colors.white,
       body: Column(
@@ -200,79 +318,343 @@ class _BookmarkListState extends State<BookmarkList> {
           // แสดงข้อมูล bookmarks
           Expanded(
             child: announceDetails.isNotEmpty && announceDetails['data'] != null
-                ? ListView.builder(
-                    itemCount: announceDetails['data'].length,
-                    itemBuilder: (context, index) {
-                      final item = announceDetails['data'][index];
-                      return Card(
-                        margin: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 8),
-                        elevation: 4,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: ListTile(
-                          title: Text(
-                            item['title'] ?? 'No Title',
-                            style: GoogleFonts.dmSans(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          subtitle: Text(
-                            item['description'] ?? 'No Description',
-                            style: GoogleFonts.dmSans(
-                              fontSize: 14,
-                              color: Colors.grey[600],
-                            ),
-                          ),
-                          // trailing: IconButton(
-                          //   icon: Icon(Icons.delete, color: Colors.red),
-                          //   onPressed: () {
-                          //     deleteBookmark(item['id']);
-                          //   },
-                          // ),
-                          onTap: () async {
-                            final existingData = {
-                              'id': item['id'],
-                              'title': item['title'],
-                              'url': item['url'],
-                              'category': item['category'],
-                              'country': item['country'],
-                              'description': item['description'],
-                              'image': item['image'],
-                              'attach_file': item['attach_file'],
-                              'published_date': item['published_date'],
-                              'close_date': item['close_date'],
-                              'education_level': item['education_level'],
-                              'attach_name': item['attach_name'],
-                            };
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => ProviderDetail(
-                                  initialData: existingData,
-                                  isProvider:
-                                      false, // ส่ง existingData ไปยังหน้าแก้ไข
+                ? Column(
+                    children: [
+                      Expanded(
+                        child: ListView.builder(
+                          itemCount: announceDetails['data'].length,
+                          itemBuilder: (context, index) {
+                            final item = announceDetails['data'][index];
+                            final title = item['title'];
+                            final DateTime publishedDate =
+                                DateTime.tryParse(item['publish_date']) ??
+                                    DateTime.now();
+                            final DateTime closeDate =
+                                DateTime.tryParse(item['close_date']) ??
+                                    DateTime.now();
+                            final String imageUrl =
+                                "${ApiConfig.announceUserUrl}/${item['id']}/image";
+                            final duration =
+                                "${DateFormat('d MMM').format(publishedDate)} - ${DateFormat('d MMM yyyy').format(closeDate)}";
+                            final String providerNameUrl =
+                                "${ApiConfig.providerUrl}/${item['provider_id']}";
+                            final String providerImage =
+                                "${ApiConfig.providerUrl}/avatar/${item['provider_id']}";
+
+                            return Padding(
+                              padding: const EdgeInsets.only(
+                                  left: 25.0, right: 25.0, bottom: 25.0),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(12),
+                                child: InkWell(
+                                  onTap: () async {
+                                    final existingData = {'id': item['id']};
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => ProviderDetail(
+                                          initialData: existingData,
+                                          isProvider: false,
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                  child: Container(
+                                    height: 192,
+                                    width: double.infinity,
+                                    color: const Color(0xFFECF0F6),
+                                    child: Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 22, vertical: 12),
+                                      child: Row(
+                                        children: [
+                                          ClipRRect(
+                                            borderRadius:
+                                                BorderRadius.circular(12.0),
+                                            child: _imageCache
+                                                    .containsKey(imageUrl)
+                                                ? (_imageCache[imageUrl] != null
+                                                    ? Image.memory(
+                                                        _imageCache[imageUrl]!,
+                                                        width: 111,
+                                                        height: 148,
+                                                        fit: BoxFit.cover,
+                                                      )
+                                                    : Image.asset(
+                                                        "assets/images/scholarship_program.png",
+                                                        width: 111,
+                                                        height: 148,
+                                                        fit: BoxFit.cover,
+                                                      ))
+                                                : FutureBuilder<Uint8List?>(
+                                                    future:
+                                                        fetchImage(imageUrl),
+                                                    builder:
+                                                        (context, snapshot) {
+                                                      if (snapshot
+                                                              .connectionState ==
+                                                          ConnectionState
+                                                              .waiting) {
+                                                        return const SizedBox(
+                                                          width: 111,
+                                                          height: 148,
+                                                          child: Center(
+                                                              child:
+                                                                  CircularProgressIndicator()),
+                                                        );
+                                                      }
+                                                      if (snapshot.data ==
+                                                          null) {
+                                                        return Image.asset(
+                                                          "assets/images/scholarship_program.png",
+                                                          width: 111,
+                                                          height: 148,
+                                                          fit: BoxFit.cover,
+                                                        );
+                                                      }
+                                                      return Image.memory(
+                                                        snapshot.data!,
+                                                        width: 111,
+                                                        height: 148,
+                                                        fit: BoxFit.cover,
+                                                      );
+                                                    },
+                                                  ),
+                                          ),
+                                          const SizedBox(width: 24),
+                                          Expanded(
+                                            child: Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.center,
+                                              children: [
+                                                Text(
+                                                  duration,
+                                                  style: TextStyleService
+                                                      .getDmSans(
+                                                    color: Color(0xFF2A4CCC),
+                                                    fontSize: 9.5,
+                                                    fontWeight: FontWeight.w400,
+                                                  ),
+                                                ),
+                                                const SizedBox(height: 8),
+                                                Text(
+                                                  title,
+                                                  style: TextStyleService
+                                                      .getDmSans(
+                                                    color: Color(0xFF000000),
+                                                    fontSize: 13,
+                                                    fontWeight: FontWeight.w600,
+                                                  ),
+                                                ),
+                                                const SizedBox(height: 8),
+                                                Row(
+                                                  children: [
+                                                    CircleAvatar(
+                                                      radius: 6,
+                                                      backgroundImage: _imageCache
+                                                                  .containsKey(
+                                                                      providerImage) &&
+                                                              _imageCache[
+                                                                      providerImage] !=
+                                                                  null
+                                                          ? MemoryImage(
+                                                              _imageCache[
+                                                                  providerImage]!)
+                                                          : null,
+                                                      child: !_imageCache
+                                                              .containsKey(
+                                                                  providerImage)
+                                                          ? FutureBuilder<
+                                                              Uint8List?>(
+                                                              future: getAvatarFuture(
+                                                                  providerImage),
+                                                              builder: (context,
+                                                                  snapshot) {
+                                                                if (snapshot
+                                                                        .connectionState ==
+                                                                    ConnectionState
+                                                                        .waiting) {
+                                                                  return const Center(
+                                                                    child:
+                                                                        CircularProgressIndicator(),
+                                                                  );
+                                                                }
+                                                                if (snapshot
+                                                                        .data ==
+                                                                    null) {
+                                                                  return ClipOval(
+                                                                    child: Image
+                                                                        .asset(
+                                                                      "assets/images/avatar.png",
+                                                                      fit: BoxFit
+                                                                          .cover,
+                                                                      width: 40,
+                                                                      height:
+                                                                          40,
+                                                                    ),
+                                                                  );
+                                                                }
+                                                                return CircleAvatar(
+                                                                  radius: 20,
+                                                                  backgroundImage:
+                                                                      MemoryImage(
+                                                                          snapshot
+                                                                              .data!),
+                                                                );
+                                                              },
+                                                            )
+                                                          : null,
+                                                    ),
+                                                    const SizedBox(width: 4.0),
+                                                    Expanded(
+                                                      child: FutureBuilder<
+                                                          String?>(
+                                                        future:
+                                                            getProviderNameFuture(
+                                                                providerNameUrl),
+                                                        builder: (context,
+                                                            snapshot) {
+                                                          if (snapshot
+                                                                  .connectionState ==
+                                                              ConnectionState
+                                                                  .waiting) {
+                                                            return const SizedBox(
+                                                              width: 60,
+                                                              height: 10,
+                                                              child:
+                                                                  LinearProgressIndicator(),
+                                                            );
+                                                          }
+                                                          if (snapshot
+                                                                  .hasError ||
+                                                              snapshot.data ==
+                                                                  null) {
+                                                            return Text(
+                                                              "Unknown",
+                                                              style:
+                                                                  TextStyleService
+                                                                      .getDmSans(
+                                                                fontSize: 9.5,
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .w400,
+                                                                color: Color(
+                                                                    0xFF94A2B8),
+                                                              ),
+                                                            );
+                                                          }
+                                                          return Text(
+                                                            snapshot.data!,
+                                                            maxLines: 1,
+                                                            overflow:
+                                                                TextOverflow
+                                                                    .ellipsis,
+                                                            style:
+                                                                TextStyleService
+                                                                    .getDmSans(
+                                                              fontSize: 9.5,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .w400,
+                                                              color: Color(
+                                                                  0xFF94A2B8),
+                                                            ),
+                                                          );
+                                                        },
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
                                 ),
                               ),
-                              // MaterialPageRoute(
-                              //   builder: (context) => ProviderAddEdit(
-                              //     isEdit: true,
-                              //     initialData:
-                              //         existingData, // ส่ง existingData ไปยังหน้าแก้ไข
-                              //   ),
-                              // ),
                             );
                           },
                         ),
-                      );
-                    },
+                      ),
+                      if (showPaginationControls)
+                        Padding(
+                          padding: const EdgeInsets.symmetric(
+                              vertical: 16.0, horizontal: 16.0),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              ElevatedButton.icon(
+                                onPressed: canGoPrev
+                                    ? () {
+                                        fetchAnnounceDetails(
+                                            page: _currentPage - 1,
+                                            refreshCounts: true);
+                                      }
+                                    : null,
+                                icon: Icon(Icons.arrow_back_ios,
+                                    size: 16,
+                                    color: canGoPrev
+                                        ? Colors.white
+                                        : Colors.grey[400]),
+                                label: Text("Prev",
+                                    style: TextStyle(
+                                        color: canGoPrev
+                                            ? Colors.white
+                                            : Colors.grey[400])),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: canGoPrev
+                                      ? Color(0xFF355FFF)
+                                      : Colors.grey[300],
+                                  shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(8)),
+                                  padding: EdgeInsets.symmetric(
+                                      horizontal: 12, vertical: 8),
+                                ),
+                              ),
+                              Text(
+                                'Page $displayPage of $displayTotal',
+                                style: TextStyleService.getDmSans(
+                                    fontSize: 14, fontWeight: FontWeight.w500),
+                              ),
+                              ElevatedButton.icon(
+                                onPressed: canGoNext
+                                    ? () {
+                                        fetchAnnounceDetails(
+                                            page: _currentPage + 1,
+                                            refreshCounts: true);
+                                      }
+                                    : null,
+                                icon: Icon(Icons.arrow_forward_ios,
+                                    size: 16,
+                                    color: canGoNext
+                                        ? Colors.white
+                                        : Colors.grey[400]),
+                                label: Text("Next",
+                                    style: TextStyle(
+                                        color: canGoNext
+                                            ? Colors.white
+                                            : Colors.grey[400])),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: canGoNext
+                                      ? Color(0xFF355FFF)
+                                      : Colors.grey[300],
+                                  shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(8)),
+                                  padding: EdgeInsets.symmetric(
+                                      horizontal: 12, vertical: 8),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                    ],
                   )
-                : const Center(
-                    child: CircularProgressIndicator(),
-                  ),
-          ),
+                : const Center(child: CircularProgressIndicator()),
+          )
         ],
       ),
     );

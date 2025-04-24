@@ -38,7 +38,7 @@ class _SearchScreenState extends State<SearchScreen> {
   final Map<String, Future<Uint8List?>> _avatarFutureCache = {};
   final Map<String, Future<String?>> _providerNameFutureCache = {};
 
-  bool showPaginationControls = true;
+  bool showPaginationControls = false;
   int displayPage = 1;
   int displayTotal = 1;
   bool canGoPrev = false;
@@ -173,7 +173,7 @@ class _SearchScreenState extends State<SearchScreen> {
               scholarshipData.map<Map<String, dynamic>>((item) {
             final String id = item['id'].toString();
             return {
-              'id': id,
+              'id': item['id'],
               'image': item['image'] != null
                   ? "${ApiConfig.announceUserUrl}/$id/image"
                   : 'assets/images/scholarship_program.png',
@@ -194,6 +194,7 @@ class _SearchScreenState extends State<SearchScreen> {
           _currentPage = data['page'] ?? 1;
           _totalPages = data['last_page'] ?? 1;
           _totalScholarships = data['total'] ?? 0;
+          showPaginationControls = _totalPages > 1;
         });
       } else {
         throw Exception('Failed to load scholarships: ${response.statusCode}');
@@ -626,7 +627,9 @@ class _SearchScreenState extends State<SearchScreen> {
                             color: Color(0xFF000000),
                           ),
                         ),
+                        SizedBox(height: 16),
                         GridView.count(
+                          padding: EdgeInsets.zero,
                           crossAxisCount: 5,
                           mainAxisSpacing: 8.0, // ระยะห่างแนวตั้งระหว่าง items
                           crossAxisSpacing: 8.0, // ระยะห่างแนวนอนระหว่าง items
@@ -955,7 +958,7 @@ class _SearchScreenState extends State<SearchScreen> {
                       },
                     ),
                   ),
-                  SizedBox(height: 16),
+                  SizedBox(height: 24),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16.0),
                     child: Align(
@@ -1196,46 +1199,25 @@ class _SearchScreenState extends State<SearchScreen> {
                                                       : null,
                                                 ),
                                                 const SizedBox(width: 4.0),
-                                                Expanded(
-                                                  child: FutureBuilder<String?>(
-                                                    future:
-                                                        getProviderNameFuture(
-                                                            providerName),
-                                                    builder:
-                                                        (context, snapshot) {
-                                                      if (snapshot
-                                                              .connectionState ==
-                                                          ConnectionState
-                                                              .waiting) {
-                                                        return const SizedBox(
-                                                          width: 60,
-                                                          height: 10,
-                                                          child:
-                                                              LinearProgressIndicator(),
-                                                        );
-                                                      }
-                                                      if (snapshot.hasError ||
-                                                          snapshot.data ==
-                                                              null) {
-                                                        return Text(
-                                                          "Unknown",
-                                                          style:
-                                                              TextStyleService
-                                                                  .getDmSans(
-                                                            fontSize: 9.415,
-                                                            fontWeight:
-                                                                FontWeight.w400,
-                                                            color: Color(
-                                                                0xFF000000),
-                                                          ),
-                                                        );
-                                                      }
-
+                                                FutureBuilder<String?>(
+                                                  future: getProviderNameFuture(
+                                                      providerName),
+                                                  builder: (context, snapshot) {
+                                                    if (snapshot
+                                                            .connectionState ==
+                                                        ConnectionState
+                                                            .waiting) {
+                                                      return const SizedBox(
+                                                        width: 60,
+                                                        height: 10,
+                                                        child:
+                                                            LinearProgressIndicator(),
+                                                      );
+                                                    }
+                                                    if (snapshot.hasError ||
+                                                        snapshot.data == null) {
                                                       return Text(
-                                                        snapshot.data!,
-                                                        maxLines: 1,
-                                                        overflow: TextOverflow
-                                                            .ellipsis,
+                                                        "Unknown",
                                                         style: TextStyleService
                                                             .getDmSans(
                                                           fontSize: 9.415,
@@ -1245,8 +1227,23 @@ class _SearchScreenState extends State<SearchScreen> {
                                                               Color(0xFF000000),
                                                         ),
                                                       );
-                                                    },
-                                                  ),
+                                                    }
+
+                                                    return Text(
+                                                      snapshot.data!,
+                                                      maxLines: 1,
+                                                      overflow:
+                                                          TextOverflow.ellipsis,
+                                                      style: TextStyleService
+                                                          .getDmSans(
+                                                        fontSize: 9.415,
+                                                        fontWeight:
+                                                            FontWeight.w400,
+                                                        color:
+                                                            Color(0xFF000000),
+                                                      ),
+                                                    );
+                                                  },
                                                 ),
                                               ],
                                             ),

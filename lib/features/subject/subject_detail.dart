@@ -522,22 +522,28 @@ class _SubjectDetailState extends State<SubjectDetail> {
                                     builder: (context, snapshot) {
                                       if (snapshot.connectionState ==
                                           ConnectionState.waiting) {
-                                        return const CircleAvatar(
-                                          radius: 20,
-                                          child: CircularProgressIndicator(),
+                                        return ClipOval(
+                                          child: const CircleAvatar(
+                                            radius: 20,
+                                            child: CircularProgressIndicator(),
+                                          ),
                                         );
                                       }
                                       if (snapshot.data == null) {
-                                        return CircleAvatar(
-                                          radius: 20,
-                                          backgroundImage: AssetImage(
-                                              "assets/images/avatar.png"),
+                                        return ClipOval(
+                                          child: CircleAvatar(
+                                            radius: 20,
+                                            backgroundImage: AssetImage(
+                                                "assets/images/avatar.png"),
+                                          ),
                                         );
                                       }
-                                      return CircleAvatar(
-                                        radius: 20,
-                                        backgroundImage:
-                                            MemoryImage(snapshot.data!),
+                                      return ClipOval(
+                                        child: CircleAvatar(
+                                          radius: 20,
+                                          backgroundImage:
+                                              MemoryImage(snapshot.data!),
+                                        ),
                                       );
                                     },
                                   ),

@@ -63,9 +63,7 @@ class _PersonalProfileState extends State<PersonalProfile> {
       setState(() {
         imageData = response.bodyBytes; // แปลง response เป็น Uint8List
       });
-    } else {
-      throw Exception('Failed to load country data');
-    }
+    } else {}
   }
 
   Future<void> fetchProfile() async {
@@ -369,34 +367,34 @@ class _PersonalProfileState extends State<PersonalProfile> {
                               ),
                             );
                           }),
-                      _buildProfileOption(
-                          icon: Icons.notifications,
-                          label: "Notification",
-                          onTap: () {
-                            Navigator.pushReplacement(
-                              context,
-                              PageRouteBuilder(
-                                pageBuilder:
-                                    (context, animation, secondaryAnimation) =>
-                                        NotificationList(id: profile!['id']),
-                                transitionsBuilder: (context, animation,
-                                    secondaryAnimation, child) {
-                                  const begin = 0.0;
-                                  const end = 1.0;
-                                  const curve = Curves.easeOut;
+                      // _buildProfileOption(
+                      //     icon: Icons.notifications,
+                      //     label: "Notification",
+                      //     onTap: () {
+                      //       Navigator.pushReplacement(
+                      //         context,
+                      //         PageRouteBuilder(
+                      //           pageBuilder:
+                      //               (context, animation, secondaryAnimation) =>
+                      //                   NotificationList(id: profile!['id']),
+                      //           transitionsBuilder: (context, animation,
+                      //               secondaryAnimation, child) {
+                      //             const begin = 0.0;
+                      //             const end = 1.0;
+                      //             const curve = Curves.easeOut;
 
-                                  var tween = Tween(begin: begin, end: end)
-                                      .chain(CurveTween(curve: curve));
-                                  return FadeTransition(
-                                    opacity: animation.drive(tween),
-                                    child: child,
-                                  );
-                                },
-                                transitionDuration:
-                                    const Duration(milliseconds: 300),
-                              ),
-                            );
-                          }),
+                      //             var tween = Tween(begin: begin, end: end)
+                      //                 .chain(CurveTween(curve: curve));
+                      //             return FadeTransition(
+                      //               opacity: animation.drive(tween),
+                      //               child: child,
+                      //             );
+                      //           },
+                      //           transitionDuration:
+                      //               const Duration(milliseconds: 300),
+                      //         ),
+                      //       );
+                      //     }),
                       _buildProfileOption(
                           icon: Icons.settings,
                           label: "Manage Account",

@@ -9,6 +9,7 @@ import 'package:edugo/features/search/screens/filter.dart';
 // import 'package:edugo/features/subject/subject_manage.dart'; // Removed unused import
 import 'package:edugo/services/scholarship_card.dart';
 import 'package:edugo/services/status_box.dart';
+import 'package:edugo/shared/utils/textStyle.dart';
 // import 'package:flutter/cupertino.dart'; // Removed unused import
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -27,6 +28,7 @@ class ProviderManagement extends StatefulWidget {
 }
 
 class _ProviderManagementState extends State<ProviderManagement> {
+  final GlobalKey _browserButtonKey = GlobalKey();
   // Data lists
   List<dynamic> scholarships = []; // Holds data for the current API page
   List<dynamic> _allScholarships = []; // Holds all fetched data for filtering
@@ -548,9 +550,61 @@ class _ProviderManagementState extends State<ProviderManagement> {
                       ),
                     ),
                     GestureDetector(
-                      onTap: () => CopyLinkButton(
-                          link:
-                              "https://capstone24.sit.kmutt.ac.th/un2/Officialwebpage"),
+                      key: _browserButtonKey, // ใส่ตรงนี้!
+                      onTap: () async {
+                        await Clipboard.setData(ClipboardData(
+                            text:
+                                "https://capstone24.sit.kmutt.ac.th/un2/Officialwebpage"));
+
+                        final overlay = Overlay.of(context);
+                        final renderBox = _browserButtonKey.currentContext!
+                            .findRenderObject() as RenderBox;
+                        final offset = renderBox.localToGlobal(Offset.zero);
+                        final size = renderBox.size;
+
+                        final overlayEntry = OverlayEntry(
+                          builder: (context) => Positioned(
+                            top: offset.dy + size.height + 2,
+                            left: offset.dx + size.width / 2 - 53,
+                            child: Material(
+                              color: Colors.transparent,
+                              child: SizedBox(
+                                width: 73,
+                                height: 37,
+                                child: Stack(
+                                  children: [
+                                    Image.asset(
+                                      'assets/images/copied.png',
+                                      width: 73,
+                                      height: 37,
+                                      fit: BoxFit.cover,
+                                    ),
+                                    Padding(
+                                      padding: const EdgeInsets.only(
+                                          top:
+                                              8.0), // const ตรงนี้ใช้ได้ เพราะค่า fix
+                                      child: Center(
+                                        child: Text(
+                                          'Copied!',
+                                          style: TextStyleService.getDmSans(
+                                            color: Color(0xFF355FFF),
+                                            fontSize: 13,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        );
+
+                        overlay.insert(overlayEntry);
+                        await Future.delayed(Duration(seconds: 2));
+                        overlayEntry.remove();
+                      },
                       child: CircleAvatar(
                         radius: 20,
                         backgroundColor: const Color(0xFFC0CDFF),
@@ -560,7 +614,7 @@ class _ProviderManagementState extends State<ProviderManagement> {
                           height: 40.0,
                         ),
                       ),
-                    ),
+                    )
                   ],
                 ),
                 const SizedBox(height: 16),
@@ -615,25 +669,29 @@ class _ProviderManagementState extends State<ProviderManagement> {
                                 .center, // Center hint text vertically
                           ),
                         ),
-                        GestureDetector(
-                          onTap: () async {
-                            final filters = await openFilterDrawer(context);
-                            if (filters != null) {
-                              setState(() {
-                                _selectedFilters = filters;
-                              });
-                              // Navigate to SearchList with filters and current query
-                              // _navigateToSearchList(_searchController.text,
-                              //     filters: _selectedFilters);
-                              fetchScholarships(filters: _selectedFilters);
-                            }
+                        Builder(
+                          builder: (context) {
+                            return GestureDetector(
+                              onTap: () async {
+                                final filters = await openFilterDrawer(context);
+                                if (filters != null) {
+                                  setState(() {
+                                    _selectedFilters = filters;
+                                  });
+                                  // Navigate to SearchList with filters and current query
+                                  // _navigateToSearchList(_searchController.text,
+                                  //     filters: _selectedFilters);
+                                  fetchScholarships(filters: _selectedFilters);
+                                }
+                              },
+                              child: Image.asset(
+                                'assets/images/three-line.png', // Make sure this asset exists
+                                width: 30.0,
+                                height: 18.0,
+                                color: const Color(0xFF8CA4FF),
+                              ),
+                            );
                           },
-                          child: Image.asset(
-                            'assets/images/three-line.png', // Make sure this asset exists
-                            width: 30.0,
-                            height: 18.0,
-                            color: const Color(0xFF8CA4FF),
-                          ),
                         ),
                       ],
                     ),
@@ -843,13 +901,35 @@ class _ProviderManagementState extends State<ProviderManagement> {
                                       final cachedImage =
                                           await fetchImage(imageUrl);
                                       existingData['cachedImage'] = cachedImage;
+
                                       Navigator.push(
                                         context,
-                                        MaterialPageRoute(
-                                          builder: (context) => ProviderDetail(
+                                        PageRouteBuilder(
+                                          pageBuilder: (context, animation,
+                                                  secondaryAnimation) =>
+                                              ProviderDetail(
                                             initialData: existingData,
                                             isProvider: true,
                                           ),
+                                          transitionsBuilder: (context,
+                                              animation,
+                                              secondaryAnimation,
+                                              child) {
+                                            const begin = 0.0;
+                                            const end = 1.0;
+                                            const curve = Curves.easeOut;
+
+                                            var tween = Tween(
+                                                    begin: begin, end: end)
+                                                .chain(
+                                                    CurveTween(curve: curve));
+                                            return FadeTransition(
+                                              opacity: animation.drive(tween),
+                                              child: child,
+                                            );
+                                          },
+                                          transitionDuration:
+                                              const Duration(milliseconds: 300),
                                         ),
                                       );
                                     },

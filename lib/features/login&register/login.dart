@@ -105,6 +105,10 @@ class _LoginState extends State<Login> {
           // เรียกฟังก์ชันตรวจสอบก่อนแสดง Success Dialog
           await _performPostLoginChecksAndShowSuccess();
         }
+      } else if (response.statusCode == 502) {
+        if (mounted) {
+          _showErrorDialog("Login Failed", "Server Error");
+        }
       } else {
         if (mounted) {
           _showErrorDialog(

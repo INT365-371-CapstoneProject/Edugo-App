@@ -42,6 +42,17 @@ class _SubjectManagementState extends State<SubjectManagement> {
   final Map<String, Uint8List?> _imageCache = {};
   final Map<String, Uint8List?> _imageAvatarCache = {};
   Map<String, dynamic>? profile;
+  bool showPaginationControls = false;
+  int displayPage = 1;
+  int displayTotal = 1;
+  bool canGoPrev = false;
+  bool canGoNext = false;
+
+  // API Pagination state
+  int _currentPage = 1; // Current API page
+  int _totalPages = 1; // Total API pages
+  int _totalScholarships = 0; // Overall total from API
+  final int _itemsPerPage = 10; // Define items per page (from API)
 
   @override
   void initState() {
@@ -159,15 +170,19 @@ class _SubjectManagementState extends State<SubjectManagement> {
     return null;
   }
 
-  Future<void> fetchsubject() async {
+  Future<void> fetchsubject({
+    int page = 1,
+    bool refreshCounts = false,
+  }) async {
     String? token = await authService.getToken();
     Map<String, String> headers = {}; // Explicitly type the map
     if (token != null) {
       headers['Authorization'] = 'Bearer $token';
     }
     try {
-      final response =
-          await http.get(Uri.parse(ApiConfig.subjectUrl), headers: headers);
+      final response = await http.get(
+          Uri.parse('${ApiConfig.subjectUrl}?page=$page'),
+          headers: headers);
       if (response.statusCode == 200) {
         final Map<String, dynamic> responseData = json.decode(response.body);
 
@@ -191,6 +206,10 @@ class _SubjectManagementState extends State<SubjectManagement> {
           subject.sort(
               (a, b) => b['published_date'].compareTo(a['published_date']));
           isLoading = false;
+          _currentPage = responseData['page'] ?? 1;
+          _totalPages = responseData['last_page'] ?? 1;
+          _totalScholarships = responseData['total'] ?? 0;
+          showPaginationControls = _totalPages > 1;
           useItem = subject;
         });
       } else {
@@ -519,6 +538,15 @@ class _SubjectManagementState extends State<SubjectManagement> {
 
   @override
   Widget build(BuildContext context) {
+    bool canGoPrev = false;
+    bool canGoNext = false;
+    int displayPage = 1;
+    int displayTotal = 1;
+    displayPage = _currentPage;
+    displayTotal = _totalPages;
+    canGoPrev = _currentPage > 1;
+    canGoNext = _currentPage < _totalPages;
+
     return Scaffold(
       backgroundColor: Colors.white,
       resizeToAvoidBottomInset: false,
@@ -1144,12 +1172,89 @@ class _SubjectManagementState extends State<SubjectManagement> {
                                 ),
                               );
                             },
-                          )
+                          ),
+                          if (showPaginationControls)
+                            Padding(
+                              padding: const EdgeInsets.symmetric(
+                                  vertical: 16.0, horizontal: 16.0),
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  ElevatedButton.icon(
+                                    onPressed: canGoPrev
+                                        ? () {
+                                            fetchsubject(
+                                                page: _currentPage - 1,
+                                                refreshCounts: true);
+                                          }
+                                        : null, // Disable if cannot go previous
+                                    icon: Icon(Icons.arrow_back_ios,
+                                        size: 16,
+                                        color: canGoPrev
+                                            ? Colors.white
+                                            : Colors.grey[400]),
+                                    label: Text("Prev",
+                                        style: TextStyle(
+                                            color: canGoPrev
+                                                ? Colors.white
+                                                : Colors.grey[400])),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: canGoPrev
+                                          ? Color(0xFF355FFF)
+                                          : Colors.grey[300],
+                                      shape: RoundedRectangleBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(8)),
+                                      padding: EdgeInsets.symmetric(
+                                          horizontal: 12, vertical: 8),
+                                    ),
+                                  ),
+                                  Text(
+                                    'Page $displayPage of $displayTotal', // Use calculated display values
+                                    style: TextStyleService.getDmSans(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w500),
+                                  ),
+                                  ElevatedButton.icon(
+                                    onPressed: canGoNext
+                                        ? () {
+                                            fetchsubject(
+                                                page: _currentPage + 1,
+                                                refreshCounts: true);
+                                          }
+                                        : null, // Disable if cannot go next
+                                    icon: Icon(Icons.arrow_forward_ios,
+                                        size: 16,
+                                        color: canGoNext
+                                            ? Colors.white
+                                            : Colors.grey[400]),
+                                    label: Text("Next",
+                                        style: TextStyle(
+                                            color: canGoNext
+                                                ? Colors.white
+                                                : Colors.grey[400])),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: canGoNext
+                                          ? Color(0xFF355FFF)
+                                          : Colors.grey[300],
+                                      shape: RoundedRectangleBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(8)),
+                                      padding: EdgeInsets.symmetric(
+                                          horizontal: 12, vertical: 8),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          const SizedBox(height: 90),
                         ],
                       ),
                     ),
                   ),
           ),
+
           // navbar
           Positioned(
             bottom: 0,

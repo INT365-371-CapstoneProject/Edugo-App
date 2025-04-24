@@ -1,5 +1,7 @@
 import 'package:edugo/config/api_config.dart';
 import 'package:edugo/features/profile/screens/profile.dart';
+import 'package:edugo/features/scholarship/screens/provider_detail.dart';
+import 'package:edugo/shared/utils/textStyle.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
@@ -48,6 +50,29 @@ class _NotificationListState extends State<NotificationList> {
         setState(() {
           notifications = responseData;
         });
+      } else {
+        throw Exception('Failed to load notifications');
+      }
+    } catch (e) {
+      print("Error fetching notifications: $e");
+    } finally {
+      setState(() => isFetching = false);
+    }
+  }
+
+  Future<void> updateNotification(int id) async {
+    String? token = await authService.getToken();
+    Map<String, String> headers = {};
+    if (token != null) {
+      headers['Authorization'] = 'Bearer $token';
+    }
+
+    final url = "${ApiConfig.notificationUrl}/$id";
+
+    try {
+      final response = await http.put(Uri.parse(url), headers: headers);
+      if (response.statusCode == 200) {
+        response;
       } else {
         throw Exception('Failed to load notifications');
       }
@@ -125,8 +150,6 @@ class _NotificationListState extends State<NotificationList> {
               ],
             ),
           ),
-
-          // แสดงผลรายการแจ้งเตือน
           Expanded(
             child: isFetching
                 ? const Center(child: CircularProgressIndicator())
@@ -137,31 +160,90 @@ class _NotificationListState extends State<NotificationList> {
                         itemBuilder: (context, index) {
                           final item = notifications[index];
                           return Card(
-                            margin: const EdgeInsets.symmetric(
-                                horizontal: 16, vertical: 8),
-                            elevation: 4,
+                            margin: EdgeInsets.zero, // เปลี่ยน margin เป็น zero
+                            elevation: 0,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(10),
                             ),
-                            child: ListTile(
-                              title: Text(
-                                item['title'] ?? 'No Title',
-                                style: GoogleFonts.dmSans(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
+                            child: Container(
+                              height: 113,
+                              color: item['is_read'] == 0
+                                  ? Color(0xFFFFFFFF)
+                                  : Color.fromARGB(255, 220, 240, 255),
+                              child: Align(
+                                alignment: Alignment.center,
+                                child: ListTile(
+                                  leading: CircleAvatar(
+                                    radius: 30,
+                                    child: ClipOval(
+                                      child: Icon(
+                                        Icons.notifications,
+                                        color: Colors.red,
+                                        size:
+                                            30, // optional: adjust size as needed
+                                      ),
+                                    ),
+                                  ),
+                                  title: Text(
+                                    item['title'] ?? 'No Title',
+                                    style: TextStyleService.getDmSans(
+                                        fontSize: 17,
+                                        fontWeight: FontWeight.w500,
+                                        color: Color(0xFF222222)),
+                                    maxLines: 1,
+                                  ),
+                                  subtitle: Text(
+                                    item['message'] ?? '',
+                                    style: TextStyleService.getDmSans(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w400,
+                                        color: Color(0xFF444444)),
+                                    maxLines: 2,
+                                  ),
+                                  trailing: item['is_read'] == 0
+                                      ? null
+                                      : const Icon(Icons.circle,
+                                          color: Color(0xFF355FFF), size: 12),
+                                  onTap: () async {
+                                    await updateNotification(
+                                        item['id']); // รอให้อัปเดตเสร็จ
+
+                                    final existingData = {
+                                      'id': item['announce_id'],
+                                    };
+
+                                    final result = await Navigator.push(
+                                      context,
+                                      PageRouteBuilder(
+                                        pageBuilder: (context, animation,
+                                                secondaryAnimation) =>
+                                            ProviderDetail(
+                                          isProvider: false,
+                                          initialData: existingData,
+                                        ),
+                                        transitionsBuilder: (context, animation,
+                                            secondaryAnimation, child) {
+                                          const begin = 0.0;
+                                          const end = 1.0;
+                                          const curve = Curves.easeOut;
+                                          var tween = Tween(
+                                                  begin: begin, end: end)
+                                              .chain(CurveTween(curve: curve));
+                                          return FadeTransition(
+                                              opacity: animation.drive(tween),
+                                              child: child);
+                                        },
+                                        transitionDuration:
+                                            const Duration(milliseconds: 300),
+                                      ),
+                                    );
+
+                                    if (result == 'refresh') {
+                                      fetchNotifications(); // รีเฟรชหลังกลับมา
+                                    }
+                                  },
                                 ),
                               ),
-                              subtitle: Text(
-                                item['message'] ?? '',
-                                style: GoogleFonts.dmSans(fontSize: 14),
-                              ),
-                              trailing: item['is_read'] == 0
-                                  ? const Icon(Icons.circle,
-                                      color: Colors.red, size: 12)
-                                  : null,
-                              onTap: () {
-                                print("Tapped on: ${item['title']}");
-                              },
                             ),
                           );
                         },

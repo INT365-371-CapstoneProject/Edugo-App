@@ -574,41 +574,42 @@ class _ProviderDetailState extends State<ProviderDetail> {
                               children: [
                                 GestureDetector(
                                   onTap: () {
-                                    Navigator.pop(
-                                        context); // กลับไปยังหน้าก่อนหน้านี้
-                                    //  Widget destination;
-                                    // print(localPreviousRouteName);
-                                    // if (localPreviousRouteName == 'search') {
-                                    //   destination = const SearchScreen();
-                                    // } else if (widget.isProvider) {
-                                    //   destination = const ProviderManagement();
-                                    // } else {
-                                    //   destination = const HomeScreenApp();
-                                    // }
-                                    // Navigator.pushReplacement(
-                                    //   context,
-                                    //   PageRouteBuilder(
-                                    //     pageBuilder: (context, animation,
-                                    //             secondaryAnimation) =>
-                                    //         destination,
-                                    //     transitionsBuilder: (context, animation,
-                                    //         secondaryAnimation, child) {
-                                    //       const begin = 0.0;
-                                    //       const end = 1.0;
-                                    //       const curve = Curves.easeOut;
+                                    // Navigator.pop(context,
+                                    //     'refresh'); // ส่งค่ากลับไป // กลับไปยังหน้าก่อนหน้านี้
+                                    // /------------------------------------------------------------------
+                                    Widget destination;
+                                    print(localPreviousRouteName);
+                                    if (localPreviousRouteName == 'search') {
+                                      destination = const SearchScreen();
+                                    } else if (widget.isProvider) {
+                                      destination = const ProviderManagement();
+                                    } else {
+                                      destination = const HomeScreenApp();
+                                    }
+                                    Navigator.pushReplacement(
+                                      context,
+                                      PageRouteBuilder(
+                                        pageBuilder: (context, animation,
+                                                secondaryAnimation) =>
+                                            destination,
+                                        transitionsBuilder: (context, animation,
+                                            secondaryAnimation, child) {
+                                          const begin = 0.0;
+                                          const end = 1.0;
+                                          const curve = Curves.easeOut;
 
-                                    //       var tween = Tween(
-                                    //               begin: begin, end: end)
-                                    //           .chain(CurveTween(curve: curve));
-                                    //       return FadeTransition(
-                                    //         opacity: animation.drive(tween),
-                                    //         child: child,
-                                    //       );
-                                    //     },
-                                    //     transitionDuration:
-                                    //         const Duration(milliseconds: 300),
-                                    //   ),
-                                    // );
+                                          var tween = Tween(
+                                                  begin: begin, end: end)
+                                              .chain(CurveTween(curve: curve));
+                                          return FadeTransition(
+                                            opacity: animation.drive(tween),
+                                            child: child,
+                                          );
+                                        },
+                                        transitionDuration:
+                                            const Duration(milliseconds: 300),
+                                      ),
+                                    );
                                   },
                                   child: CircleAvatar(
                                     radius: 20,
