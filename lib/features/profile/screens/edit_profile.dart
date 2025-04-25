@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:edugo/config/api_config.dart';
+import 'package:edugo/shared/utils/loading.dart';
 import 'package:edugo/shared/utils/textStyle.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -42,8 +43,7 @@ class _PersonalProfileEditState extends State<PersonalProfileEdit> {
   final arrow = const Icon(Icons.arrow_forward_ios, size: 15);
 
   // เพิ่มตัวแปรสำหรับเก็บสถานะการแก้ไขของ Company และ Personal
-  bool isEditingCompany = false;
-  bool isEditingPersonal = false;
+  bool isEditing = false;
   Uint8List? imageData;
 
   List<String> countries = [];
@@ -64,8 +64,8 @@ class _PersonalProfileEditState extends State<PersonalProfileEdit> {
     switch (fieldName) {
       case 'first_name':
       case 'last_name':
-        if (!RegExp(r'^[a-zA-Z]{2,25}$').hasMatch(value)) {
-          return 'Must be between 2 to 25 English letters';
+        if (!RegExp(r'^[a-zA-Z]{5,20}$').hasMatch(value)) {
+          return 'Must be between 5 to 20 characters';
         }
         break;
       case 'email':
@@ -125,6 +125,7 @@ class _PersonalProfileEditState extends State<PersonalProfileEdit> {
     companyControllers = {
       'company_name':
           TextEditingController(text: widget.profileData['company_name']),
+      'username': TextEditingController(text: widget.profileData['username']),
       'address': TextEditingController(
           text: widget.profileData['address']), // เปลี่ยนเป็น 'address'
       'city': TextEditingController(text: widget.profileData['city']),
@@ -200,7 +201,7 @@ class _PersonalProfileEditState extends State<PersonalProfileEdit> {
       });
 
       // Call updateAvatar() after picking the image
-      await updateAvatar(_imageFile!);
+      // await updateAvatar(_imageFile!);
     }
   }
 
@@ -227,12 +228,70 @@ class _PersonalProfileEditState extends State<PersonalProfileEdit> {
     }
   }
 
+  void _showSuccessDialogAndNavigate() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return Dialog(
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          child: SizedBox(
+            width: 300,
+            height: 360,
+            child: Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Image.asset(
+                    "assets/images/success_check.png",
+                    width: 120,
+                    height: 120,
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    "Edited Successful",
+                    textAlign: TextAlign.center,
+                    style: TextStyleService.getDmSans(
+                      color: Colors.green,
+                      fontSize: 24,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    "I hope you have a good feel",
+                    textAlign: TextAlign.center,
+                    style: TextStyleService.getDmSans(
+                      color: Colors.black87,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w400,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+
+    Future.delayed(const Duration(seconds: 1), () {
+      if (context.mounted) {
+        Navigator.of(context).pop(); // ปิด dialog
+      }
+    });
+  }
+
   Future<void> editProfile() async {
+    _showCustomLoadingDialog(context);
     String? token = await authService.getToken();
 
     // สร้างข้อมูลโปรไฟล์ที่แก้ไขแล้ว
     Map<String, dynamic> updatedProfile = {
       "company_name": companyControllers['company_name']?.text,
+      "username": companyControllers['username']?.text,
       "address": companyControllers['address']?.text,
       "city": companyControllers['city']?.text,
       "country": companyControllers['country']?.text,
@@ -255,15 +314,19 @@ class _PersonalProfileEditState extends State<PersonalProfileEdit> {
         body: jsonEncode(updatedProfile), // ส่งข้อมูลเป็น JSON
       );
 
+      if (mounted) {
+        Navigator.pop(context); // ปิด Loading Dialog
+      }
+
       if (response.statusCode == 200) {
         // อัปเดตข้อมูลใน UI หลังจากแก้ไขสำเร็จ
+        _showSuccessDialogAndNavigate();
         setState(() {
           widget.profileData.addAll(updatedProfile);
-          isEditingCompany = false;
-          isEditingPersonal = false;
+          isEditing = false;
         });
       } else {
-        throw Exception('Failed to update profile. Error: ${response.body}');
+        _showErrorDialog("Edited Failed", "Please, Try again.");
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -302,66 +365,292 @@ class _PersonalProfileEditState extends State<PersonalProfileEdit> {
     });
   }
 
+  void _showCustomLoadingDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) {
+        return Dialog(
+          backgroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(30),
+          ),
+          child: SizedBox(
+            width: 300, // ปรับขนาดให้เหมาะสมกับเนื้อหา
+            height: 360,
+            child: Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  GradientFadeSpinner(),
+                  const SizedBox(height: 24),
+                  Text(
+                    "Please wait...",
+                    style: TextStyleService.getDmSans(
+                      fontSize: 22,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.black87,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    "We're editing your infomation",
+                    style: TextStyleService.getDmSans(
+                      fontSize: 16,
+                      color: Colors.grey,
+                      fontWeight: FontWeight.w300,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void _showErrorDialog(String title, String message) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Dialog(
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+          child: SizedBox(
+            width: 300,
+            height: 360,
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Image.asset(
+                    'assets/images/failmark.png',
+                    height: 120,
+                    width: 120,
+                  ),
+                  const SizedBox(height: 20),
+                  Text(
+                    title,
+                    textAlign: TextAlign.center,
+                    style: TextStyleService.getDmSans(
+                      color: Colors.red,
+                      fontSize: 24,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    message,
+                    textAlign: TextAlign.center,
+                    style: TextStyleService.getDmSans(
+                      color: Colors.black,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w400,
+                    ),
+                  ),
+                  const SizedBox(height: 30),
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.redAccent,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 32, vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      elevation: 0,
+                    ),
+                    child: Text(
+                      "Try Again",
+                      style: TextStyleService.getDmSans(
+                        fontSize: 16,
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Color(0xFFFFFFFF),
       body: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildProfileHeader(),
-            SizedBox(height: bottom),
-            if (widget.profileData['role'] == 'provider') ...[
-              _buildSection(
-                  "Company Information",
-                  [
-                    _buildProfileRow(
-                        "Company Name:", 'company_name', isEditingCompany),
-                    _buildProfileRow("Address:", 'address', isEditingCompany),
-                    _buildProfileRow("City:", 'city', isEditingCompany),
-                    _buildProfileRow("Country:", 'country', isEditingCompany),
-                    _buildProfileRow("Phone:", 'phone', isEditingCompany),
-                    _buildProfileRow(
-                        "Postal Code:", 'postal_code', isEditingCompany),
+            SizedBox(height: 24),
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 24),
+              child: Column(
+                children: [
+                  if (widget.profileData['role'] == 'provider') ...[
+                    _buildSection(
+                        "Company Information",
+                        [
+                          _buildProfileRow(
+                              "Company Name:", 'company_name', isEditing),
+                          _buildProfileRow("Address:", 'address', isEditing),
+                          _buildProfileRow("City:", 'city', isEditing),
+                          _buildProfileRow("Country:", 'country', isEditing),
+                          _buildProfileRow("Phone:", 'phone', isEditing),
+                          _buildProfileRow(
+                              "Postal Code:", 'postal_code', isEditing),
+                        ],
+                        isEditing, () {
+                      setState(() {
+                        isEditing = !isEditing;
+                      });
+                    }),
                   ],
-                  isEditingCompany, () {
-                setState(() {
-                  isEditingCompany = !isEditingCompany;
-                });
-              }),
-            ],
-            SizedBox(height: 16),
-            _buildSection(
-                "Personal Information",
-                [
-                  _buildProfileRow(
-                      "First Name:", 'first_name', isEditingPersonal),
-                  _buildProfileRow(
-                      "Last Name:", 'last_name', isEditingPersonal),
-                  if (!isEditingPersonal) ...[
-                    _buildProfileRow("Role:", 'role', isEditingPersonal),
-                  ],
-                  _buildProfileRow(
-                      "Email Address:", 'email', isEditingPersonal),
-                  _buildProfileRow("Phone:", 'phone_person', isEditingPersonal),
+                  SizedBox(height: 20),
+                  Container(
+                      padding: const EdgeInsets.only(bottom: 0.0),
+                      decoration: BoxDecoration(
+                        border: Border(
+                          bottom: BorderSide(color: Color(0xFFCBD5E0)),
+                        ),
+                      )),
+                  SizedBox(height: 32),
+                  _buildSection(
+                      "Personal Information",
+                      [
+                        _buildProfileRow("Username:", 'username', isEditing),
+                        _buildProfileRow(
+                            "First Name:", 'first_name', isEditing),
+                        _buildProfileRow("Last Name:", 'last_name', isEditing),
+                        if (!isEditing) ...[
+                          _buildProfileRow("Role:", 'role', isEditing),
+                        ],
+                        _buildProfileRow("Email Address:", 'email', isEditing),
+                        _buildProfileRow("Phone:", 'phone_person', isEditing),
+                      ],
+                      isEditing, () {
+                    setState(() {
+                      isEditing = !isEditing;
+                    });
+                  }),
                 ],
-                isEditingPersonal, () {
-              setState(() {
-                isEditingPersonal = !isEditingPersonal;
-              });
-            }),
-            SizedBox(height: 8),
-            Center(
-              child: ElevatedButton(
-                onPressed: () {
-                  pickImage();
-                },
-                child: Text("Edit Picture"),
-                style: ElevatedButton.styleFrom(
-                  padding: EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-                ),
               ),
             ),
+            SizedBox(height: 8),
+            // Center(
+            //   child: ElevatedButton(
+            //     onPressed: () {
+            //       pickImage();
+            //     },
+            //     child: Text("Edit Picture"),
+            //     style: ElevatedButton.styleFrom(
+            //       padding: EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+            //     ),
+            //   ),
+            // ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24.0),
+              child: SizedBox(
+                width: double.infinity,
+                height: 50,
+                child: isEditing
+                    ? Row(
+                        children: [
+                          Expanded(
+                            child: ElevatedButton(
+                              onPressed: () {
+                                setState(() {
+                                  isEditing = false;
+                                  _resetToInitialValues();
+                                });
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFFFF4F4F),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                              ),
+                              child: Text(
+                                "Cancel",
+                                style: TextStyleService.getDmSans(
+                                  fontSize: 14,
+                                  color: const Color(0xFFFFFFFF),
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(
+                              width: 24), // Add spacing between buttons
+                          Expanded(
+                            child: ElevatedButton(
+                              onPressed: () {
+                                if (isEditing) {
+                                  validateForm();
+                                  if (isFormValid) {
+                                    if (_imageFile?.path != null) {
+                                      updateAvatar(_imageFile!);
+                                    }
+                                    editProfile();
+                                  }
+                                } else {
+                                  isEditing;
+                                }
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFF355FFF),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                              ),
+                              child: Text(
+                                "Save",
+                                style: TextStyleService.getDmSans(
+                                  fontSize: 14,
+                                  color: const Color(0xFFFFFFFF),
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      )
+                    : ElevatedButton(
+                        onPressed: () {
+                          setState(() {
+                            isEditing = !isEditing;
+                          });
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF355FFF),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        child: Text(
+                          "Edit Profile",
+                          style: TextStyleService.getDmSans(
+                            fontSize: 14,
+                            color: const Color(0xFFFFFFFF),
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+              ),
+            ),
+            SizedBox(height: 48),
           ],
         ),
       ),
@@ -418,57 +707,78 @@ class _PersonalProfileEditState extends State<PersonalProfileEdit> {
             ),
           ),
         ),
-        Positioned(
-          top: coverHeight - (profileHeight / 2),
-          left: MediaQuery.of(context).size.width / 2 - (profileHeight / 2),
-          child: Column(
-            children: [
-              Stack(
-                clipBehavior: Clip.none,
-                children: [
-                  Container(
-                    width: profileHeight,
-                    height: profileHeight,
-                    decoration: BoxDecoration(
-                      color: Colors.grey,
-                      borderRadius: BorderRadius.circular(profileHeight / 2),
-                      border: Border.all(color: Colors.white, width: 3),
+        Align(
+          alignment: Alignment.bottomCenter,
+          child: Padding(
+            padding: EdgeInsets.only(top: coverHeight - profileHeight / 2),
+            child: Column(
+              children: [
+                Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    Container(
+                      width: profileHeight,
+                      height: profileHeight,
+                      decoration: BoxDecoration(
+                        color: Colors.grey,
+                        borderRadius: BorderRadius.circular(profileHeight / 2),
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(profileHeight / 2),
+                        child: imageData != null
+                            ? Image.memory(
+                                imageData!,
+                                width: profileHeight,
+                                height: profileHeight,
+                                fit: BoxFit.cover,
+                              )
+                            : Image.asset(
+                                'assets/images/avatar.png',
+                                width: profileHeight,
+                                height: profileHeight,
+                                fit: BoxFit.cover,
+                              ),
+                      ),
                     ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(profileHeight / 2),
-                      child: imageData != null
-                          ? Image.memory(
-                              imageData!,
-                              width: profileHeight,
-                              height: profileHeight,
-                              fit: BoxFit.cover,
-                            )
-                          : Image.asset(
-                              'assets/images/avatar.png',
-                              width: profileHeight,
-                              height: profileHeight,
-                              fit: BoxFit.cover,
+                    if (isEditing)
+                      Positioned.fill(
+                        child: Material(
+                          // color: Colors.black.withOpacity(0.5),
+                          color: Color(0xFF000000),
+                          borderRadius:
+                              BorderRadius.circular(profileHeight / 2),
+                          child: InkWell(
+                            borderRadius:
+                                BorderRadius.circular(profileHeight / 2),
+                            onTap: pickImage,
+                            child: Center(
+                              child:
+                                  Icon(Icons.camera_alt, color: Colors.white),
                             ),
-                    ),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  widget.profileData['company_name'],
+                  style: GoogleFonts.dmSans(
+                    fontSize: 20,
+                    color: Color(0xFF000000),
+                    fontWeight: FontWeight.w500,
                   ),
-                  // Positioned(
-                  //   right: -4,
-                  //   bottom: -4,
-                  //   child: GestureDetector(
-                  //     onTap: () {
-                  //       pickImage();
-                  //     },
-                  //     child: CircleAvatar(
-                  //       radius: 16,
-                  //       backgroundColor: Colors.white,
-                  //       child:
-                  //           Icon(Icons.edit, color: Colors.black54, size: 16),
-                  //     ),
-                  //   ),
-                  // ),
-                ],
-              ),
-            ],
+                ),
+                Text(
+                  '@${widget.profileData['username']}',
+                  style: GoogleFonts.dmSans(
+                    fontSize: 12,
+                    color: Color(0xFF94A2B8),
+                    fontWeight: FontWeight.w400,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ],
@@ -488,79 +798,72 @@ class _PersonalProfileEditState extends State<PersonalProfileEdit> {
               Text(
                 title,
                 style: GoogleFonts.dmSans(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
+                    color: Color(0xFF355FFF),
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    height: 0),
               ),
-              Row(
-                children: [
-                  if (isEditing)
-                    TextButton(
-                      onPressed: () {
-                        setState(() {
-                          _resetToInitialValues();
-                          if (title == "Company Information") {
-                            isEditingCompany = false;
-                          } else if (title == "Personal Information") {
-                            isEditingPersonal = false;
-                          }
-                        });
-                      },
-                      child: Row(
-                        mainAxisSize:
-                            MainAxisSize.min, // ให้ Row กว้างเท่ากับเนื้อหา
-                        children: [
-                          Icon(Icons.cancel, color: Colors.black54, size: 16),
-                          SizedBox(
-                              width:
-                                  4), // ปรับระยะห่างไอคอนกับข้อความตามต้องการ
-                          Text("Cancel",
-                              style: TextStyleService.getDmSans(
-                                  color: Colors.black54,
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w400)),
-                        ],
-                      ),
-                    ),
-                  TextButton(
-                    onPressed: () {
-                      if (isEditing) {
-                        validateForm();
-                        if (isFormValid) {
-                          editProfile();
-                        }
-                      } else {
-                        onEditTap();
-                      }
-                    },
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(isEditing ? Icons.save : Icons.edit,
-                            color: Colors.black54, size: 16),
-                        SizedBox(width: 4),
-                        Text(isEditing ? "Save" : "Edit",
-                            style: TextStyleService.getDmSans(
-                                color: Colors.black54,
-                                fontSize: 14,
-                                fontWeight: FontWeight.w400)),
-                      ],
-                    ),
-                  ),
-                ],
-              )
+              // Row(
+              //   children: [
+              //     if (isEditing)
+              //       TextButton(
+              //         onPressed: () {
+              //           setState(() {
+              //             _resetToInitialValues();
+              //             if (title == "Company Information") {
+              //               isEditing = false;
+              //             } else if (title == "Personal Information") {
+              //               isEditing = false;
+              //             }
+              //           });
+              //         },
+              //         child: Row(
+              //           mainAxisSize:
+              //               MainAxisSize.min, // ให้ Row กว้างเท่ากับเนื้อหา
+              //           children: [
+              //             Icon(Icons.cancel, color: Colors.black54, size: 16),
+              //             SizedBox(
+              //                 width:
+              //                     4), // ปรับระยะห่างไอคอนกับข้อความตามต้องการ
+              //             Text("Cancel",
+              //                 style: TextStyleService.getDmSans(
+              //                     color: Colors.black54,
+              //                     fontSize: 14,
+              //                     fontWeight: FontWeight.w400)),
+              //           ],
+              //         ),
+              //       ),
+              //     TextButton(
+              //       onPressed: () {
+              //         if (isEditing) {
+              //           validateForm();
+              //           if (isFormValid) {
+              //             editProfile();
+              //           }
+              //         } else {
+              //           onEditTap();
+              //         }
+              //       },
+              //       child: Row(
+              //         mainAxisSize: MainAxisSize.min,
+              //         children: [
+              //           Icon(isEditing ? Icons.save : Icons.edit,
+              //               color: Colors.black54, size: 16),
+              //           SizedBox(width: 4),
+              //           Text(isEditing ? "Save" : "Edit",
+              //               style: TextStyleService.getDmSans(
+              //                   color: Colors.black54,
+              //                   fontSize: 14,
+              //                   fontWeight: FontWeight.w400)),
+              //         ],
+              //       ),
+              //     ),
+              //   ],
+              // )
             ],
           ),
-          const SizedBox(height: 8),
-          Container(
-            padding: const EdgeInsets.only(bottom: 8.0),
-            decoration: BoxDecoration(
-              border: Border(
-                bottom: BorderSide(color: Colors.grey.shade300),
-              ),
-            ),
-            child: Column(children: children),
-          ),
+          SizedBox(height: 24),
+          Column(children: children),
         ],
       ),
     );
@@ -570,104 +873,171 @@ class _PersonalProfileEditState extends State<PersonalProfileEdit> {
     bool isCountryField = fieldName == 'country';
 
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6.0),
-      child: Row(
+      padding: EdgeInsets.zero,
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Padding(
-            padding: const EdgeInsets.only(right: 12.0),
-            child: SizedBox(
-              width: 140,
-              child: Text(
-                label,
-                style: GoogleFonts.dmSans(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
+          Text(
+            label,
+            style: GoogleFonts.dmSans(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
             ),
           ),
-          Expanded(
-            child: isEditing
-                ? isCountryField
-                    ? DropdownButtonFormField2<String>(
-                        isExpanded: true,
-                        value: selectedCountry ??
-                            companyControllers['country']?.text,
-                        items: countries.map((String country) {
-                          return DropdownMenuItem<String>(
-                            value: country,
-                            child:
-                                Text(country, overflow: TextOverflow.ellipsis),
-                          );
-                        }).toList(),
-                        onChanged: (String? newValue) {
-                          setState(() {
-                            selectedCountry = newValue;
-                            companyControllers['country']?.text =
-                                newValue ?? '';
-                          });
-                        },
-                        decoration: InputDecoration(
-                          border: OutlineInputBorder(),
-                          contentPadding: const EdgeInsets.symmetric(
-                              vertical: 10, horizontal: 12),
+          const SizedBox(height: 12),
+          isEditing
+              ? isCountryField
+                  ? DropdownButtonFormField2<String>(
+                      isExpanded: true,
+                      value: selectedCountry ??
+                          companyControllers['country']?.text,
+                      items: countries.map((String country) {
+                        return DropdownMenuItem<String>(
+                          value: country,
+                          child: Text(country, overflow: TextOverflow.ellipsis),
+                        );
+                      }).toList(),
+                      onChanged: (String? newValue) {
+                        setState(() {
+                          selectedCountry = newValue;
+                          companyControllers['country']?.text = newValue ?? '';
+                        });
+                      },
+                      decoration: InputDecoration(
+                        filled: true,
+                        fillColor: Color(0xFFECF0F6),
+                        contentPadding: const EdgeInsets.symmetric(
+                            vertical: 10, horizontal: 12),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(9.51), // ขอบมน
                         ),
-                        dropdownStyleData: DropdownStyleData(
-                          padding: EdgeInsets.only(top: 20),
-                          maxHeight: 300,
-                          width: MediaQuery.of(context).size.width * 0.55,
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(9.51),
+                          borderSide: BorderSide(
+                              color: Color(0xFFECF0F6)), // หรือปรับสีตามต้องการ
                         ),
-                      )
-                    : StatefulBuilder(
-                        builder: (context, setStateField) {
-                          return TextField(
-                            controller:
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(9.51),
+                          borderSide: BorderSide(
+                              color: Color(0xFFECF0F6)), // หรือสีเมื่อโฟกัส
+                        ),
+                      ),
+                      dropdownStyleData: DropdownStyleData(
+                        padding: EdgeInsets.only(top: 20),
+                        maxHeight: 300,
+                        width: MediaQuery.of(context).size.width * 0.55,
+                      ),
+                    )
+                  : Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        StatefulBuilder(
+                          builder: (context, setStateField) {
+                            final controller =
                                 companyControllers.containsKey(fieldName)
                                     ? companyControllers[fieldName]
-                                    : personalControllers[fieldName],
-                            decoration: InputDecoration(
-                              border: OutlineInputBorder(
-                                borderSide: BorderSide(
-                                  color: validateField(
-                                              fieldName,
-                                              companyControllers
-                                                      .containsKey(fieldName)
-                                                  ? companyControllers[
-                                                          fieldName]
-                                                      ?.text
-                                                  : personalControllers[
-                                                          fieldName]
-                                                      ?.text) ==
-                                          null
-                                      ? Colors.grey
-                                      : Colors.red,
+                                    : personalControllers[fieldName];
+
+                            final error =
+                                validateField(fieldName, controller?.text);
+
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                SizedBox(
+                                  height: 50,
+                                  child: TextField(
+                                    controller: controller,
+                                    style: TextStyleService.getDmSans(
+                                      fontSize: 14.0,
+                                      fontWeight: FontWeight.w400,
+                                      color: Color(0xFF000000),
+                                    ),
+                                    decoration: InputDecoration(
+                                      filled: true,
+                                      fillColor: Color(0xFFECF0F6),
+                                      hintStyle: GoogleFonts.dmSans(
+                                        fontSize: 14,
+                                        color: Color(0xFF000000),
+                                        fontWeight: FontWeight.w400,
+                                      ),
+                                      border: OutlineInputBorder(
+                                        borderRadius:
+                                            BorderRadius.circular(9.51),
+                                        borderSide: BorderSide.none,
+                                      ),
+                                      enabledBorder: OutlineInputBorder(
+                                        borderRadius:
+                                            BorderRadius.circular(9.51),
+                                        borderSide: BorderSide(
+                                          color: error != null
+                                              ? Colors.red
+                                              : Colors.transparent,
+                                        ),
+                                      ),
+                                      focusedBorder: OutlineInputBorder(
+                                        borderRadius:
+                                            BorderRadius.circular(9.51),
+                                        borderSide: BorderSide(
+                                          color: error != null
+                                              ? Colors.red
+                                              : Color(0xFF4C7EFF),
+                                          width: 1.5,
+                                        ),
+                                      ),
+                                      contentPadding: EdgeInsets.symmetric(
+                                          horizontal: 16.0),
+                                    ),
+                                    onChanged: (value) {
+                                      setStateField(() {});
+                                    },
+                                  ),
                                 ),
-                              ),
-                              errorText: validateField(
-                                fieldName,
-                                companyControllers.containsKey(fieldName)
-                                    ? companyControllers[fieldName]?.text
-                                    : personalControllers[fieldName]?.text,
-                              ),
-                            ),
-                            onChanged: (value) {
-                              setStateField(
-                                  () {}); // Refresh validation on change
-                            },
-                          );
-                        },
-                      )
-                : Text(
-                    _formatValue(isCountryField
-                        ? selectedCountry ?? companyControllers['country']?.text
-                        : companyControllers.containsKey(fieldName)
-                            ? companyControllers[fieldName]?.text
-                            : personalControllers[fieldName]?.text),
-                    style:
-                        GoogleFonts.dmSans(fontSize: 16, color: Colors.black87),
+                                if (error != null)
+                                  Padding(
+                                    padding:
+                                        const EdgeInsets.only(left: 12, top: 4),
+                                    child: Text(
+                                      error,
+                                      style: TextStyle(
+                                        color: Colors.red,
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                  ),
+                              ],
+                            );
+                          },
+                        ),
+                      ],
+                    )
+              : Container(
+                  width: double.infinity,
+                  height: 50,
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8.0),
+                  alignment: Alignment.centerLeft,
+                  decoration: BoxDecoration(
+                    color: Color(0xFFECF0F6),
+                    borderRadius: BorderRadius.circular(9.51),
                   ),
-          ),
+                  child: Text(
+                    _formatValue(
+                      isCountryField
+                          ? selectedCountry ??
+                              companyControllers['country']?.text
+                          : companyControllers.containsKey(fieldName)
+                              ? companyControllers[fieldName]?.text
+                              : personalControllers[fieldName]?.text,
+                    ),
+                    style: GoogleFonts.dmSans(
+                      fontSize: 14,
+                      color: Color(0xFF000000),
+                      fontWeight: FontWeight.w400,
+                    ),
+                  ),
+                ),
+          const SizedBox(height: 16),
         ],
       ),
     );
