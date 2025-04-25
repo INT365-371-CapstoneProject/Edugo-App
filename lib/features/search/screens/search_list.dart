@@ -34,6 +34,17 @@ class _SearchListState extends State<SearchList> {
   Map<String, Set<String>> selectedFilters = {};
   final Map<String, Uint8List?> _imageCache = {}; // Add image cache
 
+  // API Pagination state
+  int _currentPage = 1; // Current API page
+  int _totalPages = 1; // Total API pages
+  int _totalScholarships = 0; // Overall total from API
+  final int _itemsPerPage = 10; // Define items per page (from API)
+  bool showPaginationControls = false;
+  int displayPage = 1;
+  int displayTotal = 1;
+  bool canGoPrev = false;
+  bool canGoNext = false;
+
   @override
   void initState() {
     super.initState();
@@ -41,7 +52,7 @@ class _SearchListState extends State<SearchList> {
 
     selectedFilters = Map.from(widget.selectedFilters ?? {});
 
-    searchScholarships(widget.searchQuery, filters: selectedFilters);
+    searchScholarships(query: widget.searchQuery, filters: selectedFilters);
   }
 
   @override
@@ -77,8 +88,12 @@ class _SearchListState extends State<SearchList> {
     return null;
   }
 
-  Future<void> searchScholarships(String? query,
-      {Map<String, Set<String>>? filters}) async {
+  Future<void> searchScholarships({
+    int page = 1,
+    bool refreshCounts = false,
+    String? query,
+    Map<String, Set<String>>? filters,
+  }) async {
     String searchQuery = (query == null || query.isEmpty) ? "" : query;
     List<String> queryParams = [];
 
@@ -110,6 +125,9 @@ class _SearchListState extends State<SearchList> {
       url += "?${queryParams.join('&')}";
     }
 
+    String paginatedUrl =
+        url.contains('?') ? '$url&page=$page' : '$url?page=$page';
+
     try {
       String? token = await authService.getToken();
       Map<String, String> headers = {};
@@ -118,11 +136,16 @@ class _SearchListState extends State<SearchList> {
         headers['Authorization'] = 'Bearer $token';
       }
 
-      final response = await http.get(Uri.parse(url), headers: headers);
+      final response =
+          await http.get(Uri.parse(paginatedUrl), headers: headers);
 
       if (response.statusCode == 200) {
         final Map<String, dynamic> data = json.decode(response.body);
         List<dynamic> results = data['data'] ?? [];
+
+        _currentPage = data['page'] ?? 1;
+        _totalPages = data['last_page'] ?? 1;
+        _totalScholarships = data['total'] ?? 0;
 
         setState(() {
           scholarships = results.map((scholarship) {
@@ -158,6 +181,8 @@ class _SearchListState extends State<SearchList> {
             if (dateA == null && dateB == null) return 0;
             if (dateA == null) return 1; // Put nulls last
             if (dateB == null) return -1; // Put nulls last
+
+            showPaginationControls = _totalPages > 1;
             return dateB.compareTo(dateA); // Sort descending by date
           });
         });
@@ -174,6 +199,11 @@ class _SearchListState extends State<SearchList> {
 
   @override
   Widget build(BuildContext context) {
+    displayPage = _currentPage;
+    displayTotal = _totalPages;
+    canGoPrev = _currentPage > 1;
+    canGoNext = _currentPage < _totalPages;
+
     return Scaffold(
       body: Column(
         // Changed to Column to include FooterNav
@@ -235,7 +265,8 @@ class _SearchListState extends State<SearchList> {
                                         .center, // Added alignment
                                     onSubmitted: (value) {
                                       // Trigger search when submitted
-                                      searchScholarships(value,
+                                      searchScholarships(
+                                          query: value,
                                           filters: selectedFilters);
                                     },
                                   ),
@@ -249,7 +280,7 @@ class _SearchListState extends State<SearchList> {
                                         selectedFilters = filters;
                                       });
                                       searchScholarships(
-                                          _searchController
+                                          query: _searchController
                                               .text, // Use current text
                                           filters: selectedFilters);
                                     }
@@ -270,101 +301,187 @@ class _SearchListState extends State<SearchList> {
                   ),
                   const SizedBox(height: 16.0),
                   scholarships.isNotEmpty
-                      ? ListView.builder(
-                          shrinkWrap: true,
-                          physics: NeverScrollableScrollPhysics(),
-                          padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                          itemCount: scholarships.length,
-                          itemBuilder: (context, index) {
-                            final scholarship = scholarships[index];
-                            final formattedTag =
-                                "#${(index + 1).toString().padLeft(5, '0')}"; // Keep tag if needed
+                      ? Column(
+                          children: [
+                            ListView.builder(
+                              shrinkWrap: true,
+                              physics: NeverScrollableScrollPhysics(),
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 16.0),
+                              itemCount: scholarships.length,
+                              itemBuilder: (context, index) {
+                                final scholarship = scholarships[index];
+                                final formattedTag =
+                                    "#${(index + 1).toString().padLeft(5, '0')}"; // Keep tag if needed
 
-                            // Prepare data for navigation
-                            final String imageUrl = scholarship['image'] ??
-                                'assets/images/scholarship_program.png';
-                            final DateTime? publishedDate = DateTime.tryParse(
-                                scholarship['published_date'] ?? '');
-                            final DateTime? closeDate = DateTime.tryParse(
-                                scholarship['close_date'] ?? '');
-                            final String duration = (publishedDate != null &&
-                                    closeDate != null)
-                                ? "${DateFormat('d MMM').format(publishedDate)} - ${DateFormat('d MMM yyyy').format(closeDate)}"
-                                : 'Date N/A'; // Handle null dates
+                                // Prepare data for navigation
+                                final String imageUrl = scholarship['image'] ??
+                                    'assets/images/scholarship_program.png';
+                                final DateTime? publishedDate =
+                                    DateTime.tryParse(
+                                        scholarship['published_date'] ?? '');
+                                final DateTime? closeDate = DateTime.tryParse(
+                                    scholarship['close_date'] ?? '');
+                                final String duration = (publishedDate !=
+                                            null &&
+                                        closeDate != null)
+                                    ? "${DateFormat('d MMM').format(publishedDate)} - ${DateFormat('d MMM yyyy').format(closeDate)}"
+                                    : 'Date N/A'; // Handle null dates
 
-                            return GestureDetector(
-                              // Wrap with GestureDetector
-                              onTap: () async {
-                                final existingData = {
-                                  'id': scholarship['id'],
-                                  'title': scholarship['title'],
-                                  'url': scholarship['url'],
-                                  'category': scholarship['category'],
-                                  'country': scholarship['country'],
-                                  'description': scholarship['description'],
-                                  'image': scholarship[
-                                      'image'], // Pass the original image URL or path
-                                  'attach_file': scholarship['attach_file'],
-                                  'published_date':
-                                      scholarship['published_date'],
-                                  'close_date': scholarship['close_date'],
-                                  'education_level':
-                                      scholarship['education_level'],
-                                  'attach_name': scholarship['attach_name'],
-                                };
+                                return GestureDetector(
+                                  // Wrap with GestureDetector
+                                  onTap: () async {
+                                    final existingData = {
+                                      'id': scholarship['id'],
+                                      'title': scholarship['title'],
+                                      'url': scholarship['url'],
+                                      'category': scholarship['category'],
+                                      'country': scholarship['country'],
+                                      'description': scholarship['description'],
+                                      'image': scholarship[
+                                          'image'], // Pass the original image URL or path
+                                      'attach_file': scholarship['attach_file'],
+                                      'published_date':
+                                          scholarship['published_date'],
+                                      'close_date': scholarship['close_date'],
+                                      'education_level':
+                                          scholarship['education_level'],
+                                      'attach_name': scholarship['attach_name'],
+                                    };
 
-                                // Fetch and add cached image
-                                final cachedImage = await fetchImage(imageUrl);
-                                existingData['cachedImage'] = cachedImage;
-                                existingData['previousRouteName'] =
-                                    'search_list'; // Indicate source
+                                    // Fetch and add cached image
+                                    final cachedImage =
+                                        await fetchImage(imageUrl);
+                                    existingData['cachedImage'] = cachedImage;
+                                    existingData['previousRouteName'] =
+                                        'search_list'; // Indicate source
 
-                                Navigator.push(
-                                  context,
-                                  PageRouteBuilder(
-                                    pageBuilder: (context, animation,
-                                            secondaryAnimation) =>
-                                        ProviderDetail(
-                                      initialData: existingData,
-                                      isProvider: false, // User is seeking
-                                      previousRouteName:
-                                          'search_list', // Pass separately
+                                    Navigator.push(
+                                      context,
+                                      PageRouteBuilder(
+                                        pageBuilder: (context, animation,
+                                                secondaryAnimation) =>
+                                            ProviderDetail(
+                                          initialData: existingData,
+                                          isProvider: false, // User is seeking
+                                          previousRouteName:
+                                              'search_list', // Pass separately
+                                        ),
+                                        transitionsBuilder: (context, animation,
+                                            secondaryAnimation, child) {
+                                          const begin = 0.0;
+                                          const end = 1.0;
+                                          const curve = Curves.easeOut;
+                                          var tween = Tween(
+                                                  begin: begin, end: end)
+                                              .chain(CurveTween(curve: curve));
+                                          return FadeTransition(
+                                            opacity: animation.drive(tween),
+                                            child: child,
+                                          );
+                                        },
+                                        transitionDuration:
+                                            const Duration(milliseconds: 300),
+                                      ),
+                                    );
+                                  },
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                        vertical: 8.0),
+                                    child: ScholarshipCard(
+                                      // Use the existing card
+                                      // tag:
+                                      //     formattedTag, // Pass tag if needed by card
+                                      tag: "",
+                                      image: imageUrl, // Pass image URL
+                                      title: scholarship['title'] ?? 'No title',
+                                      date:
+                                          duration, // Pass formatted date string
+                                      status:
+                                          "", // Determine status based on dates if needed
+                                      description: scholarship['description'] ??
+                                          'No description',
                                     ),
-                                    transitionsBuilder: (context, animation,
-                                        secondaryAnimation, child) {
-                                      const begin = 0.0;
-                                      const end = 1.0;
-                                      const curve = Curves.easeOut;
-                                      var tween = Tween(begin: begin, end: end)
-                                          .chain(CurveTween(curve: curve));
-                                      return FadeTransition(
-                                        opacity: animation.drive(tween),
-                                        child: child,
-                                      );
-                                    },
-                                    transitionDuration:
-                                        const Duration(milliseconds: 300),
                                   ),
                                 );
                               },
-                              child: Padding(
-                                padding:
-                                    const EdgeInsets.symmetric(vertical: 8.0),
-                                child: ScholarshipCard(
-                                  // Use the existing card
-                                  tag:
-                                      formattedTag, // Pass tag if needed by card
-                                  image: imageUrl, // Pass image URL
-                                  title: scholarship['title'] ?? 'No title',
-                                  date: duration, // Pass formatted date string
-                                  status:
-                                      "", // Determine status based on dates if needed
-                                  description: scholarship['description'] ??
-                                      'No description',
+                            ),
+                            if (showPaginationControls)
+                              Padding(
+                                padding: const EdgeInsets.symmetric(
+                                    vertical: 16.0, horizontal: 16.0),
+                                child: Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    ElevatedButton.icon(
+                                      onPressed: canGoPrev
+                                          ? () {
+                                              searchScholarships(
+                                                  page: _currentPage - 1,
+                                                  refreshCounts: true);
+                                            }
+                                          : null,
+                                      icon: Icon(Icons.arrow_back_ios,
+                                          size: 16,
+                                          color: canGoPrev
+                                              ? Colors.white
+                                              : Colors.grey[400]),
+                                      label: Text("Prev",
+                                          style: TextStyle(
+                                              color: canGoPrev
+                                                  ? Colors.white
+                                                  : Colors.grey[400])),
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: canGoPrev
+                                            ? Color(0xFF355FFF)
+                                            : Colors.grey[300],
+                                        shape: RoundedRectangleBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(8)),
+                                        padding: EdgeInsets.symmetric(
+                                            horizontal: 12, vertical: 8),
+                                      ),
+                                    ),
+                                    Text(
+                                      'Page $displayPage of $displayTotal',
+                                      style: TextStyleService.getDmSans(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w500),
+                                    ),
+                                    ElevatedButton.icon(
+                                      onPressed: canGoNext
+                                          ? () {
+                                              searchScholarships(
+                                                  page: _currentPage + 1,
+                                                  refreshCounts: true);
+                                            }
+                                          : null,
+                                      icon: Icon(Icons.arrow_forward_ios,
+                                          size: 16,
+                                          color: canGoNext
+                                              ? Colors.white
+                                              : Colors.grey[400]),
+                                      label: Text("Next",
+                                          style: TextStyle(
+                                              color: canGoNext
+                                                  ? Colors.white
+                                                  : Colors.grey[400])),
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: canGoNext
+                                            ? Color(0xFF355FFF)
+                                            : Colors.grey[300],
+                                        shape: RoundedRectangleBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(8)),
+                                        padding: EdgeInsets.symmetric(
+                                            horizontal: 12, vertical: 8),
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
-                            );
-                          },
+                          ],
                         )
                       : const Center(
                           child: Padding(

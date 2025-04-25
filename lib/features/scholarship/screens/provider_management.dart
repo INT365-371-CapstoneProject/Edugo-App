@@ -1134,7 +1134,7 @@ class _CopyLinkButtonState extends State<CopyLinkButton> {
     Overlay.of(context).insert(_overlayEntry!);
 
     // รอ 2 วินาทีแล้วลบ overlay
-    await Future.delayed(Duration(seconds: 2));
+    await Future.delayed(Duration(seconds: 0));
     _overlayEntry?.remove();
     _overlayEntry = null;
   }

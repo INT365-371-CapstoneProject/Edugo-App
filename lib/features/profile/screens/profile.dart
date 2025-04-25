@@ -5,6 +5,8 @@ import 'package:edugo/features/account/screens/manage_account.dart';
 import 'package:edugo/features/bookmark/screens/bookmark_management.dart';
 import 'package:edugo/features/login&register/login.dart';
 import 'package:edugo/features/notification/screens/notification_management.dart';
+import 'package:edugo/shared/utils/textStyle.dart';
+import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:edugo/features/profile/screens/edit_profile.dart';
@@ -38,6 +40,7 @@ class _PersonalProfileState extends State<PersonalProfile> {
   final bottom = profileHeight / 2;
   final arrow = const Icon(Icons.arrow_forward_ios, size: 15);
   Map<String, dynamic>? profile; // ใช้ Map ไม่ใช่ List
+  final GlobalKey _browserButtonKey = GlobalKey();
 
   @override
   void initState() {
@@ -280,12 +283,220 @@ class _PersonalProfileState extends State<PersonalProfile> {
                             children: [
                               GestureDetector(
                                 onTap: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) =>
-                                          ProviderManagement(),
-                                    ),
+                                  showDialog(
+                                    context: context,
+                                    builder: (BuildContext context) {
+                                      return AlertDialog(
+                                        backgroundColor:
+                                            const Color(0xFFFFFFFF),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(12),
+                                        ),
+                                        contentPadding:
+                                            const EdgeInsets.all(24),
+                                        content: SizedBox(
+                                          height: 530,
+                                          width: 370,
+                                          child: Column(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              const SizedBox(height: 24),
+                                              Image.asset(
+                                                "assets/images/manage-your-scholdarship.png", // เปลี่ยนเป็นรูปที่เหมือนในภาพ
+                                                height: 205,
+                                                width: 262,
+                                              ),
+                                              const SizedBox(height: 20),
+                                              Text(
+                                                "Hey! We also have a\ndesktop-friendly\nversion of our site!",
+                                                textAlign: TextAlign.center,
+                                                style:
+                                                    TextStyleService.getDmSans(
+                                                  fontSize: 20,
+                                                  fontWeight: FontWeight.w500,
+                                                  height: 1.4,
+                                                  color: Color(0xFF000000),
+                                                ),
+                                              ),
+                                              const SizedBox(height: 15),
+                                              Text(
+                                                "You can simply copy this link and access it\ndirectly from your computer anytime!",
+                                                textAlign: TextAlign.center,
+                                                style:
+                                                    TextStyleService.getDmSans(
+                                                  fontSize: 12,
+                                                  fontWeight: FontWeight.w400,
+                                                ),
+                                              ),
+                                              const SizedBox(height: 24),
+                                              SizedBox(
+                                                width: double.infinity,
+                                                height: 50,
+                                                child: ElevatedButton(
+                                                  key: _browserButtonKey,
+                                                  onPressed: () async {
+                                                    await Clipboard.setData(
+                                                        ClipboardData(
+                                                            text:
+                                                                "https://capstone24.sit.kmutt.ac.th/un2/Officialwebpage"));
+
+                                                    final overlay =
+                                                        Overlay.of(context);
+                                                    final renderBox =
+                                                        _browserButtonKey
+                                                                .currentContext!
+                                                                .findRenderObject()
+                                                            as RenderBox;
+                                                    final offset =
+                                                        renderBox.localToGlobal(
+                                                            Offset.zero);
+                                                    final size = renderBox.size;
+
+                                                    final overlayEntry =
+                                                        OverlayEntry(
+                                                      builder: (context) =>
+                                                          Positioned(
+                                                        top: offset.dy,
+                                                        left: offset.dx,
+                                                        width: size.width,
+                                                        height: size.height,
+                                                        child: Material(
+                                                          color: Colors
+                                                              .transparent,
+                                                          child: Align(
+                                                            alignment: Alignment
+                                                                .topCenter,
+                                                            child:
+                                                                FractionalTranslation(
+                                                              translation: Offset(
+                                                                  0,
+                                                                  -1.1), // ปรับให้ลอยขึ้นเหนือปุ่ม
+                                                              child: SizedBox(
+                                                                width: 73,
+                                                                height: 37,
+                                                                child: Stack(
+                                                                  alignment:
+                                                                      Alignment
+                                                                          .center,
+                                                                  children: [
+                                                                    SvgPicture
+                                                                        .asset(
+                                                                      'assets/images/copied-manage-scholarship.svg',
+                                                                      width: 73,
+                                                                      height:
+                                                                          37,
+                                                                      fit: BoxFit
+                                                                          .cover,
+                                                                    ),
+                                                                    Padding(
+                                                                      padding: EdgeInsets.only(
+                                                                          bottom:
+                                                                              12.0),
+                                                                      child:
+                                                                          Text(
+                                                                        'Copied!',
+                                                                        style: TextStyleService
+                                                                            .getDmSans(
+                                                                          color:
+                                                                              Color(0xFF355FFF),
+                                                                          fontSize:
+                                                                              13,
+                                                                          fontWeight:
+                                                                              FontWeight.w500,
+                                                                        ),
+                                                                      ),
+                                                                    ),
+                                                                  ],
+                                                                ),
+                                                              ),
+                                                            ),
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    );
+
+                                                    overlay
+                                                        .insert(overlayEntry);
+                                                    await Future.delayed(
+                                                        Duration(seconds: 2));
+                                                    overlayEntry.remove();
+                                                  },
+                                                  style:
+                                                      ElevatedButton.styleFrom(
+                                                    backgroundColor:
+                                                        const Color(0xFFFFFFFF),
+                                                    elevation: 0, // ไม่มีเงา
+                                                    shape:
+                                                        RoundedRectangleBorder(
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              8),
+                                                      side: const BorderSide(
+                                                        // ขอบปุ่ม
+                                                        color: Color(
+                                                            0xFFC0CDFF), // สีขอบ
+                                                        width: 1, // ความหนาขอบ
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  child: Text(
+                                                    "Copy website’s link",
+                                                    style: TextStyleService
+                                                        .getDmSans(
+                                                      fontSize: 14,
+                                                      color: const Color(
+                                                          0xFF0E1729),
+                                                      fontWeight:
+                                                          FontWeight.w600,
+                                                    ),
+                                                  ),
+                                                ),
+                                              ),
+                                              const SizedBox(height: 16),
+                                              SizedBox(
+                                                width: double.infinity,
+                                                height: 50,
+                                                child: ElevatedButton(
+                                                  onPressed: () {
+                                                    Navigator.pop(
+                                                        context); // ปิด dialog
+                                                    Navigator.push(
+                                                      context,
+                                                      MaterialPageRoute(
+                                                        builder: (context) =>
+                                                            ProviderManagement(),
+                                                      ),
+                                                    );
+                                                  },
+                                                  style:
+                                                      ElevatedButton.styleFrom(
+                                                    backgroundColor:
+                                                        const Color(0xFF355FFF),
+                                                    shape:
+                                                        RoundedRectangleBorder(
+                                                            borderRadius:
+                                                                BorderRadius
+                                                                    .circular(
+                                                                        8)),
+                                                  ),
+                                                  child: Text(
+                                                      "Thanks, I'll continue on mobile",
+                                                      style: TextStyleService
+                                                          .getDmSans(
+                                                              fontSize: 16,
+                                                              color: Color(
+                                                                  0xFFFFFFFF),
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .w600)),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      );
+                                    },
                                   );
                                 },
                                 child: Image.asset(

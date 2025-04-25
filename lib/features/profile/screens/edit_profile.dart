@@ -478,7 +478,7 @@ class _PersonalProfileEditState extends State<PersonalProfileEdit> {
   Widget _buildSection(String title, List<Widget> children, bool isEditing,
       VoidCallback onEditTap) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 8.0),
+      padding: EdgeInsets.zero,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

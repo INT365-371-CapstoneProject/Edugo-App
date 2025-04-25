@@ -93,7 +93,7 @@ class _NotificationListState extends State<NotificationList> {
           Container(
             color: const Color(0xFF355FFF),
             padding: const EdgeInsets.only(
-              top: 72.0,
+              top: 58.0,
               right: 16,
               left: 16,
               bottom: 22,

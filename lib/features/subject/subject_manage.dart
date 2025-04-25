@@ -53,7 +53,7 @@ class _SubjectManagementState extends State<SubjectManagement> {
   int _totalPages = 1; // Total API pages
   int _totalScholarships = 0; // Overall total from API
   final int _itemsPerPage = 10; // Define items per page (from API)
-
+  int notReadCount = 0;
   @override
   void initState() {
     super.initState();
@@ -77,9 +77,7 @@ class _SubjectManagementState extends State<SubjectManagement> {
       setState(() {
         imageAvatar = response.bodyBytes; // แปลง response เป็น Uint8List
       });
-    } else {
-      throw Exception('Failed to load country data');
-    }
+    } else {}
   }
 
   Future<void> fetchProfile() async {
@@ -107,12 +105,39 @@ class _SubjectManagementState extends State<SubjectManagement> {
             'company_name': profileData['company_name'] ?? '',
           };
         });
+        fetchCountNotifications();
       } else {
         throw Exception('Failed to load profile');
       }
     } catch (e) {
       setState(() {});
       print("Error fetching profile: $e");
+    }
+  }
+
+  Future<void> fetchCountNotifications() async {
+    String? token = await authService.getToken();
+    Map<String, String> headers = {};
+    if (token != null) {
+      headers['Authorization'] = 'Bearer $token';
+    }
+
+    final url = "${ApiConfig.notificationUrl}/count/${profile?['id']}";
+
+    try {
+      final response = await http.get(Uri.parse(url), headers: headers);
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> responseData = json.decode(response.body);
+
+        setState(() {
+          // เก็บค่าลง state หรือใช้งานได้เลย
+          notReadCount = responseData['read_count'];
+        });
+      } else {
+        throw Exception('Failed to load notifications');
+      }
+    } catch (e) {
+      print("Error fetching notifications: $e");
     }
   }
 
@@ -562,7 +587,7 @@ class _SubjectManagementState extends State<SubjectManagement> {
                   minHeight: 120), // Use minHeight instead of fixed height
               color: const Color(0xFF355FFF),
               padding: const EdgeInsets.only(
-                top: 60.0, // ลด padding ด้านบนลงเล็กน้อย
+                top: 52.0, // ลด padding ด้านบนลงเล็กน้อย
                 right: 16,
                 left: 16,
                 bottom: 16, // รักษา padding ด้านล่าง
@@ -624,43 +649,63 @@ class _SubjectManagementState extends State<SubjectManagement> {
                     ),
                   ),
                   SizedBox(width: 8),
-                  GestureDetector(
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        PageRouteBuilder(
-                          pageBuilder:
-                              (context, animation, secondaryAnimation) =>
-                                  NotificationList(
-                            id: profile?['id'],
-                          ),
-                          transitionsBuilder:
-                              (context, animation, secondaryAnimation, child) {
-                            const begin = 0.0;
-                            const end = 1.0;
-                            const curve = Curves.easeOut;
+                  Stack(
+                    children: [
+                      CircleAvatar(
+                        radius: 20,
+                        backgroundColor: const Color(0xFFDAFB59),
+                        child: GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              PageRouteBuilder(
+                                pageBuilder:
+                                    (context, animation, secondaryAnimation) =>
+                                        NotificationList(
+                                  id: profile?['id'],
+                                ),
+                                transitionsBuilder: (context, animation,
+                                    secondaryAnimation, child) {
+                                  const begin = 0.0;
+                                  const end = 1.0;
+                                  const curve = Curves.easeOut;
 
-                            var tween = Tween(begin: begin, end: end)
-                                .chain(CurveTween(curve: curve));
-                            return FadeTransition(
-                              opacity: animation.drive(tween),
-                              child: child,
+                                  var tween = Tween(begin: begin, end: end)
+                                      .chain(CurveTween(curve: curve));
+                                  return FadeTransition(
+                                    opacity: animation.drive(tween),
+                                    child: child,
+                                  );
+                                },
+                                transitionDuration:
+                                    const Duration(milliseconds: 300),
+                              ),
                             );
                           },
-                          transitionDuration: const Duration(milliseconds: 300),
+                          child: Image.asset(
+                            'assets/images/notification.png',
+                            width: 40.0,
+                            height: 40.0,
+                            color: const Color(0xFF355FFF),
+                            colorBlendMode: BlendMode.srcIn,
+                          ),
                         ),
-                      );
-                    },
-                    child: CircleAvatar(
-                      radius: 20,
-                      backgroundColor: const Color(0xFFDAFB59),
-                      child: Image.asset(
-                        'assets/images/notification.png',
-                        width: 40.0,
-                        height: 40.0,
                       ),
-                    ),
-                  ),
+                      if (notReadCount > 0)
+                        Positioned(
+                          right: 0,
+                          top: 0,
+                          child: Container(
+                            width: 12,
+                            height: 12,
+                            decoration: BoxDecoration(
+                              color: Colors.pinkAccent,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                        ),
+                    ],
+                  )
                 ],
               ),
             ),

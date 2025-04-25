@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 
 import 'package:edugo/features/notification/screens/notification_management.dart';
+import 'package:edugo/features/profile/screens/profile.dart';
 import 'package:edugo/features/scholarship/screens/provider_detail.dart';
 import 'package:edugo/features/search/screens/search_list.dart';
 import 'package:edugo/shared/utils/textStyle.dart';
@@ -561,22 +562,47 @@ class _HomeScreenAppState extends State<HomeScreenApp> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            CircleAvatar(
-                              radius: 20,
-                              child: ClipOval(
-                                child: imageAvatar != null
-                                    ? Image.memory(
-                                        imageAvatar!,
-                                        width: 40,
-                                        height: 40,
-                                        fit: BoxFit.cover,
-                                      )
-                                    : Image.asset(
-                                        'assets/images/avatar.png',
-                                        width: 40,
-                                        height: 40,
-                                        fit: BoxFit.cover,
-                                      ),
+                            GestureDetector(
+                              onTap: () {
+                                Navigator.pushReplacement(
+                                  context,
+                                  PageRouteBuilder(
+                                    pageBuilder: (context, animation,
+                                            secondaryAnimation) =>
+                                        const PersonalProfile(),
+                                    transitionsBuilder: (context, animation,
+                                        secondaryAnimation, child) {
+                                      const begin = 0.0;
+                                      const end = 1.0;
+                                      const curve = Curves.easeOut;
+                                      var tween = Tween(begin: begin, end: end)
+                                          .chain(CurveTween(curve: curve));
+                                      return FadeTransition(
+                                          opacity: animation.drive(tween),
+                                          child: child);
+                                    },
+                                    transitionDuration:
+                                        const Duration(milliseconds: 300),
+                                  ),
+                                );
+                              },
+                              child: CircleAvatar(
+                                radius: 20,
+                                child: ClipOval(
+                                  child: imageAvatar != null
+                                      ? Image.memory(
+                                          imageAvatar!,
+                                          width: 40,
+                                          height: 40,
+                                          fit: BoxFit.cover,
+                                        )
+                                      : Image.asset(
+                                          'assets/images/avatar.png',
+                                          width: 40,
+                                          height: 40,
+                                          fit: BoxFit.cover,
+                                        ),
+                                ),
                               ),
                             ),
                             Image.asset(
