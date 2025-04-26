@@ -22,7 +22,8 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:http/http.dart' as http;
 import 'package:edugo/main.dart'; // Import main.dart เพื่อเข้าถึง navigatorKey
 import 'package:edugo/features/profile/screens/change_password.dart'; // Import the new screen
-import 'package:intl/intl.dart'; // นำเข้า DateFormat
+import 'package:intl/intl.dart';
+import 'package:url_launcher/url_launcher.dart'; // นำเข้า DateFormat
 
 class ProviderProfile extends StatefulWidget {
   final Map<String, dynamic>? initialData;
@@ -59,6 +60,7 @@ class _ProviderProfileState extends State<ProviderProfile> {
 
   String? providerCompanyName;
   String? providerUsername;
+  String? providerUrl;
 
   Future<void> fetchProviderDetail(int id) async {
     String? token = await authService.getToken();
@@ -74,6 +76,7 @@ class _ProviderProfileState extends State<ProviderProfile> {
       final Map<String, dynamic> providerData = json.decode(response.body);
       providerCompanyName = providerData['company_name'];
       providerUsername = providerData['username'];
+      providerUrl = providerData['url'];
       setState(() {});
     } else {
       throw Exception('Failed to load country data');
@@ -94,13 +97,11 @@ class _ProviderProfileState extends State<ProviderProfile> {
       setState(() {
         imageAvatar = response.bodyBytes; // แปลง response เป็น Uint8List
       });
-    } else {
-      throw Exception('Failed to load country data');
-    }
+    } else {}
   }
 
   bool isLoading = true;
-  bool showPaginationControls = true;
+  bool showPaginationControls = false;
   int displayPage = 1;
   int displayTotal = 1;
   bool canGoPrev = false;
@@ -345,15 +346,40 @@ class _ProviderProfileState extends State<ProviderProfile> {
                               color: Color(0xFF000000)),
                         ),
                       ),
-                      Center(
-                        child: Text(
-                          "@$providerUsername",
-                          style: GoogleFonts.dmSans(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w400,
-                              color: Color(0xFF94A2B8)),
-                        ),
-                      ),
+                      // Center(
+                      //   child: Text(
+                      //     "@$providerUsername",
+                      //     style: GoogleFonts.dmSans(
+                      //         fontSize: 12,
+                      //         fontWeight: FontWeight.w400,
+                      //         color: Color(0xFF94A2B8)),
+                      //   ),
+                      // ),
+                      if (providerUrl != null && providerUrl != '')
+                        if (providerUrl?.isNotEmpty == true)
+                          Center(
+                            child: GestureDetector(
+                              onTap: () async {
+                                final Uri url = Uri.parse(providerUrl!);
+
+                                try {
+                                  await launchUrl(url,
+                                      mode: LaunchMode.externalApplication);
+                                } catch (e) {
+                                  print('เกิดข้อผิดพลาดในการเปิด URL: $e');
+                                }
+                              },
+                              child: Text(
+                                providerUrl!,
+                                style: GoogleFonts.dmSans(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w400,
+                                  color: Color(0xFF94A2B8),
+                                  decoration: TextDecoration.underline,
+                                ),
+                              ),
+                            ),
+                          ),
                       SizedBox(height: 20),
                       Text(
                         "All Provider Scholarship",

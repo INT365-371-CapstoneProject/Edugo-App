@@ -1,6 +1,7 @@
 import 'package:edugo/features/login&register/login.dart';
 import 'package:edugo/pages/welcome_user_page.dart';
 import 'package:edugo/shared/utils/textStyle.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
@@ -72,9 +73,25 @@ class ProviderOrUser extends StatelessWidget {
                     onTap: () {
                       Navigator.pushReplacement(
                         context,
-                        MaterialPageRoute(
-                          builder: (context) =>
-                              const WelcomeUserPage(isProvider: true),
+                        PageRouteBuilder(
+                          transitionDuration: Duration(milliseconds: 350),
+                          pageBuilder:
+                              (context, animation, secondaryAnimation) =>
+                                  WelcomeUserPage(isProvider: true),
+                          transitionsBuilder:
+                              (context, animation, secondaryAnimation, child) {
+                            // สร้างการเลื่อน Slide Out
+                            var begin = Offset(
+                                1.0, 0.0); // ให้หน้าใหม่เลื่อนจากขวามาซ้าย
+                            var end = Offset.zero; // ปลายทางอยู่ที่ตำแหน่งเดิม
+                            var curve = Curves.easeInOut;
+                            var tween = Tween(begin: begin, end: end)
+                                .chain(CurveTween(curve: curve));
+                            var offsetAnimation = animation.drive(tween);
+
+                            return SlideTransition(
+                                position: offsetAnimation, child: child);
+                          },
                         ),
                       );
                     },
@@ -93,18 +110,33 @@ class ProviderOrUser extends StatelessWidget {
                     imagePath: "assets/images/user.svg",
                     borderColor: Color(0xFF355FFF),
                     onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) =>
-                              const WelcomeUserPage(isUser: true),
-                        ),
-                      );
+                      // Navigator.pushReplacement(
+                      //   context,
+                      //   PageRouteBuilder(
+                      //     transitionDuration: Duration(milliseconds: 350),
+                      //     reverseTransitionDuration:
+                      //         Duration(milliseconds: 350),
+                      //     pageBuilder:
+                      //         (context, animation, secondaryAnimation) =>
+                      //             WelcomeUserPage(isUser: true),
+                      //     transitionsBuilder:
+                      //         (context, animation, secondaryAnimation, child) {
+                      //       // หน้าใหม่เลื่อนจากซ้าย (Slide In)
+                      //       var begin = Offset(1.0, 0.0); // เริ่มต้นจากขวา
+                      //       var end = Offset.zero; // ปลายทางที่ตำแหน่งเดิม
+                      //       var curve = Curves.easeInOut;
+                      //       var tween = Tween(begin: begin, end: end)
+                      //           .chain(CurveTween(curve: curve));
+                      //       var offsetAnimation = animation.drive(tween);
+
+                      //       return SlideTransition(
+                      //           position: offsetAnimation, child: child);
+                      //     },
+                      //   ),
+                      // );
                     },
-                    rowPadding: const EdgeInsets.symmetric(
-                        horizontal: 21.0), // กำหนด padding สำหรับ Row
-                    spacingWidget: const SizedBox(
-                        width: 19), // กำหนด spacing ที่แตกต่างได้
+                    rowPadding: const EdgeInsets.symmetric(horizontal: 21.0),
+                    spacingWidget: const SizedBox(width: 19),
                   ),
                   const SizedBox(height: 30), // Add space below the last button
                 ],

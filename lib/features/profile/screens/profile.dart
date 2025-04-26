@@ -5,6 +5,7 @@ import 'package:edugo/features/account/screens/manage_account.dart';
 import 'package:edugo/features/bookmark/screens/bookmark_management.dart';
 import 'package:edugo/features/login&register/login.dart';
 import 'package:edugo/features/notification/screens/notification_management.dart';
+import 'package:edugo/features/profile/screens/help_center.dart';
 import 'package:edugo/shared/utils/textStyle.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
@@ -631,6 +632,18 @@ class _PersonalProfileState extends State<PersonalProfile> {
                                 },
                                 transitionDuration:
                                     const Duration(milliseconds: 300),
+                              ),
+                            );
+                          }),
+                      _buildProfileOption(
+                          icon: Icons.info,
+                          label: "Help Center",
+                          onTap: () {
+                            // Navigate to Change Password Screen
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const HelpCenterScreen(),
                               ),
                             );
                           }),

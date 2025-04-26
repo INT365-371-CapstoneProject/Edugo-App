@@ -810,7 +810,7 @@ class _RegisterState extends State<Register> {
           ),
 
           // ปุ่มย้อนกลับ
-          // CustomBackButton(pageToNavigate: const Login()),
+          CustomBackButton(pageToNavigate: const Login()),
 
           Positioned(
             top: 63.0,

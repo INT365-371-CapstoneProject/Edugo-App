@@ -3,6 +3,7 @@ import 'package:edugo/features/login&register/register.dart';
 import 'package:edugo/pages/provider_or_user.dart';
 import 'package:edugo/shared/utils/customBackButton.dart';
 import 'package:edugo/shared/utils/textStyle.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
@@ -19,6 +20,7 @@ class WelcomeUserPage extends StatefulWidget {
 }
 
 class _WelcomeUserPageState extends State<WelcomeUserPage> {
+  final isFirstTime = false;
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -97,31 +99,24 @@ class _WelcomeUserPageState extends State<WelcomeUserPage> {
                           height: 48,
                           child: OutlinedButton(
                             onPressed: () {
-                              Navigator.push(
+                              Navigator.pushReplacement(
                                 context,
                                 PageRouteBuilder(
+                                  transitionDuration: Duration(
+                                      milliseconds: 350), // ตั้ง 400ms ตรงนี้
                                   pageBuilder: (context, animation,
                                           secondaryAnimation) =>
-                                      const Login(),
+                                      Login(),
                                   transitionsBuilder: (context, animation,
                                       secondaryAnimation, child) {
-                                    final spring = CurvedAnimation(
-                                      parent: animation,
-                                      curve: Curves
-                                          .easeOutBack, // ให้ฟีล spring-like
-                                    );
-
-                                    return SlideTransition(
-                                      position: Tween<Offset>(
-                                        begin: const Offset(
-                                            1.0, 0.0), // เริ่มจากขวา
-                                        end: Offset.zero,
-                                      ).animate(spring),
+                                    return CupertinoPageTransition(
+                                      primaryRouteAnimation: animation,
+                                      secondaryRouteAnimation:
+                                          secondaryAnimation,
+                                      linearTransition: true,
                                       child: child,
                                     );
                                   },
-                                  transitionDuration:
-                                      const Duration(milliseconds: 500),
                                 ),
                               );
                             },
@@ -153,28 +148,52 @@ class _WelcomeUserPageState extends State<WelcomeUserPage> {
                           child: OutlinedButton(
                             onPressed: () {
                               if (widget.isProvider) {
-                                Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                        builder: (context) => Register(
-                                              isProvider: true,
-                                            )));
-                              } else {
-                                Navigator.push(
+                                Navigator.pushReplacement(
                                   context,
-                                  MaterialPageRoute(
-                                    builder: (context) => Register(
+                                  PageRouteBuilder(
+                                    transitionDuration: Duration(
+                                        milliseconds: 350), // ตั้ง 400ms ตรงนี้
+                                    pageBuilder: (context, animation,
+                                            secondaryAnimation) =>
+                                        Register(
+                                      isProvider: true,
+                                    ),
+                                    transitionsBuilder: (context, animation,
+                                        secondaryAnimation, child) {
+                                      return CupertinoPageTransition(
+                                        primaryRouteAnimation: animation,
+                                        secondaryRouteAnimation:
+                                            secondaryAnimation,
+                                        linearTransition: true,
+                                        child: child,
+                                      );
+                                    },
+                                  ),
+                                );
+                              } else {
+                                Navigator.pushReplacement(
+                                  context,
+                                  PageRouteBuilder(
+                                    transitionDuration: Duration(
+                                        milliseconds: 350), // ตั้ง 400ms ตรงนี้
+                                    pageBuilder: (context, animation,
+                                            secondaryAnimation) =>
+                                        Register(
                                       isUser: true,
                                     ),
+                                    transitionsBuilder: (context, animation,
+                                        secondaryAnimation, child) {
+                                      return CupertinoPageTransition(
+                                        primaryRouteAnimation: animation,
+                                        secondaryRouteAnimation:
+                                            secondaryAnimation,
+                                        linearTransition: true,
+                                        child: child,
+                                      );
+                                    },
                                   ),
                                 );
                               }
-                              // else {
-                              //   Navigator.push(
-                              //       context,
-                              //       MaterialPageRoute(
-                              //           builder: (context) => Register()));
-                              // }
                             },
                             style: OutlinedButton.styleFrom(
                               backgroundColor: const Color(0xFFFFFFFF),

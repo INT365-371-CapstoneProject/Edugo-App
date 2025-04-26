@@ -285,9 +285,7 @@ class _ProviderDetailState extends State<ProviderDetail> {
       setState(() {
         imageAnnounce = response.bodyBytes; // แปลง response เป็น Uint8List
       });
-    } else {
-      throw Exception('Failed to load country data');
-    }
+    } else {}
   }
 
   Future<void> fetchProviderAvatar(int id) async {
@@ -304,9 +302,7 @@ class _ProviderDetailState extends State<ProviderDetail> {
       setState(() {
         imageAvatar = response.bodyBytes; // แปลง response เป็น Uint8List
       });
-    } else {
-      throw Exception('Failed to load country data');
-    }
+    } else {}
   }
 
   Future<void> fetchProviderDetail(int id) async {
