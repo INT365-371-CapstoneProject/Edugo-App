@@ -1,6 +1,7 @@
 import 'package:edugo/config/api_config.dart';
 import 'package:edugo/features/subject/subject_manage.dart';
 import 'package:edugo/services/auth_service.dart';
+import 'package:edugo/shared/utils/loading.dart';
 import 'package:edugo/shared/utils/textStyle.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -252,33 +253,41 @@ class _SubjectAddEditState extends State<SubjectAddEdit> {
 
     showDialog(
       context: context,
-      barrierDismissible:
-          false, // Prevent dismissing the dialog by tapping outside
-      builder: (BuildContext context) {
+      barrierDismissible: false,
+      builder: (_) {
         return Dialog(
+          backgroundColor: Colors.white,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(30),
           ),
           child: SizedBox(
-            height: 301,
-            width: 298,
-            child: Center(
+            width: 300, // ปรับขนาดให้เหมาะสมกับเนื้อหา
+            height: 360,
+            child: Padding(
+              padding: const EdgeInsets.all(24.0),
               child: Column(
-                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  CircularProgressIndicator(
-                    valueColor: AlwaysStoppedAnimation<Color>(
-                        const Color.fromARGB(249, 84, 83, 83)),
-                    strokeWidth: 6.0,
-                  ),
-                  SizedBox(height: 40),
+                  GradientFadeSpinner(),
+                  const SizedBox(height: 24),
                   Text(
-                    "Waiting for Posting",
+                    "Please wait...",
                     style: TextStyleService.getDmSans(
-                      fontSize: 24,
+                      fontSize: 22,
                       fontWeight: FontWeight.w600,
-                      color: const Color(0xFF000000),
+                      color: Colors.black87,
                     ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    "Uploading in progress",
+                    style: TextStyleService.getDmSans(
+                      fontSize: 16,
+                      color: Colors.grey,
+                      fontWeight: FontWeight.w300,
+                    ),
+                    textAlign: TextAlign.center,
                   ),
                 ],
               ),

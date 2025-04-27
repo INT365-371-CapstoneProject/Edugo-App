@@ -484,7 +484,7 @@ class _PersonalProfileEditState extends State<PersonalProfileEdit> {
                   const SizedBox(height: 30),
                   ElevatedButton(
                     onPressed: () {
-                      Navigator.of(context).pop();
+                      Navigator.pop(context, true);
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.redAccent,
@@ -592,7 +592,7 @@ class _PersonalProfileEditState extends State<PersonalProfileEdit> {
               padding: const EdgeInsets.symmetric(horizontal: 24.0),
               child: SizedBox(
                 width: double.infinity,
-                height: 50,
+                height: 48,
                 child: isEditing
                     ? Row(
                         children: [
@@ -605,7 +605,7 @@ class _PersonalProfileEditState extends State<PersonalProfileEdit> {
                                 });
                               },
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFFFF4F4F),
+                                backgroundColor: const Color(0xFF94A2B8),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(8),
                                 ),

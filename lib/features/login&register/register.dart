@@ -24,6 +24,8 @@ class Register extends StatefulWidget {
 
 class _RegisterState extends State<Register> {
   final Map<String, TextEditingController> _controllers = {};
+  final Map<String, FocusNode> _focusNodes = {};
+  final Map<String, bool> _focused = {};
   bool _isPasswordVisible = false;
   bool _isConfirmPasswordVisible = false;
   bool stepOne = true, stepTwo = false, stepThree = false;
@@ -59,6 +61,16 @@ class _RegisterState extends State<Register> {
       'postalCode': TextEditingController(),
       'phone': TextEditingController(),
       'username': TextEditingController(),
+    });
+
+    _controllers.forEach((key, controller) {
+      _focusNodes[key] = FocusNode();
+      _focused[key] = false;
+      _focusNodes[key]!.addListener(() {
+        setState(() {
+          _focused[key] = _focusNodes[key]!.hasFocus;
+        });
+      });
     });
 
     _controllers['password']?.addListener(() {
@@ -571,18 +583,18 @@ class _RegisterState extends State<Register> {
     }
     if (!isUpperPassword) {
       _errors['password'] =
-          "Password must contain at least one uppercase letter.";
+          "Password must contain at least 1 uppercase letter.";
       isValid = false;
     } else if (!isLowerPassword) {
       _errors['password'] =
-          "Password must contain at least one lowercase letter.";
+          "Password must contain at least 1 lowercase letter.";
       isValid = false;
     } else if (!isNumberPassword) {
-      _errors['password'] = "Password must contain at least one number.";
+      _errors['password'] = "Password must contain at least 1 number.";
       isValid = false;
     } else if (!isSpecialPassword) {
       _errors['password'] =
-          "Password must contain at least one special character.";
+          "Password must contain at least 1 special character.";
       isValid = false;
     }
 
@@ -1246,63 +1258,82 @@ class _RegisterState extends State<Register> {
               ),
             )
           else
-            TextField(
-              controller: controller,
-              obscureText: (isPassword && !_isPasswordVisible) ||
-                  (isConfirmPassword && !_isConfirmPasswordVisible),
-              style: TextStyleService.getDmSans(
-                fontSize: 16,
-                fontWeight: FontWeight.w200,
-                color: Color(0xFF000000),
+            Container(
+              decoration: BoxDecoration(
+                color: const Color(0xFFECF0F6),
+                borderRadius: BorderRadius.circular(15),
+                boxShadow: (_focused[key] == true)
+                    ? [
+                        BoxShadow(
+                          color: hasError
+                              ? Color.fromRGBO(237, 75, 158, 0.15)
+                              : Color.fromRGBO(108, 99, 255, 0.15),
+                          blurRadius: 0,
+                          spreadRadius: 6,
+                          offset: Offset(0, 0),
+                        ),
+                      ]
+                    : [],
               ),
-              decoration: InputDecoration(
-                hintText: label.toLowerCase().contains('email')
-                    ? "Enter your email (Ex. example@gmail.com)"
-                    : "Enter your ${label.split('*')[0].toLowerCase()}",
-                hintStyle: TextStyleService.getDmSans(
+              child: TextField(
+                controller: controller,
+                focusNode: _focusNodes[key],
+                obscureText: (isPassword && !_isPasswordVisible) ||
+                    (isConfirmPassword && !_isConfirmPasswordVisible),
+                style: TextStyleService.getDmSans(
                   fontSize: 16,
                   fontWeight: FontWeight.w200,
                   color: Color(0xFF000000),
                 ),
-                contentPadding: const EdgeInsets.all(16),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(9.51),
-                  borderSide: hasError
-                      ? const BorderSide(color: Colors.red, width: 2.0)
-                      : BorderSide.none,
+                decoration: InputDecoration(
+                  hintText: label.toLowerCase().contains('email')
+                      ? "Enter your email (Ex. example@gmail.com)"
+                      : "Enter your ${label.split('*')[0].toLowerCase()}",
+                  hintStyle: TextStyleService.getDmSans(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w200,
+                    color: Color(0xFF000000),
+                  ),
+                  contentPadding: const EdgeInsets.all(16),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(9.51),
+                    borderSide: hasError
+                        ? const BorderSide(color: Colors.red, width: 2.0)
+                        : BorderSide.none,
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(9.51),
+                    borderSide: hasError
+                        ? const BorderSide(color: Colors.red, width: 2.0)
+                        : BorderSide.none,
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(9.51),
+                    borderSide: hasError
+                        ? const BorderSide(color: Colors.red, width: 2.0)
+                        : const BorderSide(color: Color(0xFFECF0F6)),
+                  ),
+                  filled: true,
+                  fillColor: const Color(0xFFECF0F6),
+                  suffixIcon: isPassword
+                      ? IconButton(
+                          icon: Icon(_isPasswordVisible
+                              ? Icons.visibility
+                              : Icons.visibility_off),
+                          onPressed: () => setState(
+                              () => _isPasswordVisible = !_isPasswordVisible),
+                        )
+                      : isConfirmPassword
+                          ? IconButton(
+                              icon: Icon(_isConfirmPasswordVisible
+                                  ? Icons.visibility
+                                  : Icons.visibility_off),
+                              onPressed: () => setState(() =>
+                                  _isConfirmPasswordVisible =
+                                      !_isConfirmPasswordVisible),
+                            )
+                          : null,
                 ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(9.51),
-                  borderSide: hasError
-                      ? const BorderSide(color: Colors.red, width: 2.0)
-                      : BorderSide.none,
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(9.51),
-                  borderSide: hasError
-                      ? const BorderSide(color: Colors.red, width: 2.0)
-                      : const BorderSide(color: Color(0xFFECF0F6)),
-                ),
-                filled: true,
-                fillColor: const Color(0xFFECF0F6),
-                suffixIcon: isPassword
-                    ? IconButton(
-                        icon: Icon(_isPasswordVisible
-                            ? Icons.visibility
-                            : Icons.visibility_off),
-                        onPressed: () => setState(
-                            () => _isPasswordVisible = !_isPasswordVisible),
-                      )
-                    : isConfirmPassword
-                        ? IconButton(
-                            icon: Icon(_isConfirmPasswordVisible
-                                ? Icons.visibility
-                                : Icons.visibility_off),
-                            onPressed: () => setState(() =>
-                                _isConfirmPasswordVisible =
-                                    !_isConfirmPasswordVisible),
-                          )
-                        : null,
               ),
             ),
 

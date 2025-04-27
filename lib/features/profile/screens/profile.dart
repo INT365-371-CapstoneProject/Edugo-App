@@ -512,9 +512,9 @@ class _PersonalProfileState extends State<PersonalProfile> {
                       _buildProfileOption(
                         icon: Icons.person,
                         label: "Edit Profile",
-                        onTap: () {
+                        onTap: () async {
                           if (profile != null) {
-                            Navigator.push(
+                            final result = await Navigator.push(
                               context,
                               PageRouteBuilder(
                                 transitionDuration: Duration(milliseconds: 350),
@@ -525,11 +525,8 @@ class _PersonalProfileState extends State<PersonalProfile> {
                                     PersonalProfileEdit(profileData: profile!),
                                 transitionsBuilder: (context, animation,
                                     secondaryAnimation, child) {
-                                  // หน้าใหม่เลื่อนจากซ้าย (Slide In)
-                                  var begin =
-                                      Offset(1.0, 0.0); // เริ่มต้นจากขวา
-                                  var end =
-                                      Offset.zero; // ปลายทางที่ตำแหน่งเดิม
+                                  var begin = Offset(1.0, 0.0);
+                                  var end = Offset.zero;
                                   var curve = Curves.easeInOut;
                                   var tween = Tween(begin: begin, end: end)
                                       .chain(CurveTween(curve: curve));
@@ -540,13 +537,11 @@ class _PersonalProfileState extends State<PersonalProfile> {
                                 },
                               ),
                             );
-                            // Navigator.push(
-                            //   context,
-                            //   MaterialPageRoute(
-                            //     builder: (context) =>
-                            //         PersonalProfileEdit(profileData: profile!),
-                            //   ),
-                            // );
+                            if (result == true) {
+                              fetchProfile(); // รีเฟรชข้อมูลใหม่
+                            } else {
+                              fetchProfile();
+                            }
                           } else {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(

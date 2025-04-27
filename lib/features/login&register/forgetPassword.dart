@@ -27,6 +27,7 @@ class _ForgetPasswordState extends State<ForgetPassword> {
   bool isLowerPassword = false;
   bool isUpperPassword = false;
   bool isSpecialPassword = false;
+  bool isNumberPassword = false;
 
   bool verifyOTP = false;
   String? _emailErrorText;
@@ -41,11 +42,13 @@ class _ForgetPasswordState extends State<ForgetPassword> {
 
     _newPasswordController.addListener(() {
       final text = _newPasswordController.text;
+      final hasNumber = RegExp(r'\d').hasMatch(text);
       setState(() {
         isLengthValidPassword = text.length >= 8;
         isLowerPassword = RegExp(r'[a-z]').hasMatch(text);
         isUpperPassword = RegExp(r'[A-Z]').hasMatch(text);
         isSpecialPassword = RegExp(r'[^A-Za-z0-9]').hasMatch(text);
+        isNumberPassword = hasNumber;
       });
     });
   }
@@ -96,6 +99,8 @@ class _ForgetPasswordState extends State<ForgetPassword> {
       } else if (!isUpperPassword) {
         _newPasswordErrorText =
             "Password must contain at least 1 uppercase letter";
+      } else if (!isNumberPassword) {
+        _newPasswordErrorText = "Password must contain at least 1 number.";
       } else if (!isSpecialPassword) {
         _newPasswordErrorText =
             "Password must contain at least 1 special character";
@@ -662,6 +667,9 @@ class _ForgetPasswordState extends State<ForgetPassword> {
                           SizedBox(height: 4),
                           _buildRequirement(
                               isUpperPassword, "1 uppercase character (a-z)"),
+                          SizedBox(height: 4),
+                          _buildRequirement(
+                              isNumberPassword, "At least 1 number (0-9)"),
                           SizedBox(height: 4),
                           _buildRequirement(isSpecialPassword,
                               "At least 1 special character (e.g. ! @ # \$ % .)"),

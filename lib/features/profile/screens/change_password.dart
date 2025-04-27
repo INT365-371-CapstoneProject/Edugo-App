@@ -43,6 +43,8 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
   bool isLowerPassword = false;
   bool isUpperPassword = false;
   bool isSpecialPassword = false;
+  bool isNumberPassword = false;
+  bool isValid = true;
 
   @override
   void dispose() {
@@ -73,6 +75,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
 
     _newPasswordController.addListener(() {
       final text = _newPasswordController.text;
+      final hasNumber = RegExp(r'\d').hasMatch(text);
       setState(() {
         isLengthValidPassword = text.length >= 8;
         // isComplexityValid =
@@ -80,6 +83,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
         isLowerPassword = RegExp(r'[a-z]').hasMatch(text);
         isUpperPassword = RegExp(r'[A-Z]').hasMatch(text);
         isSpecialPassword = RegExp(r'[^A-Za-z0-9]').hasMatch(text);
+        isNumberPassword = hasNumber;
       });
     });
   }
@@ -88,6 +92,18 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
     setState(() {
       currentPasswordError = _currentPasswordController.text.trim().isEmpty;
       newPasswordError = _newPasswordController.text.trim().isEmpty;
+
+      // Add: Show error if new password is not valid
+      if (!newPasswordError) {
+        if (!isLengthValidPassword ||
+            !isUpperPassword ||
+            !isLowerPassword ||
+            !isNumberPassword ||
+            !isSpecialPassword) {
+          newPasswordError = true;
+        }
+      }
+
       confirmPasswordError = _confirmPasswordController.text.trim().isEmpty;
 
       // Only check for password match if the confirm field isn't empty
@@ -96,6 +112,10 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
               _newPasswordController.text.trim()) {
         confirmPasswordError = true;
       }
+
+      // Remove isValid logic here, as we now use newPasswordError
+      isValid =
+          !(currentPasswordError || newPasswordError || confirmPasswordError);
     });
 
     if (!currentPasswordError && !newPasswordError && !confirmPasswordError) {
@@ -505,6 +525,9 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                     _buildRequirement(
                         isUpperPassword, "1 uppercase character (a-z)"),
                     SizedBox(height: 4),
+                    _buildRequirement(
+                        isNumberPassword, "At least 1 number (0-9)"),
+                    SizedBox(height: 4),
                     _buildRequirement(isSpecialPassword,
                         "At least 1 special character (e.g. ! @ # \$ % .)"),
                     const SizedBox(height: 20),
@@ -556,17 +579,13 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
               ),
               disabledBackgroundColor: Colors.grey,
             ),
-            child: _isLoading
-                ? const CircularProgressIndicator(
-                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                  )
-                : Text(
-                    "Change Password",
-                    style: TextStyleService.getDmSans(
-                        fontSize: 16,
-                        color: Colors.white,
-                        fontWeight: FontWeight.w600),
-                  ),
+            child: Text(
+              "Change Password",
+              style: TextStyleService.getDmSans(
+                  fontSize: 16,
+                  color: Colors.white,
+                  fontWeight: FontWeight.w600),
+            ),
           ),
         ),
       ),
@@ -659,10 +678,14 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
       if (error) ...[
         const SizedBox(height: 8),
         Text(
-          // For confirm password: show default message if field is empty, custom message if passwords don't match
-          (label == "Confirm Password" && controller.text.trim().isNotEmpty)
-              ? customErrorText ?? "Please enter your ${label.toLowerCase()}"
-              : "Please enter your ${label.toLowerCase()}",
+          // Show specific error for new password
+          (label == "New Password")
+              ? _getNewPasswordErrorText(controller.text)
+              : (label == "Confirm Password" &&
+                      controller.text.trim().isNotEmpty)
+                  ? customErrorText ??
+                      "Please enter your ${label.toLowerCase()}"
+                  : "Please enter your ${label.toLowerCase()}",
           style: TextStyleService.getDmSans(
             color: Colors.red,
             fontSize: 12,
@@ -671,6 +694,32 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
         ),
       ],
     ]);
+  }
+
+  // Add this helper function
+  String _getNewPasswordErrorText(String value) {
+    if (value.isEmpty) {
+      return "Please enter a new password";
+    }
+    if (value.length < 8) {
+      return "Password must be at least 8 characters";
+    }
+    if (!RegExp(r'[A-Z]').hasMatch(value)) {
+      return "Password must contain at least 1 uppercase letter";
+    }
+    if (!RegExp(r'[a-z]').hasMatch(value)) {
+      return "Password must contain at least 1 lowercase letter";
+    }
+    if (!RegExp(r'\d').hasMatch(value)) {
+      return "Password must contain at least 1 number";
+    }
+    if (!RegExp(r'[^A-Za-z0-9]').hasMatch(value)) {
+      return "Password must contain at least 1 special character";
+    }
+    if (value == _currentPasswordController.text) {
+      return "The new password cannot be the same as the current password";
+    }
+    return "Invalid password";
   }
 
   Widget _buildRequirement(bool isValid, String text) {
