@@ -661,8 +661,8 @@ class _RegisterState extends State<Register> {
     if (phone.isEmpty) {
       _errors['phone'] = "Phone is required";
       isValid = false;
-    } else if (phone.length < 8) {
-      _errors['phone'] = "Phone must be at least 8 digit";
+    } else if (phone.length < 9) {
+      _errors['phone'] = "Phone must be at least 9 digit";
       isValid = false;
     }
 
@@ -1195,7 +1195,7 @@ class _RegisterState extends State<Register> {
               inputFormatters: [
                 FilteringTextInputFormatter.digitsOnly, // เฉพาะตัวเลข
                 LengthLimitingTextInputFormatter(
-                    15), // จำกัดจำนวนตัวเลขที่กรอกได้ 15 ตัว
+                    10), // จำกัดจำนวนตัวเลขที่กรอกได้ 15 ตัว
               ],
               obscureText: (isPassword && !_isPasswordVisible) ||
                   (isConfirmPassword && !_isConfirmPasswordVisible),
