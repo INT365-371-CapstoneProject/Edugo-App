@@ -942,7 +942,7 @@ class _ProviderManagementState extends State<ProviderManagement> {
                                       date: duration, // Pass formatted duration
                                       status: status, // Pass calculated status
                                       description: description,
-                                      isRow: true,
+                                      isManagement: true,
                                     ),
                                   ),
                                 );

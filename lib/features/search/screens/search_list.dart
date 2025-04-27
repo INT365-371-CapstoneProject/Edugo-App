@@ -149,9 +149,8 @@ class _SearchListState extends State<SearchList> {
 
         setState(() {
           scholarships = results.map((scholarship) {
-            scholarship['image'] = scholarship['image'] != null
-                ? "${ApiConfig.announceUserUrl}/${scholarship['id']}/image"
-                : 'assets/images/scholarship_program.png'; // Keep image URL logic
+            scholarship['image'] = "${ApiConfig.announceUserUrl}/${scholarship['id']}/image";
+               
             scholarship['title'] = scholarship['title'] ?? 'No Title';
             scholarship['description'] =
                 scholarship['description'] ?? 'No Description Available';
@@ -319,7 +318,7 @@ class _SearchListState extends State<SearchList> {
                                 mainAxisSpacing:
                                     10.0, // Vertical space between items
                                 childAspectRatio:
-                                    0.7, // Adjust aspect ratio as needed
+                                    0.57, // Adjust aspect ratio as needed
                               ),
                               itemBuilder: (context, index) {
                                 final scholarship = scholarships[index];
@@ -415,7 +414,7 @@ class _SearchListState extends State<SearchList> {
                                         "", // Determine status based on dates if needed
                                     description: scholarship['description'] ??
                                         'No description',
-                                    isRow: false,
+                                    isManagement: false,
                                   ),
                                 );
                               },

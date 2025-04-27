@@ -11,7 +11,7 @@ class ScholarshipCard extends StatelessWidget {
   final String date;
   final String status;
   final String description;
-  final bool isRow;
+  final bool isManagement;
 
   ScholarshipCard({
     super.key,
@@ -21,7 +21,7 @@ class ScholarshipCard extends StatelessWidget {
     required this.date,
     required this.status,
     required this.description,
-    required this.isRow,
+    required this.isManagement,
   });
 
   final Map<String, Uint8List?> _imageCache = {};
@@ -65,7 +65,7 @@ class ScholarshipCard extends StatelessWidget {
             border: Border.all(color: Colors.grey.withOpacity(0.3)),
           ),
           padding: const EdgeInsets.all(14),
-          child: isRow
+          child: isManagement
               ? Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -214,13 +214,13 @@ class ScholarshipCard extends StatelessWidget {
                                 ? Image.memory(
                                     _imageCache[image]!,
                                     width: double.infinity,
-                                    height: 160,
+                                    height: isManagement == false ? 210 : 160,
                                     fit: BoxFit.cover,
                                   )
                                 : Image.asset(
                                     "assets/images/scholarship_program.png",
                                     width: double.infinity,
-                                    height: 160,
+                                    height: isManagement == false ? 210 : 160,
                                     fit: BoxFit.cover,
                                   ))
                             : FutureBuilder<Uint8List?>(
@@ -228,9 +228,9 @@ class ScholarshipCard extends StatelessWidget {
                                 builder: (context, snapshot) {
                                   if (snapshot.connectionState ==
                                       ConnectionState.waiting) {
-                                    return const SizedBox(
+                                    return SizedBox(
                                       width: double.infinity,
-                                      height: 160,
+                                      height: isManagement == false ? 210 : 160,
                                       child: Center(
                                           child: CircularProgressIndicator()),
                                     );
@@ -239,14 +239,14 @@ class ScholarshipCard extends StatelessWidget {
                                     return Image.asset(
                                       "assets/images/scholarship_program.png",
                                       width: double.infinity,
-                                      height: 160,
+                                      height: isManagement == false ? 210 : 160,
                                       fit: BoxFit.cover,
                                     );
                                   }
                                   return Image.memory(
                                     snapshot.data!,
                                     width: double.infinity,
-                                    height: 160,
+                                    height: isManagement == false ? 210 : 160,
                                     fit: BoxFit.cover,
                                   );
                                 },
