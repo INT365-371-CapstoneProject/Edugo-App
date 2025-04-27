@@ -663,7 +663,7 @@ class _ProviderManagementState extends State<ProviderManagement> {
                                   EdgeInsets.zero, // Remove default padding
                             ),
                             onSubmitted: (value) {
-                              // fetchScholarships(value);
+                              fetchScholarships(query: value);
                             },
                             textAlignVertical: TextAlignVertical
                                 .center, // Center hint text vertically
