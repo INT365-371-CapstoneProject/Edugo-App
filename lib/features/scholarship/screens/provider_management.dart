@@ -910,6 +910,8 @@ class _ProviderManagementState extends State<ProviderManagement> {
                                               ProviderDetail(
                                             initialData: existingData,
                                             isProvider: true,
+                                            previousRouteName:
+                                                'provider_management', // Pass separatel
                                           ),
                                           transitionsBuilder: (context,
                                               animation,

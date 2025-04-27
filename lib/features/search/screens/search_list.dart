@@ -366,6 +366,10 @@ class _SearchListState extends State<SearchList> {
                                           isProvider: false, // User is seeking
                                           previousRouteName:
                                               'search_list', // Pass separately
+                                          searchQuery: _searchController
+                                              .text, // Pass current search query
+                                          selectedFilters:
+                                              selectedFilters, // Pass current filters
                                         ),
                                         transitionsBuilder: (context, animation,
                                             secondaryAnimation, child) {

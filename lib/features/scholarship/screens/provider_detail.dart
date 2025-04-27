@@ -81,6 +81,8 @@ class _ProviderDetailState extends State<ProviderDetail> {
     // Store previousRouteName locally
     localPreviousRouteName =
         widget.previousRouteName ?? widget.initialData?['previousRouteName'];
+    localSearchQuery = widget.searchQuery;
+    localSelectedFilters = widget.selectedFilters;
   }
 
   void confirmDelete(BuildContext context) {
@@ -522,6 +524,26 @@ class _ProviderDetailState extends State<ProviderDetail> {
     );
   }
 
+  // Function to create a fade transition route
+  Route _createFadeRoute(Widget page) {
+    return PageRouteBuilder(
+      pageBuilder: (context, animation, secondaryAnimation) => page,
+      transitionsBuilder: (context, animation, secondaryAnimation, child) {
+        const begin = 0.0;
+        const end = 1.0;
+        const curve = Curves.easeOut;
+        var tween =
+            Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+        return FadeTransition(
+          opacity: animation.drive(tween),
+          child: child,
+        );
+      },
+      transitionDuration:
+          const Duration(milliseconds: 300), // Adjust duration as needed
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     if (isLoading) {
@@ -534,10 +556,10 @@ class _ProviderDetailState extends State<ProviderDetail> {
       onWillPop: () async {
         if (localPreviousRouteName == 'search_list') {
           Navigator.pushReplacement(
-            // Use pushReplacement to avoid stacking SearchList
             context,
-            MaterialPageRoute(
-              builder: (context) => SearchList(
+            _createFadeRoute(
+              // Use fade route
+              SearchList(
                 searchQuery: localSearchQuery ?? '', // Pass back the query
                 selectedFilters: localSelectedFilters, // Pass back the filters
               ),
@@ -546,17 +568,17 @@ class _ProviderDetailState extends State<ProviderDetail> {
         } else if (localPreviousRouteName == 'search_screen') {
           Navigator.pushReplacement(
             context,
-            MaterialPageRoute(builder: (context) => const SearchScreen()),
+            _createFadeRoute(const SearchScreen()), // Use fade route
           );
         } else if (widget.isProvider) {
           Navigator.pushReplacement(
             context,
-            MaterialPageRoute(builder: (context) => const ProviderManagement()),
+            _createFadeRoute(const ProviderManagement()), // Use fade route
           );
         } else {
           Navigator.pushReplacement(
             context,
-            MaterialPageRoute(builder: (context) => const HomeScreenApp()),
+            _createFadeRoute(const HomeScreenApp()), // Use fade route
           );
         }
         return false; // Prevent default back behavior
@@ -590,18 +612,14 @@ class _ProviderDetailState extends State<ProviderDetail> {
                               children: [
                                 GestureDetector(
                                   onTap: () {
-                                    // Navigator.pop(context,
-                                    //     'refresh'); // ส่งค่ากลับไป // กลับไปยังหน้าก่อนหน้านี้
-                                    // /------------------------------------------------------------------
-                                    Widget destination;
                                     print(localPreviousRouteName);
                                     if (localPreviousRouteName ==
                                         'search_list') {
                                       Navigator.pushReplacement(
-                                        // Use pushReplacement
                                         context,
-                                        MaterialPageRoute(
-                                          builder: (context) => SearchList(
+                                        _createFadeRoute(
+                                          // Use fade route
+                                          SearchList(
                                             searchQuery: localSearchQuery ??
                                                 '', // Pass back the query
                                             selectedFilters:
@@ -613,23 +631,20 @@ class _ProviderDetailState extends State<ProviderDetail> {
                                         'search_screen') {
                                       Navigator.pushReplacement(
                                         context,
-                                        MaterialPageRoute(
-                                            builder: (context) =>
-                                                const SearchScreen()),
+                                        _createFadeRoute(
+                                            const SearchScreen()), // Use fade route
                                       );
                                     } else if (widget.isProvider) {
                                       Navigator.pushReplacement(
                                         context,
-                                        MaterialPageRoute(
-                                            builder: (context) =>
-                                                const ProviderManagement()),
+                                        _createFadeRoute(
+                                            const ProviderManagement()), // Use fade route
                                       );
                                     } else {
                                       Navigator.pushReplacement(
                                         context,
-                                        MaterialPageRoute(
-                                            builder: (context) =>
-                                                const HomeScreenApp()),
+                                        _createFadeRoute(
+                                            const HomeScreenApp()), // Use fade route
                                       );
                                     }
                                   },

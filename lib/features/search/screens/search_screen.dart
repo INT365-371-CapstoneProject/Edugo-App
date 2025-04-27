@@ -727,7 +727,7 @@ class _SearchScreenState extends State<SearchScreen> {
                                         initialData: existingData,
                                         // Always treat navigation from home screen as non-provider view for edit/delete buttons
                                         isProvider: false,
-                                        previousRouteName: 'search'),
+                                        previousRouteName: 'search_screen'),
                                 transitionsBuilder: (context, animation,
                                     secondaryAnimation, child) {
                                   const begin = 0.0;
@@ -1232,11 +1232,22 @@ class _SearchScreenState extends State<SearchScreen> {
                                                       );
                                                     }
 
+                                                    String providerText =
+                                                        snapshot.data!;
+                                                    const int maxLength =
+                                                        20; // กำหนดความยาวสูงสุดที่นี่
+                                                    if (providerText.length >
+                                                        maxLength) {
+                                                      providerText =
+                                                          '${providerText.substring(0, maxLength)}...';
+                                                    }
+
                                                     return Text(
-                                                      snapshot.data!,
-                                                      maxLines: 1,
-                                                      overflow:
-                                                          TextOverflow.ellipsis,
+                                                      providerText, // ใช้ข้อความที่จำกัดความยาวแล้ว
+                                                      maxLines:
+                                                          1, // ยังคงไว้เผื่อกรณีข้อความสั้นแต่ขึ้นบรรทัดใหม่
+                                                      overflow: TextOverflow
+                                                          .ellipsis, // จัดการกรณีเกินแม้จะตัดแล้ว (ไม่น่าเกิด)
                                                       style: TextStyleService
                                                           .getDmSans(
                                                         fontSize: 9.415,
