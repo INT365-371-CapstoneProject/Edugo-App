@@ -755,7 +755,7 @@ class _ForgetPasswordState extends State<ForgetPassword> {
               ),
             ),
           ),
-          CustomBackButton(pageToNavigate: const Login()),
+          CustomBackButton(),
         ],
       ),
     );

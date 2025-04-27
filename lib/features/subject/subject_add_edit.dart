@@ -298,7 +298,7 @@ class _SubjectAddEditState extends State<SubjectAddEdit> {
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         showSuccessDialog(context, false);
-        Navigator.pushReplacement(
+        Navigator.push(
           context,
           PageRouteBuilder(
             pageBuilder: (context, animation, secondaryAnimation) =>
@@ -415,7 +415,7 @@ class _SubjectAddEditState extends State<SubjectAddEdit> {
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         showSuccessDialog(context, true);
-        Navigator.pushReplacement(
+        Navigator.push(
           context,
           PageRouteBuilder(
             pageBuilder: (context, animation, secondaryAnimation) =>
@@ -554,7 +554,7 @@ class _SubjectAddEditState extends State<SubjectAddEdit> {
                           child: IconButton(
                             icon: Icon(Icons.close, color: Color(0xFFED4B9E)),
                             onPressed: () {
-                              Navigator.pushReplacement(
+                              Navigator.push(
                                 context,
                                 PageRouteBuilder(
                                   pageBuilder: (context, animation,

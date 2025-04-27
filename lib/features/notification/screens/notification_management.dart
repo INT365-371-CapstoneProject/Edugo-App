@@ -117,7 +117,7 @@ class _NotificationListState extends State<NotificationList> {
                   child: GestureDetector(
                     onTap: () {
                       Navigator.pop(context);
-                      // Navigator.pushReplacement(
+                      // Navigator.push(
                       //   context,
                       //   PageRouteBuilder(
                       //     pageBuilder:

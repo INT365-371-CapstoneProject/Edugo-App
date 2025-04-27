@@ -516,11 +516,37 @@ class _PersonalProfileState extends State<PersonalProfile> {
                           if (profile != null) {
                             Navigator.push(
                               context,
-                              MaterialPageRoute(
-                                builder: (context) =>
+                              PageRouteBuilder(
+                                transitionDuration: Duration(milliseconds: 350),
+                                reverseTransitionDuration:
+                                    Duration(milliseconds: 350),
+                                pageBuilder: (context, animation,
+                                        secondaryAnimation) =>
                                     PersonalProfileEdit(profileData: profile!),
+                                transitionsBuilder: (context, animation,
+                                    secondaryAnimation, child) {
+                                  // หน้าใหม่เลื่อนจากซ้าย (Slide In)
+                                  var begin =
+                                      Offset(1.0, 0.0); // เริ่มต้นจากขวา
+                                  var end =
+                                      Offset.zero; // ปลายทางที่ตำแหน่งเดิม
+                                  var curve = Curves.easeInOut;
+                                  var tween = Tween(begin: begin, end: end)
+                                      .chain(CurveTween(curve: curve));
+                                  var offsetAnimation = animation.drive(tween);
+
+                                  return SlideTransition(
+                                      position: offsetAnimation, child: child);
+                                },
                               ),
                             );
+                            // Navigator.push(
+                            //   context,
+                            //   MaterialPageRoute(
+                            //     builder: (context) =>
+                            //         PersonalProfileEdit(profileData: profile!),
+                            //   ),
+                            // );
                           } else {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
@@ -545,37 +571,66 @@ class _PersonalProfileState extends State<PersonalProfile> {
                             // Navigate to Change Password Screen
                             Navigator.push(
                               context,
-                              MaterialPageRoute(
-                                builder: (context) =>
-                                    const ChangePasswordScreen(),
+                              PageRouteBuilder(
+                                transitionDuration: Duration(milliseconds: 350),
+                                reverseTransitionDuration:
+                                    Duration(milliseconds: 350),
+                                pageBuilder:
+                                    (context, animation, secondaryAnimation) =>
+                                        const ChangePasswordScreen(),
+                                transitionsBuilder: (context, animation,
+                                    secondaryAnimation, child) {
+                                  // หน้าใหม่เลื่อนจากซ้าย (Slide In)
+                                  var begin =
+                                      Offset(1.0, 0.0); // เริ่มต้นจากขวา
+                                  var end =
+                                      Offset.zero; // ปลายทางที่ตำแหน่งเดิม
+                                  var curve = Curves.easeInOut;
+                                  var tween = Tween(begin: begin, end: end)
+                                      .chain(CurveTween(curve: curve));
+                                  var offsetAnimation = animation.drive(tween);
+
+                                  return SlideTransition(
+                                      position: offsetAnimation, child: child);
+                                },
                               ),
                             );
+                            // Navigator.push(
+                            //   context,
+                            //   MaterialPageRoute(
+                            //     builder: (context) =>
+                            //         const ChangePasswordScreen(),
+                            //   ),
+                            // );
                           }),
                       _buildProfileOption(
                           icon: Icons.bookmark,
                           label: "Bookmark",
                           onTap: () {
-                            Navigator.pushReplacement(
+                            Navigator.push(
                               context,
                               PageRouteBuilder(
+                                transitionDuration: Duration(milliseconds: 350),
+                                reverseTransitionDuration:
+                                    Duration(milliseconds: 350),
                                 pageBuilder:
                                     (context, animation, secondaryAnimation) =>
                                         BookmarkList(id: profile!['id']),
                                 transitionsBuilder: (context, animation,
                                     secondaryAnimation, child) {
-                                  const begin = 0.0;
-                                  const end = 1.0;
-                                  const curve = Curves.easeOut;
-
+                                  // หน้าใหม่เลื่อนจากซ้าย (Slide In)
+                                  var begin =
+                                      Offset(1.0, 0.0); // เริ่มต้นจากขวา
+                                  var end =
+                                      Offset.zero; // ปลายทางที่ตำแหน่งเดิม
+                                  var curve = Curves.easeInOut;
                                   var tween = Tween(begin: begin, end: end)
                                       .chain(CurveTween(curve: curve));
-                                  return FadeTransition(
-                                    opacity: animation.drive(tween),
-                                    child: child,
-                                  );
+                                  var offsetAnimation = animation.drive(tween);
+
+                                  return SlideTransition(
+                                      position: offsetAnimation, child: child);
                                 },
-                                transitionDuration:
-                                    const Duration(milliseconds: 300),
                               ),
                             );
                           }),
@@ -583,7 +638,7 @@ class _PersonalProfileState extends State<PersonalProfile> {
                       //     icon: Icons.notifications,
                       //     label: "Notification",
                       //     onTap: () {
-                      //       Navigator.pushReplacement(
+                      //       Navigator.push(
                       //         context,
                       //         PageRouteBuilder(
                       //           pageBuilder:
@@ -611,41 +666,93 @@ class _PersonalProfileState extends State<PersonalProfile> {
                           icon: Icons.settings,
                           label: "Manage Account",
                           onTap: () {
-                            Navigator.pushReplacement(
+                            Navigator.push(
                               context,
                               PageRouteBuilder(
+                                transitionDuration: Duration(milliseconds: 350),
+                                reverseTransitionDuration:
+                                    Duration(milliseconds: 350),
                                 pageBuilder:
                                     (context, animation, secondaryAnimation) =>
                                         ManageAccount(id: profile!['id']),
                                 transitionsBuilder: (context, animation,
                                     secondaryAnimation, child) {
-                                  const begin = 0.0;
-                                  const end = 1.0;
-                                  const curve = Curves.easeOut;
-
+                                  // หน้าใหม่เลื่อนจากซ้าย (Slide In)
+                                  var begin =
+                                      Offset(1.0, 0.0); // เริ่มต้นจากขวา
+                                  var end =
+                                      Offset.zero; // ปลายทางที่ตำแหน่งเดิม
+                                  var curve = Curves.easeInOut;
                                   var tween = Tween(begin: begin, end: end)
                                       .chain(CurveTween(curve: curve));
-                                  return FadeTransition(
-                                    opacity: animation.drive(tween),
-                                    child: child,
-                                  );
+                                  var offsetAnimation = animation.drive(tween);
+
+                                  return SlideTransition(
+                                      position: offsetAnimation, child: child);
                                 },
-                                transitionDuration:
-                                    const Duration(milliseconds: 300),
                               ),
                             );
+                            // Navigator.push(
+                            //   context,
+                            //   PageRouteBuilder(
+                            //     pageBuilder:
+                            //         (context, animation, secondaryAnimation) =>
+                            //             ManageAccount(id: profile!['id']),
+                            //     transitionsBuilder: (context, animation,
+                            //         secondaryAnimation, child) {
+                            //       const begin = 0.0;
+                            //       const end = 1.0;
+                            //       const curve = Curves.easeOut;
+
+                            //       var tween = Tween(begin: begin, end: end)
+                            //           .chain(CurveTween(curve: curve));
+                            //       return FadeTransition(
+                            //         opacity: animation.drive(tween),
+                            //         child: child,
+                            //       );
+                            //     },
+                            //     transitionDuration:
+                            //         const Duration(milliseconds: 300),
+                            //   ),
+                            // );
                           }),
                       _buildProfileOption(
                           icon: Icons.info,
                           label: "Help Center",
                           onTap: () {
-                            // Navigate to Change Password Screen
                             Navigator.push(
                               context,
-                              MaterialPageRoute(
-                                builder: (context) => const HelpCenterScreen(),
+                              PageRouteBuilder(
+                                transitionDuration: Duration(milliseconds: 350),
+                                reverseTransitionDuration:
+                                    Duration(milliseconds: 350),
+                                pageBuilder:
+                                    (context, animation, secondaryAnimation) =>
+                                        HelpCenterScreen(),
+                                transitionsBuilder: (context, animation,
+                                    secondaryAnimation, child) {
+                                  // หน้าใหม่เลื่อนจากซ้าย (Slide In)
+                                  var begin =
+                                      Offset(1.0, 0.0); // เริ่มต้นจากขวา
+                                  var end =
+                                      Offset.zero; // ปลายทางที่ตำแหน่งเดิม
+                                  var curve = Curves.easeInOut;
+                                  var tween = Tween(begin: begin, end: end)
+                                      .chain(CurveTween(curve: curve));
+                                  var offsetAnimation = animation.drive(tween);
+
+                                  return SlideTransition(
+                                      position: offsetAnimation, child: child);
+                                },
                               ),
                             );
+                            // Navigate to Change Password Screen
+                            // Navigator.push(
+                            //   context,
+                            //   MaterialPageRoute(
+                            //     builder: (context) => const HelpCenterScreen(),
+                            //   ),
+                            // );
                           }),
                       Padding(
                         padding: const EdgeInsets.symmetric(
@@ -767,12 +874,28 @@ class _PersonalProfileState extends State<PersonalProfile> {
       if (mounted) {
         Navigator.pushAndRemoveUntil(
           context,
-          MaterialPageRoute(builder: (context) => const Login()),
-          (route) => false,
+          PageRouteBuilder(
+            pageBuilder: (context, animation, secondaryAnimation) =>
+                const Login(),
+            transitionsBuilder:
+                (context, animation, secondaryAnimation, child) {
+              // Use FadeTransition for the animation
+              return FadeTransition(opacity: animation, child: child);
+            },
+            transitionDuration:
+                const Duration(milliseconds: 300), // Adjust duration as needed
+          ),
+          (route) => false, // Remove all previous routes
         );
       }
     } catch (e) {
       print('Error during logout: $e');
+      // Optionally show an error message to the user
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Logout failed: ${e.toString()}')),
+        );
+      }
     }
   }
 }

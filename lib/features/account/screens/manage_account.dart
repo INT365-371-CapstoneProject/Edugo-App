@@ -316,7 +316,7 @@ class _ManageAccountState extends State<ManageAccount> {
     Future.delayed(const Duration(seconds: 1), () {
       if (context.mounted) {
         Navigator.of(context).pop(); // ปิด dialog
-        Navigator.pushReplacement(
+        Navigator.push(
           context,
           PageRouteBuilder(
             pageBuilder: (context, animation, secondaryAnimation) => page,
@@ -392,24 +392,25 @@ class _ManageAccountState extends State<ManageAccount> {
               children: [
                 GestureDetector(
                   onTap: () {
-                    Navigator.pushReplacement(
-                      context,
-                      PageRouteBuilder(
-                        pageBuilder: (context, animation, secondaryAnimation) =>
-                            const PersonalProfile(),
-                        transitionsBuilder:
-                            (context, animation, secondaryAnimation, child) {
-                          const begin = 0.0;
-                          const end = 1.0;
-                          const curve = Curves.easeOut;
-                          var tween = Tween(begin: begin, end: end)
-                              .chain(CurveTween(curve: curve));
-                          return FadeTransition(
-                              opacity: animation.drive(tween), child: child);
-                        },
-                        transitionDuration: const Duration(milliseconds: 300),
-                      ),
-                    );
+                    Navigator.pop(context);
+                    // Navigator.push(
+                    //   context,
+                    //   PageRouteBuilder(
+                    //     pageBuilder: (context, animation, secondaryAnimation) =>
+                    //         const PersonalProfile(),
+                    //     transitionsBuilder:
+                    //         (context, animation, secondaryAnimation, child) {
+                    //       const begin = 0.0;
+                    //       const end = 1.0;
+                    //       const curve = Curves.easeOut;
+                    //       var tween = Tween(begin: begin, end: end)
+                    //           .chain(CurveTween(curve: curve));
+                    //       return FadeTransition(
+                    //           opacity: animation.drive(tween), child: child);
+                    //     },
+                    //     transitionDuration: const Duration(milliseconds: 300),
+                    //   ),
+                    // );
                   },
                   child: CircleAvatar(
                     radius: 20,

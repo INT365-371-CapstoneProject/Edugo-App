@@ -715,7 +715,7 @@ class _SearchScreenState extends State<SearchScreen> {
 
                             // Add the cached image to existingData
                             existingData['cachedImage'] = cachedImage;
-                            Navigator.pushReplacement(
+                            Navigator.push(
                               context,
                               PageRouteBuilder(
                                 pageBuilder: (context, animation,
@@ -1029,7 +1029,7 @@ class _SearchScreenState extends State<SearchScreen> {
 
                           // Add the cached image to existingData
                           existingData['cachedImage'] = cachedImage;
-                          Navigator.pushReplacement(
+                          Navigator.push(
                             context,
                             PageRouteBuilder(
                               pageBuilder:

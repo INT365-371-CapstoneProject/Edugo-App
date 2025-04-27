@@ -92,7 +92,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
           ? const IntroScreen() // แก้ไขจาก IntroPage เป็น IntroScreen
           : widget.isLoggedIn
               ? const HomeScreenApp() // เปลี่ยนจาก SplashScreen ไป HomeScreenApp โดยตรงหลัง login
-              : const WelcomeUserPage(),
+              : const Login(),
     );
   }
 }

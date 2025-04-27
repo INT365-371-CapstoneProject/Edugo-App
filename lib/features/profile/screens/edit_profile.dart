@@ -49,6 +49,11 @@ class _PersonalProfileEditState extends State<PersonalProfileEdit> {
   List<String> countries = [];
   String? selectedCountry;
 
+  // Map to hold FocusNodes for each text field
+  final Map<String, FocusNode> _focusNodes = {};
+  // Track the currently focused field name
+  String? _currentlyFocusedField;
+
   String? validateField(String fieldName, String? value) {
     if (value == null || value.isEmpty) {
       if (fieldName == 'phone' ||
@@ -144,6 +149,26 @@ class _PersonalProfileEditState extends State<PersonalProfileEdit> {
       'phone_person':
           TextEditingController(text: widget.profileData['phone_person']),
     };
+
+    // Initialize FocusNodes and add listeners
+    final allControllers = {...companyControllers, ...personalControllers};
+    allControllers.forEach((fieldName, controller) {
+      // Skip non-editable fields like 'role' if necessary
+      if (fieldName != 'role' && fieldName != 'country') {
+        final focusNode = FocusNode();
+        focusNode.addListener(() {
+          setState(() {
+            if (focusNode.hasFocus) {
+              _currentlyFocusedField = fieldName;
+            } else if (_currentlyFocusedField == fieldName) {
+              // Clear focus only if this specific field lost focus
+              _currentlyFocusedField = null;
+            }
+          });
+        });
+        _focusNodes[fieldName] = focusNode;
+      }
+    });
   }
 
   Future<void> fetchCountryData() async {
@@ -344,6 +369,11 @@ class _PersonalProfileEditState extends State<PersonalProfileEdit> {
     personalControllers.forEach((key, controller) {
       controller.dispose();
     });
+    // Dispose FocusNodes
+    _focusNodes.forEach((key, node) {
+      node.removeListener(() {}); // Remove listener first
+      node.dispose();
+    });
     super.dispose();
   }
 
@@ -517,16 +547,16 @@ class _PersonalProfileEditState extends State<PersonalProfileEdit> {
                         isEditing = !isEditing;
                       });
                     }),
+                    SizedBox(height: 20),
+                    Container(
+                        padding: const EdgeInsets.only(bottom: 0.0),
+                        decoration: BoxDecoration(
+                          border: Border(
+                            bottom: BorderSide(color: Color(0xFFCBD5E0)),
+                          ),
+                        )),
+                    SizedBox(height: 32),
                   ],
-                  SizedBox(height: 20),
-                  Container(
-                      padding: const EdgeInsets.only(bottom: 0.0),
-                      decoration: BoxDecoration(
-                        border: Border(
-                          bottom: BorderSide(color: Color(0xFFCBD5E0)),
-                        ),
-                      )),
-                  SizedBox(height: 32),
                   _buildSection(
                       "Personal Information",
                       [
@@ -760,23 +790,35 @@ class _PersonalProfileEditState extends State<PersonalProfileEdit> {
                       ),
                   ],
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  widget.profileData['company_name'],
-                  style: GoogleFonts.dmSans(
-                    fontSize: 20,
-                    color: Color(0xFF000000),
-                    fontWeight: FontWeight.w500,
+                if (!isEditing) ...[
+                  const SizedBox(height: 8),
+                  widget.profileData['role'] == 'provider'
+                      ? Text(
+                          widget.profileData['company_name'],
+                          style: GoogleFonts.dmSans(
+                            fontSize: 20,
+                            color: Color(0xFF000000),
+                            fontWeight: FontWeight.w500,
+                          ),
+                        )
+                      : Text(
+                          "${widget.profileData['first_name']} ${widget.profileData['last_name']}",
+                          style: GoogleFonts.dmSans(
+                            fontSize: 20,
+                            color: Color(0xFF000000),
+                            fontWeight: FontWeight.w500,
+                          ),
+                          maxLines: 1,
+                        ),
+                  Text(
+                    '@${widget.profileData['username']}',
+                    style: GoogleFonts.dmSans(
+                      fontSize: 12,
+                      color: Color(0xFF94A2B8),
+                      fontWeight: FontWeight.w400,
+                    ),
                   ),
-                ),
-                Text(
-                  '@${widget.profileData['username']}',
-                  style: GoogleFonts.dmSans(
-                    fontSize: 12,
-                    color: Color(0xFF94A2B8),
-                    fontWeight: FontWeight.w400,
-                  ),
-                ),
+                ],
               ],
             ),
           ),
@@ -871,6 +913,8 @@ class _PersonalProfileEditState extends State<PersonalProfileEdit> {
 
   Widget _buildProfileRow(String label, String fieldName, bool isEditing) {
     bool isCountryField = fieldName == 'country';
+    // Get the specific FocusNode for this field, if it exists
+    final focusNode = _focusNodes[fieldName];
 
     return Padding(
       padding: EdgeInsets.zero,
@@ -888,6 +932,7 @@ class _PersonalProfileEditState extends State<PersonalProfileEdit> {
           isEditing
               ? isCountryField
                   ? DropdownButtonFormField2<String>(
+                      // ... existing dropdown code ...
                       isExpanded: true,
                       value: selectedCountry ??
                           companyControllers['country']?.text,
@@ -910,16 +955,15 @@ class _PersonalProfileEditState extends State<PersonalProfileEdit> {
                             vertical: 10, horizontal: 12),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(9.51), // ขอบมน
+                          borderSide: BorderSide.none, // No border needed here
                         ),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(9.51),
-                          borderSide: BorderSide(
-                              color: Color(0xFFECF0F6)), // หรือปรับสีตามต้องการ
+                          borderSide: BorderSide.none, // No border needed here
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(9.51),
-                          borderSide: BorderSide(
-                              color: Color(0xFFECF0F6)), // หรือสีเมื่อโฟกัส
+                          borderSide: BorderSide.none, // No border needed here
                         ),
                       ),
                       dropdownStyleData: DropdownStyleData(
@@ -928,90 +972,119 @@ class _PersonalProfileEditState extends State<PersonalProfileEdit> {
                         width: MediaQuery.of(context).size.width * 0.55,
                       ),
                     )
-                  : Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        StatefulBuilder(
-                          builder: (context, setStateField) {
-                            final controller =
-                                companyControllers.containsKey(fieldName)
-                                    ? companyControllers[fieldName]
-                                    : personalControllers[fieldName];
+                  : StatefulBuilder(
+                      // Keep StatefulBuilder for immediate validation feedback
+                      builder: (context, setStateField) {
+                        final controller =
+                            companyControllers.containsKey(fieldName)
+                                ? companyControllers[fieldName]
+                                : personalControllers[fieldName];
 
-                            final error =
-                                validateField(fieldName, controller?.text);
+                        final error =
+                            validateField(fieldName, controller?.text);
+                        final bool isFocused =
+                            _currentlyFocusedField == fieldName;
 
-                            return Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                SizedBox(
-                                  height: 50,
-                                  child: TextField(
-                                    controller: controller,
-                                    style: TextStyleService.getDmSans(
-                                      fontSize: 14.0,
-                                      fontWeight: FontWeight.w400,
-                                      color: Color(0xFF000000),
-                                    ),
-                                    decoration: InputDecoration(
-                                      filled: true,
-                                      fillColor: Color(0xFFECF0F6),
-                                      hintStyle: GoogleFonts.dmSans(
-                                        fontSize: 14,
-                                        color: Color(0xFF000000),
-                                        fontWeight: FontWeight.w400,
-                                      ),
-                                      border: OutlineInputBorder(
-                                        borderRadius:
-                                            BorderRadius.circular(9.51),
-                                        borderSide: BorderSide.none,
-                                      ),
-                                      enabledBorder: OutlineInputBorder(
-                                        borderRadius:
-                                            BorderRadius.circular(9.51),
-                                        borderSide: BorderSide(
-                                          color: error != null
-                                              ? Colors.red
-                                              : Colors.transparent,
-                                        ),
-                                      ),
-                                      focusedBorder: OutlineInputBorder(
-                                        borderRadius:
-                                            BorderRadius.circular(9.51),
-                                        borderSide: BorderSide(
-                                          color: error != null
-                                              ? Colors.red
-                                              : Color(0xFF4C7EFF),
-                                          width: 1.5,
-                                        ),
-                                      ),
-                                      contentPadding: EdgeInsets.symmetric(
-                                          horizontal: 16.0),
-                                    ),
-                                    onChanged: (value) {
-                                      setStateField(() {});
-                                    },
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Container(
+                              // Wrap TextField in Container for shadow
+                              decoration: BoxDecoration(
+                                color: Color(0xFFECF0F6), // Background color
+                                borderRadius: BorderRadius.circular(
+                                    15), // Rounded corners like login
+                                boxShadow:
+                                    isFocused // Apply shadow based on focus and error state
+                                        ? [
+                                            BoxShadow(
+                                              color: error != null
+                                                  ? Color.fromRGBO(
+                                                      237, 75, 158, 0.15)
+                                                  : Color.fromRGBO(
+                                                      108, 99, 255, 0.15),
+                                              blurRadius: 0,
+                                              spreadRadius: 6,
+                                              offset: Offset(0, 0),
+                                            ),
+                                          ]
+                                        : [], // No shadow if not focused
+                              ),
+                              child: TextField(
+                                controller: controller,
+                                focusNode: focusNode, // Assign the FocusNode
+                                style: TextStyleService.getDmSans(
+                                  fontSize: 14.0,
+                                  fontWeight: FontWeight.w400,
+                                  color: Color(0xFF000000),
+                                ),
+                                decoration: InputDecoration(
+                                  // Remove fill color from TextField, container handles it
+                                  // filled: true,
+                                  // fillColor: Color(0xFFECF0F6),
+                                  hintStyle: GoogleFonts.dmSans(
+                                    fontSize: 14,
+                                    color: Color(0xFF000000).withOpacity(
+                                        0.5), // Match login hint style opacity
+                                    fontWeight: FontWeight.w400,
+                                  ),
+                                  // Use InputBorder.none for default states, rely on container
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(
+                                        9.51), // Keep inner radius
+                                    borderSide: BorderSide
+                                        .none, // No border needed here
+                                  ),
+                                  // Show red border only when there is an error
+                                  enabledBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(9.51),
+                                    borderSide: error != null
+                                        ? const BorderSide(
+                                            color: Colors.red,
+                                            width: 1.5) // Error border
+                                        : BorderSide
+                                            .none, // No border otherwise
+                                  ),
+                                  // Show red border on focus only when there is an error
+                                  focusedBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(9.51),
+                                    borderSide: error != null
+                                        ? const BorderSide(
+                                            color: Colors.red,
+                                            width: 1.5) // Error border
+                                        : BorderSide
+                                            .none, // No border otherwise (shadow indicates focus)
+                                  ),
+                                  contentPadding: EdgeInsets.symmetric(
+                                      horizontal: 20,
+                                      vertical: 16), // Match login padding
+                                ),
+                                onChanged: (value) {
+                                  // Trigger validation update within the StatefulBuilder
+                                  setStateField(() {});
+                                  // Also trigger main state update if needed for other logic
+                                  // setState(() {});
+                                },
+                              ),
+                            ),
+                            if (error != null)
+                              Padding(
+                                padding:
+                                    const EdgeInsets.only(left: 12, top: 4),
+                                child: Text(
+                                  error,
+                                  style: TextStyle(
+                                    color: Colors.red,
+                                    fontSize: 12,
                                   ),
                                 ),
-                                if (error != null)
-                                  Padding(
-                                    padding:
-                                        const EdgeInsets.only(left: 12, top: 4),
-                                    child: Text(
-                                      error,
-                                      style: TextStyle(
-                                        color: Colors.red,
-                                        fontSize: 12,
-                                      ),
-                                    ),
-                                  ),
-                              ],
-                            );
-                          },
-                        ),
-                      ],
+                              ),
+                          ],
+                        );
+                      },
                     )
               : Container(
+                  // Non-editing state
                   width: double.infinity,
                   height: 50,
                   padding:

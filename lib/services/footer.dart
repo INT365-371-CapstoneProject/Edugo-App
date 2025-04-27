@@ -98,7 +98,7 @@ class _FooterNavState extends State<FooterNav> {
   }
 
   void _navigateTo(BuildContext context, Widget page) {
-    Navigator.pushReplacement(
+    Navigator.push(
       context,
       PageRouteBuilder(
         pageBuilder: (context, animation, secondaryAnimation) => page,
@@ -114,7 +114,7 @@ class _FooterNavState extends State<FooterNav> {
             child: child,
           );
         },
-        transitionDuration: const Duration(milliseconds: 300),
+        transitionDuration: const Duration(milliseconds: 350),
       ),
     );
   }

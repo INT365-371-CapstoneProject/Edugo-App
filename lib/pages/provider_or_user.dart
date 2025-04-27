@@ -71,7 +71,7 @@ class ProviderOrUser extends StatelessWidget {
                     imagePath: "assets/images/provider.svg",
                     borderColor: Color(0xFF355FFF),
                     onTap: () {
-                      Navigator.pushReplacement(
+                      Navigator.push(
                         context,
                         PageRouteBuilder(
                           transitionDuration: Duration(milliseconds: 350),
@@ -110,30 +110,30 @@ class ProviderOrUser extends StatelessWidget {
                     imagePath: "assets/images/user.svg",
                     borderColor: Color(0xFF355FFF),
                     onTap: () {
-                      // Navigator.pushReplacement(
-                      //   context,
-                      //   PageRouteBuilder(
-                      //     transitionDuration: Duration(milliseconds: 350),
-                      //     reverseTransitionDuration:
-                      //         Duration(milliseconds: 350),
-                      //     pageBuilder:
-                      //         (context, animation, secondaryAnimation) =>
-                      //             WelcomeUserPage(isUser: true),
-                      //     transitionsBuilder:
-                      //         (context, animation, secondaryAnimation, child) {
-                      //       // หน้าใหม่เลื่อนจากซ้าย (Slide In)
-                      //       var begin = Offset(1.0, 0.0); // เริ่มต้นจากขวา
-                      //       var end = Offset.zero; // ปลายทางที่ตำแหน่งเดิม
-                      //       var curve = Curves.easeInOut;
-                      //       var tween = Tween(begin: begin, end: end)
-                      //           .chain(CurveTween(curve: curve));
-                      //       var offsetAnimation = animation.drive(tween);
+                      Navigator.push(
+                        context,
+                        PageRouteBuilder(
+                          transitionDuration: Duration(milliseconds: 350),
+                          reverseTransitionDuration:
+                              Duration(milliseconds: 350),
+                          pageBuilder:
+                              (context, animation, secondaryAnimation) =>
+                                  WelcomeUserPage(isUser: true),
+                          transitionsBuilder:
+                              (context, animation, secondaryAnimation, child) {
+                            // หน้าใหม่เลื่อนจากซ้าย (Slide In)
+                            var begin = Offset(1.0, 0.0); // เริ่มต้นจากขวา
+                            var end = Offset.zero; // ปลายทางที่ตำแหน่งเดิม
+                            var curve = Curves.easeInOut;
+                            var tween = Tween(begin: begin, end: end)
+                                .chain(CurveTween(curve: curve));
+                            var offsetAnimation = animation.drive(tween);
 
-                      //       return SlideTransition(
-                      //           position: offsetAnimation, child: child);
-                      //     },
-                      //   ),
-                      // );
+                            return SlideTransition(
+                                position: offsetAnimation, child: child);
+                          },
+                        ),
+                      );
                     },
                     rowPadding: const EdgeInsets.symmetric(horizontal: 21.0),
                     spacingWidget: const SizedBox(width: 19),

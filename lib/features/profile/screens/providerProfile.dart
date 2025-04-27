@@ -252,7 +252,7 @@ class _ProviderProfileState extends State<ProviderProfile> {
                                           'id': id,
                                         };
 
-                                        Navigator.pushReplacement(
+                                        Navigator.push(
                                           context,
                                           PageRouteBuilder(
                                             pageBuilder: (context, animation,
@@ -423,7 +423,7 @@ class _ProviderProfileState extends State<ProviderProfile> {
                             onTap: () async {
                               final existingData = {'id': scholarship['id']};
 
-                              Navigator.pushReplacement(
+                              Navigator.push(
                                 context,
                                 PageRouteBuilder(
                                   pageBuilder: (context, animation,

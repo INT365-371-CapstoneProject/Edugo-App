@@ -99,7 +99,7 @@ class _WelcomeUserPageState extends State<WelcomeUserPage> {
                           height: 48,
                           child: OutlinedButton(
                             onPressed: () {
-                              Navigator.pushReplacement(
+                              Navigator.push(
                                 context,
                                 PageRouteBuilder(
                                   transitionDuration: Duration(
@@ -148,7 +148,7 @@ class _WelcomeUserPageState extends State<WelcomeUserPage> {
                           child: OutlinedButton(
                             onPressed: () {
                               if (widget.isProvider) {
-                                Navigator.pushReplacement(
+                                Navigator.push(
                                   context,
                                   PageRouteBuilder(
                                     transitionDuration: Duration(
@@ -171,7 +171,7 @@ class _WelcomeUserPageState extends State<WelcomeUserPage> {
                                   ),
                                 );
                               } else {
-                                Navigator.pushReplacement(
+                                Navigator.push(
                                   context,
                                   PageRouteBuilder(
                                     transitionDuration: Duration(
@@ -224,7 +224,7 @@ class _WelcomeUserPageState extends State<WelcomeUserPage> {
               ],
             ),
           ),
-          CustomBackButton(pageToNavigate: const ProviderOrUser()),
+          CustomBackButton(),
         ],
       ),
     );

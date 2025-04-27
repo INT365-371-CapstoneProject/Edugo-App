@@ -188,7 +188,7 @@ class _HomeScreenAppState extends State<HomeScreenApp> {
       // ถ้า token ไม่ถูกต้องหรือหมดอายุ ให้ลบ token และนำไปหน้า login
       await authService.removeToken();
       if (mounted) {
-        Navigator.pushReplacement(
+        Navigator.push(
           context,
           MaterialPageRoute(builder: (context) => const Login()),
         );
@@ -564,7 +564,7 @@ class _HomeScreenAppState extends State<HomeScreenApp> {
                           children: [
                             GestureDetector(
                               onTap: () {
-                                Navigator.pushReplacement(
+                                Navigator.push(
                                   context,
                                   PageRouteBuilder(
                                     pageBuilder: (context, animation,
@@ -969,7 +969,7 @@ class _HomeScreenAppState extends State<HomeScreenApp> {
 
                             // Add the cached image to existingData
                             existingData['cachedImage'] = cachedImage;
-                            Navigator.pushReplacement(
+                            Navigator.push(
                               context,
                               PageRouteBuilder(
                                 pageBuilder:

@@ -867,27 +867,59 @@ class _LoginState extends State<Login> {
                                   Navigator.push(
                                     context,
                                     PageRouteBuilder(
+                                      transitionDuration:
+                                          Duration(milliseconds: 350),
+                                      reverseTransitionDuration:
+                                          Duration(milliseconds: 350),
                                       pageBuilder: (context, animation,
                                               secondaryAnimation) =>
                                           const ForgetPassword(),
                                       transitionsBuilder: (context, animation,
                                           secondaryAnimation, child) {
-                                        const begin = 0.0;
-                                        const end = 1.0;
-                                        const curve = Curves.easeOut;
-
+                                        // หน้าใหม่เลื่อนจากซ้าย (Slide In)
+                                        var begin =
+                                            Offset(1.0, 0.0); // เริ่มต้นจากขวา
+                                        var end = Offset
+                                            .zero; // ปลายทางที่ตำแหน่งเดิม
+                                        var curve = Curves.easeInOut;
                                         var tween = Tween(
                                                 begin: begin, end: end)
                                             .chain(CurveTween(curve: curve));
-                                        return FadeTransition(
-                                          opacity: animation.drive(tween),
-                                          child: child,
-                                        );
+                                        var offsetAnimation =
+                                            animation.drive(tween);
+
+                                        return SlideTransition(
+                                            position: offsetAnimation,
+                                            child: child);
                                       },
-                                      transitionDuration:
-                                          const Duration(milliseconds: 300),
                                     ),
                                   );
+                                  // Navigator.push(
+                                  //   context,
+                                  //   PageRouteBuilder(
+                                  //     transitionDuration:
+                                  //         Duration(milliseconds: 350),
+                                  //     reverseTransitionDuration:
+                                  //         Duration(milliseconds: 350),
+                                  //     pageBuilder: (context, animation,
+                                  //             secondaryAnimation) =>
+                                  //         const ForgetPassword(),
+                                  //     transitionsBuilder: (context, animation,
+                                  //         secondaryAnimation, child) {
+                                  //       const begin = 0.0;
+                                  //       const end = 1.0;
+                                  //       const curve = Curves.easeOut;
+
+                                  //       var tween = Tween(
+                                  //               begin: begin, end: end)
+                                  //           .chain(CurveTween(curve: curve));
+                                  //       return FadeTransition(
+                                  //         opacity: animation.drive(tween),
+                                  //         child: child,
+                                  //       );
+                                  //     },
+                                  //   ),
+                                  // );
                                 },
                                 child: Text(
                                   "Forgot Password?",
@@ -960,9 +992,32 @@ class _LoginState extends State<Login> {
                                   onTap: () {
                                     Navigator.push(
                                       context,
-                                      MaterialPageRoute(
-                                        builder: (context) =>
-                                            const Register(isUser: true),
+                                      PageRouteBuilder(
+                                        transitionDuration:
+                                            Duration(milliseconds: 350),
+                                        reverseTransitionDuration:
+                                            Duration(milliseconds: 350),
+                                        pageBuilder: (context, animation,
+                                                secondaryAnimation) =>
+                                            Register(isUser: true),
+                                        transitionsBuilder: (context, animation,
+                                            secondaryAnimation, child) {
+                                          // หน้าใหม่เลื่อนจากซ้าย (Slide In)
+                                          var begin = Offset(
+                                              1.0, 0.0); // เริ่มต้นจากขวา
+                                          var end = Offset
+                                              .zero; // ปลายทางที่ตำแหน่งเดิม
+                                          var curve = Curves.easeInOut;
+                                          var tween = Tween(
+                                                  begin: begin, end: end)
+                                              .chain(CurveTween(curve: curve));
+                                          var offsetAnimation =
+                                              animation.drive(tween);
+
+                                          return SlideTransition(
+                                              position: offsetAnimation,
+                                              child: child);
+                                        },
                                       ),
                                     );
                                   },
@@ -997,14 +1052,37 @@ class _LoginState extends State<Login> {
                                   onTap: () {
                                     Navigator.push(
                                       context,
-                                      MaterialPageRoute(
-                                        builder: (context) =>
+                                      PageRouteBuilder(
+                                        transitionDuration:
+                                            Duration(milliseconds: 350),
+                                        reverseTransitionDuration:
+                                            Duration(milliseconds: 350),
+                                        pageBuilder: (context, animation,
+                                                secondaryAnimation) =>
                                             const Register(isProvider: true),
+                                        transitionsBuilder: (context, animation,
+                                            secondaryAnimation, child) {
+                                          // หน้าใหม่เลื่อนจากซ้าย (Slide In)
+                                          var begin = Offset(
+                                              1.0, 0.0); // เริ่มต้นจากขวา
+                                          var end = Offset
+                                              .zero; // ปลายทางที่ตำแหน่งเดิม
+                                          var curve = Curves.easeInOut;
+                                          var tween = Tween(
+                                                  begin: begin, end: end)
+                                              .chain(CurveTween(curve: curve));
+                                          var offsetAnimation =
+                                              animation.drive(tween);
+
+                                          return SlideTransition(
+                                              position: offsetAnimation,
+                                              child: child);
+                                        },
                                       ),
                                     );
                                   },
                                   child: Text(
-                                    "Register", // Changed from "Register as Provider"
+                                    "Register as Provider", // Changed from "Register as Provider"
                                     style: TextStyleService.getDmSans(
                                       color: Color(0xFF355FFF),
                                       fontWeight: FontWeight.w500,
@@ -1024,7 +1102,7 @@ class _LoginState extends State<Login> {
               ],
             ),
           ),
-          CustomBackButton(pageToNavigate: const WelcomeUserPage()),
+          // CustomBackButton(),
         ],
       ),
     );

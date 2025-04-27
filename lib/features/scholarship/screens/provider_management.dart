@@ -513,7 +513,7 @@ class _ProviderManagementState extends State<ProviderManagement> {
                   children: [
                     GestureDetector(
                       onTap: () {
-                        Navigator.pushReplacement(
+                        Navigator.push(
                           context,
                           PageRouteBuilder(
                             pageBuilder:

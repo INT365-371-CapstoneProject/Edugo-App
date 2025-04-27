@@ -19,7 +19,7 @@ class _SplashScreenState extends State<SplashScreen> {
     _timer = Timer(const Duration(seconds: 3), () {
       // ตรวจสอบว่า widget ยังอยู่ใน tree ก่อนเรียก Navigator
       if (mounted) {
-        Navigator.pushReplacement(
+        Navigator.push(
           context,
           PageRouteBuilder(
             pageBuilder: (context, animation, secondaryAnimation) =>

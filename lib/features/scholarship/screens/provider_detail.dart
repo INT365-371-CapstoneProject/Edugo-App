@@ -535,7 +535,7 @@ class _ProviderDetailState extends State<ProviderDetail> {
         } else {
           destination = const HomeScreenApp();
         }
-        Navigator.pushReplacement(
+        Navigator.push(
           context,
           MaterialPageRoute(builder: (context) => destination),
         );
@@ -582,7 +582,7 @@ class _ProviderDetailState extends State<ProviderDetail> {
                                     } else {
                                       destination = const HomeScreenApp();
                                     }
-                                    Navigator.pushReplacement(
+                                    Navigator.push(
                                       context,
                                       PageRouteBuilder(
                                         pageBuilder: (context, animation,

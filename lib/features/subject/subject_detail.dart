@@ -375,7 +375,7 @@ class _SubjectDetailState extends State<SubjectDetail> {
         Navigator.pop(context); // Close the first pop-up
         isComment
             ? fetchComment()
-            : Navigator.pushReplacement(
+            : Navigator.push(
                 context,
                 PageRouteBuilder(
                   pageBuilder: (context, animation, secondaryAnimation) =>
@@ -441,7 +441,7 @@ class _SubjectDetailState extends State<SubjectDetail> {
                   children: [
                     GestureDetector(
                       onTap: () {
-                        Navigator.pushReplacement(
+                        Navigator.push(
                           context,
                           PageRouteBuilder(
                             pageBuilder:

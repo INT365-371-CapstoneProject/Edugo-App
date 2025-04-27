@@ -19,7 +19,7 @@ class _IntroScreenState extends State<IntroScreen> {
         isIntro1 = false;
       });
     } else {
-      Navigator.pushReplacement(
+      Navigator.push(
         context,
         MaterialPageRoute(
           builder: (context) => const ProviderOrUser(),
