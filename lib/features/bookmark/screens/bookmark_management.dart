@@ -51,10 +51,27 @@ class _BookmarkListState extends State<BookmarkList> {
   int _totalScholarships = 0; // Overall total from API
   final int _itemsPerPage = 10; // Define items per page (from API)
 
+  // เพิ่มตัวแปรเพื่อติดตามสถานะการโหลด
+  bool isLoading = true;
+
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    fetchBookmark(); // โหลดทุกครั้งที่เข้า
+  void initState() {
+    super.initState();
+    // เรียกใช้ฟังก์ชันนี้แทนใน initState แทน didChangeDependencies
+    _loadBookmarkData();
+  }
+
+  // ฟังก์ชันใหม่ที่จัดการการโหลดข้อมูลทั้งหมด
+  Future<void> _loadBookmarkData() async {
+    setState(() {
+      isLoading = true;
+    });
+
+    await fetchBookmark();
+
+    setState(() {
+      isLoading = false;
+    });
   }
 
   List<int> announceIds = []; // เก็บแค่ announce_id
@@ -74,21 +91,29 @@ class _BookmarkListState extends State<BookmarkList> {
       if (response.statusCode == 200) {
         final List<dynamic> responseData = json.decode(response.body);
 
-        setState(() {
-          bookmarks = responseData; // เก็บข้อมูลเต็ม
+        // ใช้ Set เพื่อเก็บ announce_id ไม่ให้ซ้ำ
+        List<int> ids = responseData
+            .map<int>((item) => item['announce_id'] as int)
+            .toSet()
+            .toList();
 
-          // ใช้ Set เพื่อเก็บ announce_id ไม่ให้ซ้ำ
-          announceIds = responseData
-              .map<int>(
-                  (item) => item['announce_id'] as int) // ดึงเฉพาะ announce_id
-              .toSet() // ลบค่าซ้ำ
-              .toList(); // แปลงกลับเป็น List
+        setState(() {
+          bookmarks = responseData;
+          announceIds = ids;
         });
-        fetchAnnounceDetails();
+
+        // รอให้ fetchAnnounceDetails เสร็จด้วย
+        await fetchAnnounceDetails();
       } else {
+        setState(() {
+          announceDetails = {"data": []};
+        });
         throw Exception('Failed to load bookmarks');
       }
     } catch (e) {
+      setState(() {
+        announceDetails = {"data": []};
+      });
       print("Error fetching bookmarks: $e");
     }
   }
@@ -157,6 +182,14 @@ class _BookmarkListState extends State<BookmarkList> {
       {page = 1, bool refreshCounts = false}) async {
     String? token = await authService.getToken();
 
+    // ถ้าไม่มี ID ให้เซ็ตค่าเป็นอาร์เรย์ว่าง (แสดง No bookmark)
+    if (announceIds.isEmpty) {
+      setState(() {
+        announceDetails = {"data": []};
+      });
+      return;
+    }
+
     try {
       final response = await http.post(
         Uri.parse('${ApiConfig.bookmarkUser}?page=$page'),
@@ -164,23 +197,31 @@ class _BookmarkListState extends State<BookmarkList> {
           'Authorization': token != null ? 'Bearer $token' : '',
           'Content-Type': 'application/json',
         },
-        body: json.encode({"announce_id": announceIds}), // ส่งเป็น JSON
+        body: json.encode({"announce_id": announceIds}),
       );
 
       if (response.statusCode == 200) {
         final Map<String, dynamic> responseData = json.decode(response.body);
 
         setState(() {
-          announceDetails = responseData; // เก็บข้อมูลที่ได้
+          announceDetails = responseData;
           _currentPage = responseData['page'] ?? 1;
           _totalPages = responseData['last_page'] ?? 1;
           _totalScholarships = responseData['total'] ?? 0;
           showPaginationControls = _totalPages > 1;
         });
       } else {
+        // เมื่อ API เรียกไม่สำเร็จ ให้เซ็ตค่าเป็นอาร์เรย์ว่าง
+        setState(() {
+          announceDetails = {"data": []};
+        });
         throw Exception('Failed to load announcement details');
       }
     } catch (e) {
+      // เมื่อเกิด error ให้เซ็ตค่าเป็นอาร์เรย์ว่างเช่นกัน
+      setState(() {
+        announceDetails = {"data": []};
+      });
       print("Error fetching announce details: $e");
     }
   }
@@ -232,6 +273,7 @@ class _BookmarkListState extends State<BookmarkList> {
     }
   }
 
+  // แก้ฟังก์ชัน build เพื่อจัดการสถานะ loading ที่ชัดเจน
   @override
   Widget build(BuildContext context) {
     bool canGoPrev = false;
@@ -320,343 +362,396 @@ class _BookmarkListState extends State<BookmarkList> {
 
           // แสดงข้อมูล bookmarks
           Expanded(
-            child: announceDetails.isNotEmpty && announceDetails['data'] != null
-                ? Column(
-                    children: [
-                      Expanded(
-                        child: ListView.builder(
-                          itemCount: announceDetails['data'].length,
-                          itemBuilder: (context, index) {
-                            final item = announceDetails['data'][index];
-                            final title = item['title'];
-                            final DateTime publishedDate =
-                                DateTime.tryParse(item['publish_date']) ??
-                                    DateTime.now();
-                            final DateTime closeDate =
-                                DateTime.tryParse(item['close_date']) ??
-                                    DateTime.now();
-                            final String imageUrl =
-                                "${ApiConfig.announceUserUrl}/${item['id']}/image";
-                            final duration =
-                                "${DateFormat('d MMM').format(publishedDate)} - ${DateFormat('d MMM yyyy').format(closeDate)}";
-                            final String providerNameUrl =
-                                "${ApiConfig.providerUrl}/${item['provider_id']}";
-                            final String providerImage =
-                                "${ApiConfig.providerUrl}/avatar/${item['provider_id']}";
+            child: isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : announceDetails.isNotEmpty && announceDetails['data'] != null
+                    ? (announceDetails['data'].length > 0
+                        ? Column(
+                            children: [
+                              Expanded(
+                                child: ListView.builder(
+                                  itemCount: announceDetails['data'].length,
+                                  itemBuilder: (context, index) {
+                                    final item = announceDetails['data'][index];
+                                    final title = item['title'];
+                                    final DateTime publishedDate =
+                                        DateTime.tryParse(
+                                                item['publish_date']) ??
+                                            DateTime.now();
+                                    final DateTime closeDate =
+                                        DateTime.tryParse(item['close_date']) ??
+                                            DateTime.now();
+                                    final String imageUrl =
+                                        "${ApiConfig.announceUserUrl}/${item['id']}/image";
+                                    final duration =
+                                        "${DateFormat('d MMM').format(publishedDate)} - ${DateFormat('d MMM yyyy').format(closeDate)}";
+                                    final String providerNameUrl =
+                                        "${ApiConfig.providerUrl}/${item['provider_id']}";
+                                    final String providerImage =
+                                        "${ApiConfig.providerUrl}/avatar/${item['provider_id']}";
 
-                            return Padding(
-                              padding: const EdgeInsets.only(
-                                  left: 25.0, right: 25.0, bottom: 25.0),
-                              child: ClipRRect(
-                                borderRadius: BorderRadius.circular(12),
-                                child: InkWell(
-                                  onTap: () async {
-                                    final existingData = {'id': item['id']};
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) => ProviderDetail(
-                                          initialData: existingData,
-                                          isProvider: false,
+                                    return Padding(
+                                      padding: const EdgeInsets.only(
+                                          left: 25.0,
+                                          right: 25.0,
+                                          bottom: 25.0),
+                                      child: ClipRRect(
+                                        borderRadius: BorderRadius.circular(12),
+                                        child: InkWell(
+                                          onTap: () async {
+                                            final existingData = {
+                                              'id': item['id']
+                                            };
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (context) =>
+                                                    ProviderDetail(
+                                                  initialData: existingData,
+                                                  isProvider: false,
+                                                ),
+                                              ),
+                                            );
+                                          },
+                                          child: Container(
+                                            height: 192,
+                                            width: double.infinity,
+                                            color: const Color(0xFFECF0F6),
+                                            child: Padding(
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                      horizontal: 22,
+                                                      vertical: 12),
+                                              child: Row(
+                                                children: [
+                                                  ClipRRect(
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            12.0),
+                                                    child: _imageCache
+                                                            .containsKey(
+                                                                imageUrl)
+                                                        ? (_imageCache[
+                                                                    imageUrl] !=
+                                                                null
+                                                            ? Image.memory(
+                                                                _imageCache[
+                                                                    imageUrl]!,
+                                                                width: 111,
+                                                                height: 148,
+                                                                fit: BoxFit
+                                                                    .cover,
+                                                              )
+                                                            : Image.asset(
+                                                                "assets/images/scholarship_program.png",
+                                                                width: 111,
+                                                                height: 148,
+                                                                fit: BoxFit
+                                                                    .cover,
+                                                              ))
+                                                        : FutureBuilder<
+                                                            Uint8List?>(
+                                                            future: fetchImage(
+                                                                imageUrl),
+                                                            builder: (context,
+                                                                snapshot) {
+                                                              if (snapshot
+                                                                      .connectionState ==
+                                                                  ConnectionState
+                                                                      .waiting) {
+                                                                return const SizedBox(
+                                                                  width: 111,
+                                                                  height: 148,
+                                                                  child: Center(
+                                                                      child:
+                                                                          CircularProgressIndicator()),
+                                                                );
+                                                              }
+                                                              if (snapshot
+                                                                      .data ==
+                                                                  null) {
+                                                                return Image
+                                                                    .asset(
+                                                                  "assets/images/scholarship_program.png",
+                                                                  width: 111,
+                                                                  height: 148,
+                                                                  fit: BoxFit
+                                                                      .cover,
+                                                                );
+                                                              }
+                                                              return Image
+                                                                  .memory(
+                                                                snapshot.data!,
+                                                                width: 111,
+                                                                height: 148,
+                                                                fit: BoxFit
+                                                                    .cover,
+                                                              );
+                                                            },
+                                                          ),
+                                                  ),
+                                                  const SizedBox(width: 24),
+                                                  Expanded(
+                                                    child: Column(
+                                                      crossAxisAlignment:
+                                                          CrossAxisAlignment
+                                                              .start,
+                                                      mainAxisAlignment:
+                                                          MainAxisAlignment
+                                                              .center,
+                                                      children: [
+                                                        Text(
+                                                          duration,
+                                                          style:
+                                                              TextStyleService
+                                                                  .getDmSans(
+                                                            color: Color(
+                                                                0xFF2A4CCC),
+                                                            fontSize: 9.5,
+                                                            fontWeight:
+                                                                FontWeight.w400,
+                                                          ),
+                                                        ),
+                                                        const SizedBox(
+                                                            height: 8),
+                                                        Text(
+                                                          title,
+                                                          style:
+                                                              TextStyleService
+                                                                  .getDmSans(
+                                                            color: Color(
+                                                                0xFF000000),
+                                                            fontSize: 13,
+                                                            fontWeight:
+                                                                FontWeight.w600,
+                                                          ),
+                                                        ),
+                                                        const SizedBox(
+                                                            height: 8),
+                                                        Row(
+                                                          children: [
+                                                            CircleAvatar(
+                                                              radius: 6,
+                                                              backgroundImage: _imageCache
+                                                                          .containsKey(
+                                                                              providerImage) &&
+                                                                      _imageCache[
+                                                                              providerImage] !=
+                                                                          null
+                                                                  ? MemoryImage(
+                                                                      _imageCache[
+                                                                          providerImage]!)
+                                                                  : null,
+                                                              child: !_imageCache
+                                                                      .containsKey(
+                                                                          providerImage)
+                                                                  ? FutureBuilder<
+                                                                      Uint8List?>(
+                                                                      future: getAvatarFuture(
+                                                                          providerImage),
+                                                                      builder:
+                                                                          (context,
+                                                                              snapshot) {
+                                                                        if (snapshot.connectionState ==
+                                                                            ConnectionState.waiting) {
+                                                                          return const Center(
+                                                                            child:
+                                                                                CircularProgressIndicator(),
+                                                                          );
+                                                                        }
+                                                                        if (snapshot.data ==
+                                                                            null) {
+                                                                          return ClipOval(
+                                                                            child:
+                                                                                Image.asset(
+                                                                              "assets/images/avatar.png",
+                                                                              fit: BoxFit.cover,
+                                                                              width: 40,
+                                                                              height: 40,
+                                                                            ),
+                                                                          );
+                                                                        }
+                                                                        return CircleAvatar(
+                                                                          radius:
+                                                                              20,
+                                                                          backgroundImage:
+                                                                              MemoryImage(snapshot.data!),
+                                                                        );
+                                                                      },
+                                                                    )
+                                                                  : null,
+                                                            ),
+                                                            const SizedBox(
+                                                                width: 4.0),
+                                                            Expanded(
+                                                              child:
+                                                                  FutureBuilder<
+                                                                      String?>(
+                                                                future: getProviderNameFuture(
+                                                                    providerNameUrl),
+                                                                builder: (context,
+                                                                    snapshot) {
+                                                                  if (snapshot
+                                                                          .connectionState ==
+                                                                      ConnectionState
+                                                                          .waiting) {
+                                                                    return const SizedBox(
+                                                                      width: 60,
+                                                                      height:
+                                                                          10,
+                                                                      child:
+                                                                          LinearProgressIndicator(),
+                                                                    );
+                                                                  }
+                                                                  if (snapshot
+                                                                          .hasError ||
+                                                                      snapshot.data ==
+                                                                          null) {
+                                                                    return Text(
+                                                                      "Unknown",
+                                                                      style: TextStyleService
+                                                                          .getDmSans(
+                                                                        fontSize:
+                                                                            9.5,
+                                                                        fontWeight:
+                                                                            FontWeight.w400,
+                                                                        color: Color(
+                                                                            0xFF94A2B8),
+                                                                      ),
+                                                                    );
+                                                                  }
+                                                                  return Text(
+                                                                    snapshot
+                                                                        .data!,
+                                                                    maxLines: 1,
+                                                                    overflow:
+                                                                        TextOverflow
+                                                                            .ellipsis,
+                                                                    style: TextStyleService
+                                                                        .getDmSans(
+                                                                      fontSize:
+                                                                          9.5,
+                                                                      fontWeight:
+                                                                          FontWeight
+                                                                              .w400,
+                                                                      color: Color(
+                                                                          0xFF94A2B8),
+                                                                    ),
+                                                                  );
+                                                                },
+                                                              ),
+                                                            ),
+                                                          ],
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          ),
                                         ),
                                       ),
                                     );
                                   },
-                                  child: Container(
-                                    height: 192,
-                                    width: double.infinity,
-                                    color: const Color(0xFFECF0F6),
-                                    child: Padding(
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 22, vertical: 12),
-                                      child: Row(
-                                        children: [
-                                          ClipRRect(
-                                            borderRadius:
-                                                BorderRadius.circular(12.0),
-                                            child: _imageCache
-                                                    .containsKey(imageUrl)
-                                                ? (_imageCache[imageUrl] != null
-                                                    ? Image.memory(
-                                                        _imageCache[imageUrl]!,
-                                                        width: 111,
-                                                        height: 148,
-                                                        fit: BoxFit.cover,
-                                                      )
-                                                    : Image.asset(
-                                                        "assets/images/scholarship_program.png",
-                                                        width: 111,
-                                                        height: 148,
-                                                        fit: BoxFit.cover,
-                                                      ))
-                                                : FutureBuilder<Uint8List?>(
-                                                    future:
-                                                        fetchImage(imageUrl),
-                                                    builder:
-                                                        (context, snapshot) {
-                                                      if (snapshot
-                                                              .connectionState ==
-                                                          ConnectionState
-                                                              .waiting) {
-                                                        return const SizedBox(
-                                                          width: 111,
-                                                          height: 148,
-                                                          child: Center(
-                                                              child:
-                                                                  CircularProgressIndicator()),
-                                                        );
-                                                      }
-                                                      if (snapshot.data ==
-                                                          null) {
-                                                        return Image.asset(
-                                                          "assets/images/scholarship_program.png",
-                                                          width: 111,
-                                                          height: 148,
-                                                          fit: BoxFit.cover,
-                                                        );
-                                                      }
-                                                      return Image.memory(
-                                                        snapshot.data!,
-                                                        width: 111,
-                                                        height: 148,
-                                                        fit: BoxFit.cover,
-                                                      );
-                                                    },
-                                                  ),
-                                          ),
-                                          const SizedBox(width: 24),
-                                          Expanded(
-                                            child: Column(
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.start,
-                                              mainAxisAlignment:
-                                                  MainAxisAlignment.center,
-                                              children: [
-                                                Text(
-                                                  duration,
-                                                  style: TextStyleService
-                                                      .getDmSans(
-                                                    color: Color(0xFF2A4CCC),
-                                                    fontSize: 9.5,
-                                                    fontWeight: FontWeight.w400,
-                                                  ),
-                                                ),
-                                                const SizedBox(height: 8),
-                                                Text(
-                                                  title,
-                                                  style: TextStyleService
-                                                      .getDmSans(
-                                                    color: Color(0xFF000000),
-                                                    fontSize: 13,
-                                                    fontWeight: FontWeight.w600,
-                                                  ),
-                                                ),
-                                                const SizedBox(height: 8),
-                                                Row(
-                                                  children: [
-                                                    CircleAvatar(
-                                                      radius: 6,
-                                                      backgroundImage: _imageCache
-                                                                  .containsKey(
-                                                                      providerImage) &&
-                                                              _imageCache[
-                                                                      providerImage] !=
-                                                                  null
-                                                          ? MemoryImage(
-                                                              _imageCache[
-                                                                  providerImage]!)
-                                                          : null,
-                                                      child: !_imageCache
-                                                              .containsKey(
-                                                                  providerImage)
-                                                          ? FutureBuilder<
-                                                              Uint8List?>(
-                                                              future: getAvatarFuture(
-                                                                  providerImage),
-                                                              builder: (context,
-                                                                  snapshot) {
-                                                                if (snapshot
-                                                                        .connectionState ==
-                                                                    ConnectionState
-                                                                        .waiting) {
-                                                                  return const Center(
-                                                                    child:
-                                                                        CircularProgressIndicator(),
-                                                                  );
-                                                                }
-                                                                if (snapshot
-                                                                        .data ==
-                                                                    null) {
-                                                                  return ClipOval(
-                                                                    child: Image
-                                                                        .asset(
-                                                                      "assets/images/avatar.png",
-                                                                      fit: BoxFit
-                                                                          .cover,
-                                                                      width: 40,
-                                                                      height:
-                                                                          40,
-                                                                    ),
-                                                                  );
-                                                                }
-                                                                return CircleAvatar(
-                                                                  radius: 20,
-                                                                  backgroundImage:
-                                                                      MemoryImage(
-                                                                          snapshot
-                                                                              .data!),
-                                                                );
-                                                              },
-                                                            )
-                                                          : null,
-                                                    ),
-                                                    const SizedBox(width: 4.0),
-                                                    Expanded(
-                                                      child: FutureBuilder<
-                                                          String?>(
-                                                        future:
-                                                            getProviderNameFuture(
-                                                                providerNameUrl),
-                                                        builder: (context,
-                                                            snapshot) {
-                                                          if (snapshot
-                                                                  .connectionState ==
-                                                              ConnectionState
-                                                                  .waiting) {
-                                                            return const SizedBox(
-                                                              width: 60,
-                                                              height: 10,
-                                                              child:
-                                                                  LinearProgressIndicator(),
-                                                            );
-                                                          }
-                                                          if (snapshot
-                                                                  .hasError ||
-                                                              snapshot.data ==
-                                                                  null) {
-                                                            return Text(
-                                                              "Unknown",
-                                                              style:
-                                                                  TextStyleService
-                                                                      .getDmSans(
-                                                                fontSize: 9.5,
-                                                                fontWeight:
-                                                                    FontWeight
-                                                                        .w400,
-                                                                color: Color(
-                                                                    0xFF94A2B8),
-                                                              ),
-                                                            );
-                                                          }
-                                                          return Text(
-                                                            snapshot.data!,
-                                                            maxLines: 1,
-                                                            overflow:
-                                                                TextOverflow
-                                                                    .ellipsis,
-                                                            style:
-                                                                TextStyleService
-                                                                    .getDmSans(
-                                                              fontSize: 9.5,
-                                                              fontWeight:
-                                                                  FontWeight
-                                                                      .w400,
-                                                              color: Color(
-                                                                  0xFF94A2B8),
-                                                            ),
-                                                          );
-                                                        },
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                        ],
+                                ),
+                              ),
+                              if (showPaginationControls)
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                      vertical: 16.0, horizontal: 16.0),
+                                  child: Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      ElevatedButton.icon(
+                                        onPressed: canGoPrev
+                                            ? () {
+                                                fetchAnnounceDetails(
+                                                    page: _currentPage - 1,
+                                                    refreshCounts: true);
+                                              }
+                                            : null,
+                                        icon: Icon(Icons.arrow_back_ios,
+                                            size: 16,
+                                            color: canGoPrev
+                                                ? Colors.white
+                                                : Colors.grey[400]),
+                                        label: Text("Prev",
+                                            style: TextStyle(
+                                                color: canGoPrev
+                                                    ? Colors.white
+                                                    : Colors.grey[400])),
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: canGoPrev
+                                              ? Color(0xFF355FFF)
+                                              : Colors.grey[300],
+                                          shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(8)),
+                                          padding: EdgeInsets.symmetric(
+                                              horizontal: 12, vertical: 8),
+                                        ),
                                       ),
-                                    ),
+                                      Text(
+                                        'Page $displayPage of $displayTotal',
+                                        style: TextStyleService.getDmSans(
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.w500),
+                                      ),
+                                      ElevatedButton.icon(
+                                        onPressed: canGoNext
+                                            ? () {
+                                                fetchAnnounceDetails(
+                                                    page: _currentPage + 1,
+                                                    refreshCounts: true);
+                                              }
+                                            : null,
+                                        icon: Icon(Icons.arrow_forward_ios,
+                                            size: 16,
+                                            color: canGoNext
+                                                ? Colors.white
+                                                : Colors.grey[400]),
+                                        label: Text("Next",
+                                            style: TextStyle(
+                                                color: canGoNext
+                                                    ? Colors.white
+                                                    : Colors.grey[400])),
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: canGoNext
+                                              ? Color(0xFF355FFF)
+                                              : Colors.grey[300],
+                                          shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(8)),
+                                          padding: EdgeInsets.symmetric(
+                                              horizontal: 12, vertical: 8),
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                      if (showPaginationControls)
-                        Padding(
-                          padding: const EdgeInsets.symmetric(
-                              vertical: 16.0, horizontal: 16.0),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              ElevatedButton.icon(
-                                onPressed: canGoPrev
-                                    ? () {
-                                        fetchAnnounceDetails(
-                                            page: _currentPage - 1,
-                                            refreshCounts: true);
-                                      }
-                                    : null,
-                                icon: Icon(Icons.arrow_back_ios,
-                                    size: 16,
-                                    color: canGoPrev
-                                        ? Colors.white
-                                        : Colors.grey[400]),
-                                label: Text("Prev",
-                                    style: TextStyle(
-                                        color: canGoPrev
-                                            ? Colors.white
-                                            : Colors.grey[400])),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: canGoPrev
-                                      ? Color(0xFF355FFF)
-                                      : Colors.grey[300],
-                                  shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(8)),
-                                  padding: EdgeInsets.symmetric(
-                                      horizontal: 12, vertical: 8),
-                                ),
-                              ),
-                              Text(
-                                'Page $displayPage of $displayTotal',
-                                style: TextStyleService.getDmSans(
-                                    fontSize: 14, fontWeight: FontWeight.w500),
-                              ),
-                              ElevatedButton.icon(
-                                onPressed: canGoNext
-                                    ? () {
-                                        fetchAnnounceDetails(
-                                            page: _currentPage + 1,
-                                            refreshCounts: true);
-                                      }
-                                    : null,
-                                icon: Icon(Icons.arrow_forward_ios,
-                                    size: 16,
-                                    color: canGoNext
-                                        ? Colors.white
-                                        : Colors.grey[400]),
-                                label: Text("Next",
-                                    style: TextStyle(
-                                        color: canGoNext
-                                            ? Colors.white
-                                            : Colors.grey[400])),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: canGoNext
-                                      ? Color(0xFF355FFF)
-                                      : Colors.grey[300],
-                                  shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(8)),
-                                  padding: EdgeInsets.symmetric(
-                                      horizontal: 12, vertical: 8),
-                                ),
-                              ),
                             ],
-                          ),
-                        ),
-                    ],
-                  )
-                : const Center(child: CircularProgressIndicator()),
+                          )
+                        : Padding(
+                            padding: const EdgeInsets.only(top: 22.0),
+                            child: SizedBox(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    "Save your favorites to see them here!",
+                                    style: TextStyleService.getDmSans(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w500,
+                                      color: Color(0xFF94A2B8),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ))
+                    : const Center(child: CircularProgressIndicator()),
           )
         ],
       ),

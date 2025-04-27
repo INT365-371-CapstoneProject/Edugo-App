@@ -429,7 +429,8 @@ class _ProviderDetailState extends State<ProviderDetail> {
   }
 
   Future<void> submitDeleteData() async {
-    final String apiUrl = "${ApiConfig.announceUrl}/$id";
+    final String apiUrl =
+        "${ApiConfig.announceUrl}/${widget.initialData?['id']}";
 
     String? token = await authService.getToken();
 

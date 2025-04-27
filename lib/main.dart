@@ -88,11 +88,10 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
         primarySwatch: Colors.blue,
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
-      home: widget.isFirstTime
-          ? const IntroScreen() // แก้ไขจาก IntroPage เป็น IntroScreen
-          : widget.isLoggedIn
-              ? const HomeScreenApp() // เปลี่ยนจาก SplashScreen ไป HomeScreenApp โดยตรงหลัง login
-              : const Login(),
+      home: SplashScreen(
+        isFirstTime: widget.isFirstTime,
+        isLoggedIn: widget.isLoggedIn,
+      ), // แสดง SplashScreen ก่อนเสมอ แล้วค่อยไปยังหน้าที่เหมาะสม
     );
   }
 }

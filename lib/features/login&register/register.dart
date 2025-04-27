@@ -31,6 +31,7 @@ class _RegisterState extends State<Register> {
   bool isLowerPassword = false;
   bool isUpperPassword = false;
   bool isSpecialPassword = false;
+  bool isNumberPassword = false;
   // bool isComplexityValid = false;
   Map<String, String?> _errors = {};
   // List<String> _countries = [];
@@ -62,13 +63,14 @@ class _RegisterState extends State<Register> {
 
     _controllers['password']?.addListener(() {
       final text = _controllers['password']!.text;
+      final hasNumber = RegExp(r'\d').hasMatch(text);
+      print('Password: $text, Contains number: $hasNumber');
       setState(() {
         isLengthValidPassword = text.length >= 8;
-        // isComplexityValid =
-        //     RegExp(r'^(?=.*[a-zA-Z])(?=.*\d)(?=.*[^A-Za-z0-9])').hasMatch(text);
         isLowerPassword = RegExp(r'[a-z]').hasMatch(text);
         isUpperPassword = RegExp(r'[A-Z]').hasMatch(text);
         isSpecialPassword = RegExp(r'[^A-Za-z0-9]').hasMatch(text);
+        isNumberPassword = hasNumber;
       });
     });
   }
@@ -536,15 +538,15 @@ class _RegisterState extends State<Register> {
       isValid = false;
     }
 
-    if (firstName.length < 2 || firstName.length > 25) {
+    if (firstName.length < 5 || firstName.length > 20) {
       _errors['firstName'] =
-          "First name must be between 2 and 25 characters long";
+          "First name must be between 5 and 20 characters long";
       isValid = false;
     }
 
-    if (lastName.length < 2 || lastName.length > 25) {
+    if (lastName.length < 5 || lastName.length > 20) {
       _errors['lastName'] =
-          "Last name must be between 2 and 25 characters long";
+          "Last name must be between 5 and 20 characters long";
       isValid = false;
     }
 
@@ -569,15 +571,18 @@ class _RegisterState extends State<Register> {
     }
     if (!isUpperPassword) {
       _errors['password'] =
-          "Password must contain letters, numbers, and special characters";
+          "Password must contain at least one uppercase letter.";
       isValid = false;
     } else if (!isLowerPassword) {
       _errors['password'] =
-          "Password must contain letters, numbers, and special characters";
+          "Password must contain at least one lowercase letter.";
+      isValid = false;
+    } else if (!isNumberPassword) {
+      _errors['password'] = "Password must contain at least one number.";
       isValid = false;
     } else if (!isSpecialPassword) {
       _errors['password'] =
-          "Password must contain letters, numbers, and special characters";
+          "Password must contain at least one special character.";
       isValid = false;
     }
 
@@ -882,6 +887,8 @@ class _RegisterState extends State<Register> {
       _buildRequirement(isLowerPassword, '1 Lowercase character (a-z)'),
       SizedBox(height: 4),
       _buildRequirement(isUpperPassword, "1 uppercase character (a-z)"),
+      SizedBox(height: 4),
+      _buildRequirement(isNumberPassword, "At least 1 number (0-9)"),
       SizedBox(height: 4),
       _buildRequirement(isSpecialPassword,
           "At least 1 special character (e.g. ! @ # \$ % .)"),

@@ -56,7 +56,7 @@ class _AnimationQuestionState extends State<AnimationQuestion>
         url,
         headers: headers,
         body: json.encode({
-          'education_Level': widget.selectedEducation,
+          'education_Level': 'Master',
           'countries': widget.selectedCountries,
           'categories': [1],
         }),

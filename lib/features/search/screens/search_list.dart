@@ -303,16 +303,28 @@ class _SearchListState extends State<SearchList> {
                   scholarships.isNotEmpty
                       ? Column(
                           children: [
-                            ListView.builder(
+                            GridView.builder(
+                              // Changed from ListView.builder
                               shrinkWrap: true,
                               physics: NeverScrollableScrollPhysics(),
                               padding:
                                   const EdgeInsets.symmetric(horizontal: 16.0),
                               itemCount: scholarships.length,
+                              gridDelegate:
+                                  SliverGridDelegateWithFixedCrossAxisCount(
+                                // Added gridDelegate
+                                crossAxisCount: 2, // Number of columns
+                                crossAxisSpacing:
+                                    10.0, // Horizontal space between items
+                                mainAxisSpacing:
+                                    10.0, // Vertical space between items
+                                childAspectRatio:
+                                    0.7, // Adjust aspect ratio as needed
+                              ),
                               itemBuilder: (context, index) {
                                 final scholarship = scholarships[index];
-                                final formattedTag =
-                                    "#${(index + 1).toString().padLeft(5, '0')}"; // Keep tag if needed
+                                // final formattedTag =
+                                //     "#${(index + 1).toString().padLeft(5, '0')}"; // Keep tag if needed
 
                                 // Prepare data for navigation
                                 final String imageUrl = scholarship['image'] ??
@@ -389,23 +401,21 @@ class _SearchListState extends State<SearchList> {
                                       ),
                                     );
                                   },
-                                  child: Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                        vertical: 8.0),
-                                    child: ScholarshipCard(
-                                      // Use the existing card
-                                      // tag:
-                                      //     formattedTag, // Pass tag if needed by card
-                                      tag: "",
-                                      image: imageUrl, // Pass image URL
-                                      title: scholarship['title'] ?? 'No title',
-                                      date:
-                                          duration, // Pass formatted date string
-                                      status:
-                                          "", // Determine status based on dates if needed
-                                      description: scholarship['description'] ??
-                                          'No description',
-                                    ),
+                                  // Removed Padding, spacing handled by GridView
+                                  child: ScholarshipCard(
+                                    // Use the existing card
+                                    // tag:
+                                    //     formattedTag, // Pass tag if needed by card
+                                    tag: "",
+                                    image: imageUrl, // Pass image URL
+                                    title: scholarship['title'] ?? 'No title',
+                                    date:
+                                        duration, // Pass formatted date string
+                                    status:
+                                        "", // Determine status based on dates if needed
+                                    description: scholarship['description'] ??
+                                        'No description',
+                                    isRow: false,
                                   ),
                                 );
                               },

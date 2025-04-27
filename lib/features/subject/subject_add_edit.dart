@@ -64,9 +64,7 @@ class _SubjectAddEditState extends State<SubjectAddEdit> {
       setState(() {
         imageAvatar = response.bodyBytes; // แปลง response เป็น Uint8List
       });
-    } else {
-      throw Exception('Failed to load country data');
-    }
+    } else {}
   }
 
   Future<void> fetchProfile() async {

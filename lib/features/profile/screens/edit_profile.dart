@@ -209,9 +209,7 @@ class _PersonalProfileEditState extends State<PersonalProfileEdit> {
       setState(() {
         imageData = response.bodyBytes; // แปลง response เป็น Uint8List
       });
-    } else {
-      throw Exception('Failed to load country data');
-    }
+    } else {}
   }
 
   File? _imageFile;

@@ -69,13 +69,6 @@ class _SearchScreenState extends State<SearchScreen> {
       if (isAnswer && filters != null) {
         List<String> queryParams = [];
 
-        // Education Levels
-        if (filters.containsKey('educationLevels') &&
-            filters['educationLevels']!.isNotEmpty) {
-          final levels = filters['educationLevels']!.join(',');
-          queryParams.add("education_level=$levels");
-        }
-
         // Countries
         if (filters.containsKey('countries') &&
             filters['countries']!.isNotEmpty) {
@@ -282,12 +275,11 @@ class _SearchScreenState extends State<SearchScreen> {
       final response = await http.get(url, headers: headers);
       if (response.statusCode == 200 || response.statusCode == 201) {
         final Map<String, dynamic> data = json.decode(response.body);
-        final List categories = data['categories'] ?? [];
+        // final List categories = data['categories'] ?? [];
         final List countries = data['countries'] ?? [];
-        final educationLevel = data['education_level'];
+        // final educationLevel = data['education_level'];
 
-        final isEmptyData =
-            categories.isEmpty && countries.isEmpty && educationLevel == null;
+        final isEmptyData = countries.isEmpty;
 
         if (isEmptyData) {
           fetchScholarshipsForAnswer(false, null);
@@ -315,12 +307,9 @@ class _SearchScreenState extends State<SearchScreen> {
         .map<String>((c) => c['name'].toString())
         .toSet();
 
-    final String? educationLevel = data['education_level']?.toString();
-
+    // จะ set เฉพาะ countries เท่านั้น
     return {
       if (countries.isNotEmpty) 'countries': countries,
-      if (educationLevel != null && educationLevel.isNotEmpty)
-        'educationLevels': {educationLevel},
     };
   }
 
@@ -746,7 +735,7 @@ class _SearchScreenState extends State<SearchScreen> {
                             );
                           },
                           child: Padding(
-                            padding: const EdgeInsets.only(right: 12.0),
+                            padding: const EdgeInsets.only(right: 16.0),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [

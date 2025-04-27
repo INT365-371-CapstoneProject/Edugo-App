@@ -11,6 +11,7 @@ class ScholarshipCard extends StatelessWidget {
   final String date;
   final String status;
   final String description;
+  final bool isRow;
 
   ScholarshipCard({
     super.key,
@@ -20,6 +21,7 @@ class ScholarshipCard extends StatelessWidget {
     required this.date,
     required this.status,
     required this.description,
+    required this.isRow,
   });
 
   final Map<String, Uint8List?> _imageCache = {};
@@ -58,146 +60,284 @@ class ScholarshipCard extends StatelessWidget {
       width: 359,
       height: 171,
       child: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: Colors.grey.withOpacity(0.3)),
-        ),
-        padding: const EdgeInsets.all(14),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(4),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(12.0),
-                child: _imageCache.containsKey(image)
-                    ? (_imageCache[image] != null
-                        ? Image.memory(
-                            _imageCache[image]!,
-                            width: 144,
-                            height: 160,
-                            fit: BoxFit.cover,
-                          )
-                        : Image.asset(
-                            "assets/images/scholarship_program.png",
-                            width: 144,
-                            height: 160,
-                            fit: BoxFit.cover,
-                          ))
-                    : FutureBuilder<Uint8List?>(
-                        future: fetchImage(image),
-                        builder: (context, snapshot) {
-                          if (snapshot.connectionState ==
-                              ConnectionState.waiting) {
-                            return const SizedBox(
-                              width: 101,
-                              height: 143,
-                              child: Center(child: CircularProgressIndicator()),
-                            );
-                          }
-                          if (snapshot.data == null) {
-                            return Image.asset(
-                              "assets/images/scholarship_program.png",
-                              width: 101,
-                              height: 143,
-                              fit: BoxFit.cover,
-                            );
-                          }
-                          return Image.memory(
-                            snapshot.data!,
-                            width: 101,
-                            height: 143,
-                            fit: BoxFit.cover,
-                          );
-                        },
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: Colors.grey.withOpacity(0.3)),
+          ),
+          padding: const EdgeInsets.all(14),
+          child: isRow
+              ? Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(4),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(12.0),
+                        child: _imageCache.containsKey(image)
+                            ? (_imageCache[image] != null
+                                ? Image.memory(
+                                    _imageCache[image]!,
+                                    width: 144,
+                                    height: 160,
+                                    fit: BoxFit.cover,
+                                  )
+                                : Image.asset(
+                                    "assets/images/scholarship_program.png",
+                                    width: 144,
+                                    height: 160,
+                                    fit: BoxFit.cover,
+                                  ))
+                            : FutureBuilder<Uint8List?>(
+                                future: fetchImage(image),
+                                builder: (context, snapshot) {
+                                  if (snapshot.connectionState ==
+                                      ConnectionState.waiting) {
+                                    return const SizedBox(
+                                      width: 101,
+                                      height: 160,
+                                      child: Center(
+                                          child: CircularProgressIndicator()),
+                                    );
+                                  }
+                                  if (snapshot.data == null) {
+                                    return Image.asset(
+                                      "assets/images/scholarship_program.png",
+                                      width: 101,
+                                      height: 160,
+                                      fit: BoxFit.cover,
+                                    );
+                                  }
+                                  return Image.memory(
+                                    snapshot.data!,
+                                    width: 101,
+                                    height: 160,
+                                    fit: BoxFit.cover,
+                                  );
+                                },
+                              ),
                       ),
-              ),
-            ),
-            const SizedBox(width: 11),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      if (tag.isNotEmpty)
-                        Text(
-                          tag,
-                          style: const TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w500,
-                            color: Color(0xFF94A2B8),
+                    ),
+                    const SizedBox(width: 11),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              if (tag.isNotEmpty)
+                                Text(
+                                  tag,
+                                  style: const TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w500,
+                                    color: Color(0xFF94A2B8),
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                              if (status.isNotEmpty)
+                                Container(
+                                  padding:
+                                      const EdgeInsets.symmetric(horizontal: 8),
+                                  decoration: BoxDecoration(
+                                    color: status == 'Pending'
+                                        ? const Color(0xFFECF0F6)
+                                        : status == "Closed"
+                                            ? const Color(0xFFF9C7E1)
+                                            : Colors.green[100],
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                  child: Text(
+                                    status,
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w500,
+                                      color: status == 'Pending'
+                                          ? const Color(0xFF94A2B8)
+                                          : status == "Closed"
+                                              ? const Color(0xFFED4B9E)
+                                              : Colors.green,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ),
+                            ],
                           ),
-                          textAlign: TextAlign.center,
-                        ),
-                      if (status.isNotEmpty)
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8),
-                          decoration: BoxDecoration(
-                            color: status == 'Pending'
-                                ? const Color(0xFFECF0F6)
-                                : status == "Closed"
-                                    ? const Color(0xFFF9C7E1)
-                                    : Colors.green[100],
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: Text(
-                            status,
-                            style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w500,
-                              color: status == 'Pending'
-                                  ? const Color(0xFF94A2B8)
-                                  : status == "Closed"
-                                      ? const Color(0xFFED4B9E)
-                                      : Colors.green,
+                          const SizedBox(height: 4),
+                          Text(
+                            title,
+                            style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFF000000),
+                              height: 1.4,
                             ),
-                            textAlign: TextAlign.center,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
-                        ),
-                    ],
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFF000000),
-                      height: 1.4,
+                          const SizedBox(height: 4),
+                          Text(
+                            date,
+                            style: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                              color: Color(0xFF2A4CCC),
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            description,
+                            style: const TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w400,
+                              color: Color(0xFF94A2B8),
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
                     ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    date,
-                    style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                      color: Color(0xFF2A4CCC),
+                  ],
+                )
+              : Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(4),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(12.0),
+                        child: _imageCache.containsKey(image)
+                            ? (_imageCache[image] != null
+                                ? Image.memory(
+                                    _imageCache[image]!,
+                                    width: double.infinity,
+                                    height: 160,
+                                    fit: BoxFit.cover,
+                                  )
+                                : Image.asset(
+                                    "assets/images/scholarship_program.png",
+                                    width: double.infinity,
+                                    height: 160,
+                                    fit: BoxFit.cover,
+                                  ))
+                            : FutureBuilder<Uint8List?>(
+                                future: fetchImage(image),
+                                builder: (context, snapshot) {
+                                  if (snapshot.connectionState ==
+                                      ConnectionState.waiting) {
+                                    return const SizedBox(
+                                      width: double.infinity,
+                                      height: 160,
+                                      child: Center(
+                                          child: CircularProgressIndicator()),
+                                    );
+                                  }
+                                  if (snapshot.data == null) {
+                                    return Image.asset(
+                                      "assets/images/scholarship_program.png",
+                                      width: double.infinity,
+                                      height: 160,
+                                      fit: BoxFit.cover,
+                                    );
+                                  }
+                                  return Image.memory(
+                                    snapshot.data!,
+                                    width: double.infinity,
+                                    height: 160,
+                                    fit: BoxFit.cover,
+                                  );
+                                },
+                              ),
+                      ),
                     ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    description,
-                    style: const TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w400,
-                      color: Color(0xFF94A2B8),
+                    const SizedBox(width: 11),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              if (tag.isNotEmpty)
+                                Text(
+                                  tag,
+                                  style: const TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w500,
+                                    color: Color(0xFF94A2B8),
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                              if (status.isNotEmpty)
+                                Container(
+                                  padding:
+                                      const EdgeInsets.symmetric(horizontal: 8),
+                                  decoration: BoxDecoration(
+                                    color: status == 'Pending'
+                                        ? const Color(0xFFECF0F6)
+                                        : status == "Closed"
+                                            ? const Color(0xFFF9C7E1)
+                                            : Colors.green[100],
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                  child: Text(
+                                    status,
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w500,
+                                      color: status == 'Pending'
+                                          ? const Color(0xFF94A2B8)
+                                          : status == "Closed"
+                                              ? const Color(0xFFED4B9E)
+                                              : Colors.green,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ),
+                            ],
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            title,
+                            style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFF000000),
+                              height: 1.4,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            date,
+                            style: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                              color: Color(0xFF2A4CCC),
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            description,
+                            style: const TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w400,
+                              color: Color(0xFF94A2B8),
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
                     ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
+                  ],
+                )),
     );
   }
 }

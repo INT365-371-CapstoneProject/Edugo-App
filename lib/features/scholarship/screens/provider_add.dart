@@ -8,6 +8,7 @@ import 'package:edugo/services/datetime_provider_add.dart';
 import 'package:edugo/services/dropdown_provider_add.dart';
 import 'package:edugo/services/file_upload.dart';
 import 'package:edugo/services/top_provider_add.dart';
+import 'package:edugo/shared/utils/loading.dart';
 import 'package:edugo/shared/utils/textStyle.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -354,44 +355,41 @@ class _ProviderAddEditState extends State<ProviderAddEdit> {
 
     showDialog(
       context: context,
-      barrierDismissible: false, // ไม่ให้ปิด Dialog โดยการคลิกนอกพื้นที่
-      builder: (BuildContext context) {
+      barrierDismissible: false,
+      builder: (_) {
         return Dialog(
+          backgroundColor: Colors.white,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(30),
           ),
           child: SizedBox(
-            // Removed fixed height: 301
-            width: 298,
+            width: 300, // ปรับขนาดให้เหมาะสมกับเนื้อหา
+            height: 360,
             child: Padding(
-              // Added padding for better spacing
-              padding:
-                  const EdgeInsets.symmetric(vertical: 40.0, horizontal: 20.0),
+              padding: const EdgeInsets.all(24.0),
               child: Column(
-                mainAxisSize: MainAxisSize.min, // Keep this
-                mainAxisAlignment:
-                    MainAxisAlignment.center, // Center vertically
-                crossAxisAlignment:
-                    CrossAxisAlignment.center, // Center horizontally
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  SizedBox(
-                    // Keep SizedBox for progress indicator size
-                    height: 100,
-                    width: 100,
-                    child: CircularProgressIndicator(
-                      valueColor: AlwaysStoppedAnimation<Color>(
-                          const Color.fromARGB(249, 84, 83, 83)),
-                      strokeWidth: 18.0, // ความหนาของเส้น
-                    ),
-                  ),
-                  SizedBox(height: 40),
+                  GradientFadeSpinner(),
+                  const SizedBox(height: 24),
                   Text(
-                    "Waiting for Posting",
-                    textAlign: TextAlign.center, // Ensure text is centered
-                    style: GoogleFonts.dmSans(
-                        fontSize: 24, // ปรับขนาดฟอนต์ที่นี่
-                        fontWeight: FontWeight.w600,
-                        color: const Color(0xFF000000)),
+                    "Please wait...",
+                    style: TextStyleService.getDmSans(
+                      fontSize: 22,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.black87,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    "We're add your new announcement",
+                    style: TextStyleService.getDmSans(
+                      fontSize: 16,
+                      color: Colors.grey,
+                      fontWeight: FontWeight.w300,
+                    ),
+                    textAlign: TextAlign.center,
                   ),
                 ],
               ),
@@ -495,44 +493,41 @@ class _ProviderAddEditState extends State<ProviderAddEdit> {
     // แสดง Loading Dialog
     showDialog(
       context: context,
-      barrierDismissible: false, // ไม่ให้ปิด Dialog โดยการคลิกนอกพื้นที่
-      builder: (BuildContext context) {
+      barrierDismissible: false,
+      builder: (_) {
         return Dialog(
+          backgroundColor: Colors.white,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(30),
           ),
           child: SizedBox(
-            // Removed fixed height: 301
-            width: 298,
+            width: 300, // ปรับขนาดให้เหมาะสมกับเนื้อหา
+            height: 360,
             child: Padding(
-              // Added padding for better spacing
-              padding:
-                  const EdgeInsets.symmetric(vertical: 40.0, horizontal: 20.0),
+              padding: const EdgeInsets.all(24.0),
               child: Column(
-                mainAxisSize: MainAxisSize.min, // Keep this
-                mainAxisAlignment:
-                    MainAxisAlignment.center, // Center vertically
-                crossAxisAlignment:
-                    CrossAxisAlignment.center, // Center horizontally
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  SizedBox(
-                    // Keep SizedBox for progress indicator size
-                    height: 100,
-                    width: 100,
-                    child: CircularProgressIndicator(
-                      valueColor: AlwaysStoppedAnimation<Color>(
-                          const Color.fromARGB(249, 84, 83, 83)),
-                      strokeWidth: 18.0, // ความหนาของเส้น
-                    ),
-                  ),
-                  SizedBox(height: 40),
+                  GradientFadeSpinner(),
+                  const SizedBox(height: 24),
                   Text(
-                    "Waiting for Updating",
-                    textAlign: TextAlign.center, // Ensure text is centered
-                    style: GoogleFonts.dmSans(
-                        fontSize: 24, // ปรับขนาดฟอนต์ที่นี่
-                        fontWeight: FontWeight.w600,
-                        color: const Color(0xFF000000)),
+                    "Please wait...",
+                    style: TextStyleService.getDmSans(
+                      fontSize: 22,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.black87,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    "We're edit your announcement",
+                    style: TextStyleService.getDmSans(
+                      fontSize: 16,
+                      color: Colors.grey,
+                      fontWeight: FontWeight.w300,
+                    ),
+                    textAlign: TextAlign.center,
                   ),
                 ],
               ),
@@ -1490,24 +1485,24 @@ class _ProviderAddEditState extends State<ProviderAddEdit> {
                                 submitAddData(); // เรียกใช้ API สำหรับเพิ่มข้อมูลใหม่
                               }
                             } else {
-                              showDialog(
-                                context: context,
-                                builder: (BuildContext context) {
-                                  return AlertDialog(
-                                    title: Text("Required fields"),
-                                    content: Text(
-                                        "Please fill in all the required fields."),
-                                    actions: [
-                                      TextButton(
-                                        child: Text("OK"),
-                                        onPressed: () {
-                                          Navigator.of(context).pop();
-                                        },
-                                      ),
-                                    ],
-                                  );
-                                },
-                              );
+                              // showDialog(
+                              //   context: context,
+                              //   builder: (BuildContext context) {
+                              //     return AlertDialog(
+                              //       title: Text("Required fields"),
+                              //       content: Text(
+                              //           "Please fill in all the required fields."),
+                              //       actions: [
+                              //         TextButton(
+                              //           child: Text("OK"),
+                              //           onPressed: () {
+                              //             Navigator.of(context).pop();
+                              //           },
+                              //         ),
+                              //       ],
+                              //     );
+                              //   },
+                              // );
                             }
                           },
                           style: ElevatedButton.styleFrom(

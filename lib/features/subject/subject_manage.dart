@@ -42,11 +42,6 @@ class _SubjectManagementState extends State<SubjectManagement> {
   final Map<String, Uint8List?> _imageCache = {};
   final Map<String, Uint8List?> _imageAvatarCache = {};
   Map<String, dynamic>? profile;
-  bool showPaginationControls = false;
-  int displayPage = 1;
-  int displayTotal = 1;
-  bool canGoPrev = false;
-  bool canGoNext = false;
 
   // API Pagination state
   int _currentPage = 1; // Current API page
@@ -195,46 +190,40 @@ class _SubjectManagementState extends State<SubjectManagement> {
     return null;
   }
 
-  Future<void> fetchsubject({
-    int page = 1,
-    bool refreshCounts = false,
-  }) async {
+  Future<void> fetchSubject() async {
     String? token = await authService.getToken();
-    Map<String, String> headers = {}; // Explicitly type the map
+    Map<String, String> headers = {}; // กำหนด type ชัดเจน
+
     if (token != null) {
       headers['Authorization'] = 'Bearer $token';
     }
+
     try {
       final response = await http.get(
-          Uri.parse('${ApiConfig.subjectUrl}?page=$page'),
-          headers: headers);
-      if (response.statusCode == 200) {
-        final Map<String, dynamic> responseData = json.decode(response.body);
+        Uri.parse('${ApiConfig.subjectUrl}'),
+        headers: headers,
+      );
 
-        // ดึงข้อมูลเฉพาะ "data" มาใช้งาน
-        final List<dynamic> data = responseData['data'];
+      if (response.statusCode == 200) {
+        final List<dynamic> responseData = json.decode(response.body);
 
         setState(() {
-          subject = data.map((subject) {
-            subject['id'] = subject['id'];
-
-            subject['title'] = subject['title'] ?? 'No Title';
-            subject['description'] =
-                subject['description'] ?? 'No Description Available';
-            subject['published_date'] =
-                subject['published_date'] ?? subject['publish_date'];
-            subject['fullname'] = subject['fullname'] ?? 'No Name';
-            subject['account_id'] = subject['account_id'];
-
-            return subject;
+          subject = responseData.map((item) {
+            return {
+              'id': item['id'],
+              'title': item['title'] ?? 'No Title',
+              'description': item['description'] ?? 'No Description Available',
+              'published_date': item['published_date'] ?? item['publish_date'],
+              'fullname': item['fullname'] ?? 'No Name',
+              'account_id': item['account_id'],
+            };
           }).toList();
+
           subject.sort(
-              (a, b) => b['published_date'].compareTo(a['published_date']));
+            (a, b) => b['published_date'].compareTo(a['published_date']),
+          );
+
           isLoading = false;
-          _currentPage = responseData['page'] ?? 1;
-          _totalPages = responseData['last_page'] ?? 1;
-          _totalScholarships = responseData['total'] ?? 0;
-          showPaginationControls = _totalPages > 1;
           useItem = subject;
         });
       } else {
@@ -250,7 +239,7 @@ class _SubjectManagementState extends State<SubjectManagement> {
 
   Future<void> _delayedLoad() async {
     await Future.delayed(const Duration(seconds: 3)); // Delay 3 seconds
-    fetchsubject();
+    fetchSubject();
   }
 
   void confirmDelete(BuildContext context, int id) {
@@ -1079,7 +1068,7 @@ class _SubjectManagementState extends State<SubjectManagement> {
                                             ],
                                           ),
                                           SizedBox(
-                                            height: 15,
+                                            height: 22,
                                           ),
                                           Text(
                                             description,
@@ -1218,81 +1207,6 @@ class _SubjectManagementState extends State<SubjectManagement> {
                               );
                             },
                           ),
-                          if (showPaginationControls)
-                            Padding(
-                              padding: const EdgeInsets.symmetric(
-                                  vertical: 16.0, horizontal: 16.0),
-                              child: Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  ElevatedButton.icon(
-                                    onPressed: canGoPrev
-                                        ? () {
-                                            fetchsubject(
-                                                page: _currentPage - 1,
-                                                refreshCounts: true);
-                                          }
-                                        : null, // Disable if cannot go previous
-                                    icon: Icon(Icons.arrow_back_ios,
-                                        size: 16,
-                                        color: canGoPrev
-                                            ? Colors.white
-                                            : Colors.grey[400]),
-                                    label: Text("Prev",
-                                        style: TextStyle(
-                                            color: canGoPrev
-                                                ? Colors.white
-                                                : Colors.grey[400])),
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: canGoPrev
-                                          ? Color(0xFF355FFF)
-                                          : Colors.grey[300],
-                                      shape: RoundedRectangleBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(8)),
-                                      padding: EdgeInsets.symmetric(
-                                          horizontal: 12, vertical: 8),
-                                    ),
-                                  ),
-                                  Text(
-                                    'Page $displayPage of $displayTotal', // Use calculated display values
-                                    style: TextStyleService.getDmSans(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w500),
-                                  ),
-                                  ElevatedButton.icon(
-                                    onPressed: canGoNext
-                                        ? () {
-                                            fetchsubject(
-                                                page: _currentPage + 1,
-                                                refreshCounts: true);
-                                          }
-                                        : null, // Disable if cannot go next
-                                    icon: Icon(Icons.arrow_forward_ios,
-                                        size: 16,
-                                        color: canGoNext
-                                            ? Colors.white
-                                            : Colors.grey[400]),
-                                    label: Text("Next",
-                                        style: TextStyle(
-                                            color: canGoNext
-                                                ? Colors.white
-                                                : Colors.grey[400])),
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: canGoNext
-                                          ? Color(0xFF355FFF)
-                                          : Colors.grey[300],
-                                      shape: RoundedRectangleBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(8)),
-                                      padding: EdgeInsets.symmetric(
-                                          horizontal: 12, vertical: 8),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
                           const SizedBox(height: 90),
                         ],
                       ),

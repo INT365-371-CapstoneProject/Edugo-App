@@ -121,9 +121,7 @@ class _SubjectDetailState extends State<SubjectDetail> {
       setState(() {
         imageProfileAvatar = response.bodyBytes; // แปลง response เป็น Uint8List
       });
-    } else {
-      throw Exception('Failed to load country data');
-    }
+    } else {}
   }
 
   Future<Uint8List?> fetchPostAvatar(String url) async {
@@ -833,9 +831,9 @@ class _SubjectDetailState extends State<SubjectDetail> {
                                 child: Text(
                                   "No comments",
                                   style: GoogleFonts.dmSans(
-                                    fontSize: 24, // ปรับขนาดเป็น 72
+                                    fontSize: 16, // ปรับขนาดเป็น 72
                                     fontWeight: FontWeight
-                                        .bold, // เพิ่มความหนาให้อ่านง่าย
+                                        .w400, // เพิ่มความหนาให้อ่านง่าย
                                     color: Colors
                                         .grey[400], // ใช้สีเทาอ่อนให้ดูดีขึ้น
                                   ),
@@ -1158,10 +1156,10 @@ class _SubjectDetailState extends State<SubjectDetail> {
                                             Text(
                                               comment['comments_text'] ??
                                                   'No comment',
-                                              style: GoogleFonts.dmSans(
-                                                fontSize: 14,
+                                              style: TextStyleService.getDmSans(
+                                                fontSize: 24,
                                                 fontWeight: FontWeight.normal,
-                                                color: Colors.grey[700],
+                                                color: Color(0xFF747474),
                                               ),
                                             ),
                                             if (image!.isNotEmpty)
@@ -1252,7 +1250,7 @@ class _SubjectDetailState extends State<SubjectDetail> {
                             decoration: InputDecoration(
                               hintText: 'What about your opinion?',
                               hintStyle: TextStyleService.getDmSans(
-                                fontSize: 11,
+                                fontSize: 12.5,
                                 color: Color(0xFF747474),
                                 fontWeight: FontWeight.w200,
                               ),

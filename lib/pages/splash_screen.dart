@@ -1,10 +1,18 @@
 import 'dart:async';
-import 'package:edugo/features/home/screens/home_screen.dart'; // เปลี่ยน import
+import 'package:edugo/features/home/screens/home_screen.dart';
+import 'package:edugo/features/login&register/login.dart';
 import 'package:edugo/pages/intro.dart';
 import 'package:flutter/material.dart';
 
 class SplashScreen extends StatefulWidget {
-  const SplashScreen({super.key});
+  final bool isFirstTime;
+  final bool isLoggedIn;
+
+  const SplashScreen({
+    super.key,
+    required this.isFirstTime,
+    required this.isLoggedIn,
+  });
 
   @override
   State<SplashScreen> createState() => _SplashScreenState();
@@ -19,14 +27,13 @@ class _SplashScreenState extends State<SplashScreen> {
     _timer = Timer(const Duration(seconds: 3), () {
       // ตรวจสอบว่า widget ยังอยู่ใน tree ก่อนเรียก Navigator
       if (mounted) {
-        Navigator.push(
+        Navigator.pushReplacement(
           context,
           PageRouteBuilder(
             pageBuilder: (context, animation, secondaryAnimation) =>
-                const HomeScreenApp(), // เปลี่ยนเป็น HomeScreenApp
+                _getNextScreen(),
             transitionsBuilder:
                 (context, animation, secondaryAnimation, child) {
-              // ...existing transition code...
               const begin = 0.0;
               const end = 1.0;
               const curve = Curves.easeOut;
@@ -42,9 +49,19 @@ class _SplashScreenState extends State<SplashScreen> {
     });
   }
 
+  Widget _getNextScreen() {
+    if (widget.isFirstTime) {
+      return const IntroScreen();
+    } else if (widget.isLoggedIn) {
+      return const HomeScreenApp();
+    } else {
+      return const Login();
+    }
+  }
+
   @override
   void dispose() {
-    _timer?.cancel(); // ยกเลิก Timer เมื่อ dispose
+    _timer?.cancel();
     super.dispose();
   }
 
