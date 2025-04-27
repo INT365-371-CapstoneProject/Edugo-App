@@ -5,6 +5,7 @@ import 'package:edugo/features/home/screens/home_screen.dart';
 import 'package:edugo/features/profile/screens/providerProfile.dart';
 import 'package:edugo/features/scholarship/screens/provider_add.dart';
 import 'package:edugo/features/scholarship/screens/provider_management.dart';
+import 'package:edugo/features/search/screens/search_list.dart';
 import 'package:edugo/features/search/screens/search_screen.dart'; // Import SearchScreen
 import 'package:edugo/services/auth_service.dart';
 import 'package:edugo/services/datetime_provider_add.dart';
@@ -23,12 +24,16 @@ class ProviderDetail extends StatefulWidget {
   final bool isProvider;
   final Map<String, dynamic>? initialData;
   final String? previousRouteName; // Add previousRouteName parameter
+  final String? searchQuery; // Optional search query
+  final Map<String, Set<String>>? selectedFilters; // Optional filters
 
   const ProviderDetail({
     Key? key,
     required this.isProvider,
     this.initialData,
     this.previousRouteName, // Initialize previousRouteName
+    this.searchQuery, // Add optional parameter
+    this.selectedFilters, // Add optional parameter
   }) : super(key: key);
 
   @override
@@ -62,6 +67,9 @@ class _ProviderDetailState extends State<ProviderDetail> {
   String? providerCompanyName;
   Uint8List? imageAvatar;
   Uint8List? imageAnnounce;
+
+  String? localSearchQuery; // Local variable for search query
+  Map<String, Set<String>>? localSelectedFilters; // Local variable for filters
 
   @override
   void initState() {
@@ -441,8 +449,6 @@ class _ProviderDetailState extends State<ProviderDetail> {
           ),
           (route) => false, // ลบ stack ทั้งหมด
         );
-      } else {
-        showError("Failed to delete data. Status code: ${response.statusCode}");
       }
     } catch (e) {
       showError("Error occurred: $e");
@@ -526,20 +532,34 @@ class _ProviderDetailState extends State<ProviderDetail> {
 
     return WillPopScope(
       onWillPop: () async {
-        // Navigate back based on previousRouteName
-        Widget destination;
-        if (localPreviousRouteName == 'search') {
-          destination = const SearchScreen();
+        if (localPreviousRouteName == 'search_list') {
+          Navigator.pushReplacement(
+            // Use pushReplacement to avoid stacking SearchList
+            context,
+            MaterialPageRoute(
+              builder: (context) => SearchList(
+                searchQuery: localSearchQuery ?? '', // Pass back the query
+                selectedFilters: localSelectedFilters, // Pass back the filters
+              ),
+            ),
+          );
+        } else if (localPreviousRouteName == 'search_screen') {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const SearchScreen()),
+          );
         } else if (widget.isProvider) {
-          destination = const ProviderManagement();
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const ProviderManagement()),
+          );
         } else {
-          destination = const HomeScreenApp();
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const HomeScreenApp()),
+          );
         }
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => destination),
-        );
-        return false; // ป้องกันการย้อนกลับไปหน้าก่อนหน้า
+        return false; // Prevent default back behavior
       },
       child: Scaffold(
         backgroundColor: const Color(0xffFFFFFF),
@@ -575,37 +595,43 @@ class _ProviderDetailState extends State<ProviderDetail> {
                                     // /------------------------------------------------------------------
                                     Widget destination;
                                     print(localPreviousRouteName);
-                                    if (localPreviousRouteName == 'search') {
-                                      destination = const SearchScreen();
+                                    if (localPreviousRouteName ==
+                                        'search_list') {
+                                      Navigator.pushReplacement(
+                                        // Use pushReplacement
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) => SearchList(
+                                            searchQuery: localSearchQuery ??
+                                                '', // Pass back the query
+                                            selectedFilters:
+                                                localSelectedFilters, // Pass back the filters
+                                          ),
+                                        ),
+                                      );
+                                    } else if (localPreviousRouteName ==
+                                        'search_screen') {
+                                      Navigator.pushReplacement(
+                                        context,
+                                        MaterialPageRoute(
+                                            builder: (context) =>
+                                                const SearchScreen()),
+                                      );
                                     } else if (widget.isProvider) {
-                                      destination = const ProviderManagement();
+                                      Navigator.pushReplacement(
+                                        context,
+                                        MaterialPageRoute(
+                                            builder: (context) =>
+                                                const ProviderManagement()),
+                                      );
                                     } else {
-                                      destination = const HomeScreenApp();
+                                      Navigator.pushReplacement(
+                                        context,
+                                        MaterialPageRoute(
+                                            builder: (context) =>
+                                                const HomeScreenApp()),
+                                      );
                                     }
-                                    Navigator.push(
-                                      context,
-                                      PageRouteBuilder(
-                                        pageBuilder: (context, animation,
-                                                secondaryAnimation) =>
-                                            destination,
-                                        transitionsBuilder: (context, animation,
-                                            secondaryAnimation, child) {
-                                          const begin = 0.0;
-                                          const end = 1.0;
-                                          const curve = Curves.easeOut;
-
-                                          var tween = Tween(
-                                                  begin: begin, end: end)
-                                              .chain(CurveTween(curve: curve));
-                                          return FadeTransition(
-                                            opacity: animation.drive(tween),
-                                            child: child,
-                                          );
-                                        },
-                                        transitionDuration:
-                                            const Duration(milliseconds: 300),
-                                      ),
-                                    );
                                   },
                                   child: CircleAvatar(
                                     radius: 20,

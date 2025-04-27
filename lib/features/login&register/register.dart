@@ -435,6 +435,10 @@ class _RegisterState extends State<Register> {
   // }
 
   void _showErrorDialog(String title, String message) {
+    if (Navigator.canPop(context)) {
+      Navigator.pop(
+          context); // Close the existing dialog (likely the loading dialog)
+    }
     showDialog(
       context: context,
       builder: (BuildContext context) {

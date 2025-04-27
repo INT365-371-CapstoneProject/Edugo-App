@@ -715,6 +715,9 @@ class _SearchScreenState extends State<SearchScreen> {
 
                             // Add the cached image to existingData
                             existingData['cachedImage'] = cachedImage;
+                            existingData['previousRouteName'] =
+                                'search_screen'; // Indicate source
+
                             Navigator.push(
                               context,
                               PageRouteBuilder(
