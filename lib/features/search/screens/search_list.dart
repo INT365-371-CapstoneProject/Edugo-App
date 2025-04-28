@@ -149,8 +149,9 @@ class _SearchListState extends State<SearchList> {
 
         setState(() {
           scholarships = results.map((scholarship) {
-            scholarship['image'] = "${ApiConfig.announceUserUrl}/${scholarship['id']}/image";
-               
+            scholarship['image'] =
+                "${ApiConfig.announceUserUrl}/${scholarship['id']}/image";
+
             scholarship['title'] = scholarship['title'] ?? 'No Title';
             scholarship['description'] =
                 scholarship['description'] ?? 'No Description Available';

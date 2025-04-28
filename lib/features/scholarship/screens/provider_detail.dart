@@ -1026,13 +1026,15 @@ class _ProviderDetailState extends State<ProviderDetail> {
                             border: Border.all(color: const Color(0xFFCBD5E0)),
                             borderRadius: BorderRadius.circular(6),
                           ),
-                          child: DateSelector(
-                            isDetail: true,
-                            // initialStartDate: selectedStartDate,
-                            // initialEndDate: selectedEndDate,
-                            initialStartDate:
-                                scholarshipDetail?['publish_date'],
-                            initialEndDate: scholarshipDetail?['close_date'],
+                          child: AbsorbPointer(
+                            absorbing:
+                                widget.isProvider == false, // true = disable
+                            child: DateSelector(
+                              isDetail: true,
+                              initialStartDate:
+                                  scholarshipDetail?['publish_date'],
+                              initialEndDate: scholarshipDetail?['close_date'],
+                            ),
                           ),
                         ),
                         const SizedBox(height: 24),

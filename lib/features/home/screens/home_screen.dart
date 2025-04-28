@@ -357,7 +357,7 @@ class _HomeScreenAppState extends State<HomeScreenApp> {
 
         uri = Uri.parse(url);
       } else {
-        uri = Uri.parse(ApiConfig.announceUserUrl);
+        uri = Uri.parse(ApiConfig.searchAnnounceUrl);
       }
 
       final response = await http.get(uri, headers: headers);

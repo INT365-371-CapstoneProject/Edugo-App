@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:edugo/config/api_config.dart';
 import 'package:edugo/features/account/screens/manage_account.dart';
 import 'package:edugo/features/bookmark/screens/bookmark_management.dart';
+import 'package:edugo/features/home/screens/home_screen.dart';
 import 'package:edugo/features/login&register/login.dart';
 import 'package:edugo/features/notification/screens/notification_management.dart';
 import 'package:edugo/features/scholarship/screens/provider_detail.dart';
@@ -257,9 +258,7 @@ class _ProviderProfileState extends State<ProviderProfile> {
                                           PageRouteBuilder(
                                             pageBuilder: (context, animation,
                                                     secondaryAnimation) =>
-                                                ProviderDetail(
-                                                    isProvider: false,
-                                                    initialData: existingData),
+                                                HomeScreenApp(),
                                             transitionsBuilder: (context,
                                                 animation,
                                                 secondaryAnimation,
